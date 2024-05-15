@@ -12,9 +12,6 @@ void m5io_showanalogrgb(byte sw, const CRGB &rgb);
 const char *mk312_main_modes_c =
     "Manual\nTimer\nRandom\nSync";
 
-// todo: knob levels are not complete! see perl IO::Estim for details
-// todo: report via callback the status so we can update mqtt or colours of tabs
-
 tab_mk312::tab_mk312() {
   ison = true;
   lockpanel = false;
@@ -43,7 +40,7 @@ void tab_mk312::encoder_change(int sw, int change) {
     if (level_a < 0) level_a = 0;
     if (level_a > 99) level_a = 99;
     md->etbox_setbyte(ETMEM_knoba,
-                      level_a * 255 / 99);  // TODO match this better
+                      level_a * 255 / 99);  
     need_knob_refresh = true;
   }
   if (main_mode == MODE_RANDOM && sw == 3) {

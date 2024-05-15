@@ -8,11 +8,6 @@
 #include "tab-splashscreen.hpp"
 #include "tab.hpp"
 
-// todo: nice logo, version number
-// todo: battery level
-// todo: maybe better scanning that doesn't stay on forever with button and
-// spinner etc
-
 tab_splashscreen::tab_splashscreen() {
   page = nullptr;
   old_last_change = last_change = D_NONE;
