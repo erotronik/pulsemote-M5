@@ -52,6 +52,12 @@ void tab_splashscreen::loop(boolean activetab) {
         5, hsvToRgb(255, 0, buttonhue[4] / 2));  // cherry LED (very bright)
     buttonhue[4]++;
   }
+  if (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 20000) { // every 20 sec
+    batterycheckmillis = millis();
+    int level = min(4,M5.Power.getBatteryLevel() / 20);
+    lv_label_set_text_fmt(labelbattery, "%s%s",batteryicons[level], M5.Power.isCharging()?batteryicons[5]:"");
+  }
+
 }
 
 tab_object_timer *ttest;
@@ -62,6 +68,9 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
            value ? "push" : "release");
   if (sw == 4 && value) {
     printf_log("Battery %dmV level %d%%\n", M5.Power.getBatteryVoltage(), M5.Power.getBatteryLevel());
+    if (M5.Power.isCharging()) {
+      printf_log("Charging\n");
+    }
     //printf_log("%d=%d\n",M5.getBoard(),lgfx::boards::board_M5StackCoreS3);
     dump_connected_devices();
   }
@@ -89,6 +98,12 @@ void tab_splashscreen::setup(void) {
   lv_textarea_set_cursor_click_pos(lv_debug_window, false);
   lv_obj_set_size(lv_debug_window, lv_pct(100), lv_pct(60));
   lv_obj_set_align(lv_debug_window, LV_ALIGN_BOTTOM_LEFT);
+
+  labelbattery = lv_label_create(tv2);
+  lv_label_set_text(labelbattery, "");
+  lv_obj_set_style_text_align(labelbattery, LV_TEXT_ALIGN_RIGHT, 0);
+  lv_obj_align(labelbattery, LV_ALIGN_TOP_RIGHT, -8, 0);
+  lv_obj_set_style_text_font(labelbattery, &lv_font_montserrat_24, LV_PART_MAIN);
 
   ttest = nullptr;
   // t = new tab_object_timer(false); //just for testing!
