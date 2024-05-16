@@ -5,10 +5,12 @@
 
 #include "device-coyote2.hpp"
 #include "device-mk312.hpp"
+#include "device-thrustalot.hpp"
 #include "device.hpp"
 
 device_coyote2 *coyote_device_controller;
 device_mk312 *device_mk312_controller;
+device_thrustalot *device_thrustalot_controller;
 
 void device_change_handler(type_of_change t, Device *d);
 
@@ -28,6 +30,7 @@ int scanTime = 60;  // Duration is in seconds in NimBLE
 
 NimBLEAdvertisedDevice *coyote_ble_device = nullptr;
 NimBLEAdvertisedDevice *device_mk312_device = nullptr;
+NimBLEAdvertisedDevice *device_thrustalot_device = nullptr;
 
 class PulsemoteAdvertisedDeviceCallbacks
     : public NimBLEAdvertisedDeviceCallbacks {
@@ -47,6 +50,13 @@ class PulsemoteAdvertisedDeviceCallbacks
       device_mk312_device = new NimBLEAdvertisedDevice(*advertisedDevice);
       NimBLEDevice::getScan()->stop();
     }
+    if (device_thrustalot_controller->is_device(advertisedDevice)) {
+      ESP_LOGI(device_thrustalot_controller->getShortName(), "found device");
+      scanthread_found_something = true;
+      device_thrustalot_device = new NimBLEAdvertisedDevice(*advertisedDevice);
+      NimBLEDevice::getScan()->stop();
+    }
+
   }
 };
 
@@ -92,6 +102,11 @@ void scan_loop() {
           device_mk312_controller = new device_mk312();
           device_mk312_controller->set_callback(device_change_handler);
         }
+      } else if (device_thrustalot_device) {
+        boolean connected =
+            device_thrustalot_controller->connect_to_device(device_thrustalot_device);
+        delete device_thrustalot_device;
+        device_thrustalot_device = nullptr;
       }
       repeatscan = true;
       vTaskDelay(pdMS_TO_TICKS(100));
@@ -112,12 +127,14 @@ void scan_loop() {
 void TaskCommsBT(void *pvParameters) {
   coyote_device_controller = new device_coyote2();
   device_mk312_controller = new device_mk312();
+  device_thrustalot_controller = new device_thrustalot();
 
   coyote_device_controller->get().set_callback(coyote_change_handler);
   device_mk312_controller->set_callback(device_change_handler);
+  device_thrustalot_controller->set_callback(device_change_handler);
 
   scan_comms_init();
-  vTaskDelay(pdMS_TO_TICKS(100));
+  vTaskDelay(pdMS_TO_TICKS(5000)); // time for serial/debug to be ready
   while (true) {
     scan_loop();
     vTaskDelay(pdMS_TO_TICKS(1000));  // Scan for 60 seconds, wait for 1 second
