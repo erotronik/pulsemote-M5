@@ -4,6 +4,7 @@
 #include <lvgl.h>
 #include "tab.hpp"
 #include "tab-coyote.hpp"
+#include "lvgl-utils.h"
 #include "hsv.h"
 void m5io_showanalogrgb(byte sw, const CRGB &rgb);
 

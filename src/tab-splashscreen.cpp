@@ -7,6 +7,25 @@
 #include "tab-object-timer.hpp"
 #include "tab-splashscreen.hpp"
 #include "tab.hpp"
+#include "lvgl-utils.h"
+
+// just a test mode to display what we think all the connected
+// devices are to the debug window when you push a button
+// on the splashscreen
+
+void dump_connected_devices(void) {
+  for (int i = 0; i < tabs.size(); i++) {
+    Tab *t = tabs.get(i);
+    printf_log("tab %d: ", i);
+    if (t->page != nullptr) {
+      printf_log("tab=%d ", lv_get_tabview_idx_from_page(tv, t->page));
+    }
+    if (t->device != nullptr) {
+      printf_log("device=%s", t->device->getShortName());
+    }
+    printf_log("\n");
+  }
+}
 
 tab_splashscreen::tab_splashscreen() {
   page = nullptr;

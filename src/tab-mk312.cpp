@@ -7,6 +7,8 @@
 #include "tab-mk312.hpp"
 #include "tab-object-timer.hpp"
 #include "tab.hpp"
+#include "lvgl-utils.h"
+
 void m5io_showanalogrgb(byte sw, const CRGB &rgb);
 
 const char *mk312_main_modes_c =

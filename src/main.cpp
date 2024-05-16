@@ -16,43 +16,13 @@
 #include "tab-mk312.hpp"
 #include "tab-splashscreen.hpp"
 #include "tab.hpp"
+#include "lvgl-utils.h"
 
 lv_obj_t *tv;
-
-LinkedList<Tab *> tabs = LinkedList<Tab *>();
-
-constexpr int32_t SCREENW = 320;
-constexpr int32_t SCREENH = 240;
-
 lv_display_t *display;
 lv_indev_t *indev;
 
-void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area,
-                      uint8_t *px_map) {
-  uint32_t w = (area->x2 - area->x1 + 1);
-  uint32_t h = (area->y2 - area->y1 + 1);
-
-  lv_draw_sw_rgb565_swap(px_map, w * h);
-  M5.Display.pushImageDMA<uint16_t>(area->x1, area->y1, w, h,
-                                    (uint16_t *)px_map);
-  lv_disp_flush_ready(disp);
-}
-
-uint32_t lvgl_tick_function() { return (esp_timer_get_time() / 1000LL); }
-
-void lvgl_touchpad_read(lv_indev_t *drv, lv_indev_data_t *data) {
-  M5.update();
-  auto count = M5.Touch.getCount();
-
-  if (count == 0) {
-    data->state = LV_INDEV_STATE_RELEASED;
-  } else {
-    auto touch = M5.Touch.getDetail(0);
-    data->state = LV_INDEV_STATE_PRESSED;
-    data->point.x = touch.x;
-    data->point.y = touch.y;
-  }
-}
+LinkedList<Tab *> tabs = LinkedList<Tab *>();
 
 byte lastencodertest[numencoders] = {128, 128, 128, 128};
 byte encodertest[numencoders] = {128, 128, 128, 128};
@@ -62,24 +32,6 @@ void RotaryEncoderChanged(bool clockwise, int id) {
     encodertest[id]++;
   } else {
     encodertest[id]--;
-  }
-}
-
-// just a test mode to display what we think all the connected
-// devices are to the debug window when you push a button
-// on the splashscreen
-
-void dump_connected_devices(void) {
-  for (int i = 0; i < tabs.size(); i++) {
-    Tab *t = tabs.get(i);
-    printf_log("tab %d: ", i);
-    if (t->page != nullptr) {
-      printf_log("tab=%d ", lv_get_tabview_idx_from_page(tv, t->page));
-    }
-    if (t->device != nullptr) {
-      printf_log("device=%s", t->device->getShortName());
-    }
-    printf_log("\n");
   }
 }
 
@@ -212,13 +164,15 @@ void setup() {
                          LV_DISPLAY_RENDER_MODE_PARTIAL);
   indev = lv_indev_create();
   lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
-
   lv_indev_set_read_cb(indev, lvgl_touchpad_read);
   printf_log("display setup done\n");
+
   setup_tabs();
   printf_log("tab setup done\n");
+
   m5io_init();
   printf_log("io setup done\n");
+
   printf_log("Version %s\n",__DATE__);
   printf_log("Scanning for devices...\n");
 
@@ -228,22 +182,6 @@ void setup() {
 }
 
 void loop() {};
-
-void lv_hide_tab(lv_obj_t *page) {
-  if (page == nullptr) return;
-  int tabid = lv_get_tabview_idx_from_page(tv, page);
-  ESP_LOGD("main", "hide tab id %d", tabid);
-  if (tabid == -1) return;
-  // if we're viewing the tab that's gone away then switch to the main screen
-  if (lv_tabview_get_tab_act(tv) == tabid)
-    lv_tabview_set_act(tv, 0, LV_ANIM_OFF);
-
-  lv_obj_t *tbar = lv_tabview_get_tab_bar(
-      tv);  // in lvgl 9 they are real buttons not a matrix
-  lv_obj_t *cont = lv_tabview_get_content(tv);
-  lv_obj_del(lv_obj_get_child(tbar, tabid));
-  lv_obj_del(lv_obj_get_child(cont, tabid));
-}
 
 void handlehardwarecallbacks() {
   for (int i = 0; i < tabs.size(); i++) {

@@ -37,15 +37,3 @@ class Tab {
 extern LinkedList<Tab *> tabs;
 
 void printf_log(const char *format, ...);
-
-// given a tabview and a content page of a tab, get the tab index. This
-// stops us having to keep track of the tabid which changes when we
-// delete tabs as hardware goes away
-
-inline int lv_get_tabview_idx_from_page(lv_obj_t *l, lv_obj_t *page) {
-  lv_obj_t *c = lv_tabview_get_content(l);
-  for (int i = 0; i < lv_obj_get_child_count(c); i++) {
-    if (lv_obj_get_child(c, i) == page) return i;
-  }
-  return -1;
-}

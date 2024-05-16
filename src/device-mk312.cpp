@@ -204,7 +204,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
     notify(D_DISCONNECTED);
     return false;
   }
-  int y = BOX.getbyte(ETMEM_knoba);
+  int y = BOX.getbyte(ETMEM_knoba); // any location really just to ensure the handshake worked
   if (y == -1) {
     ESP_LOGE(getShortName(), "couldnt get data from box");
     bleClient->disconnect();
