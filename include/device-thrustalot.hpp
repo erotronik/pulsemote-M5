@@ -34,6 +34,16 @@ class device_thrustalot : public Device {
   void thrustallthewayin();
   void thrustallthewayout();
   void thrustonetime(int speed);
+  int thrustcb_pos;
+  int thrustcb_count;
+  int thrustcb_left;
+
+  const char *getpostext(void) {
+    if (thrustcb_pos ==1) return "In";
+    if (thrustcb_pos ==2) return "Out";
+    if (thrustcb_pos ==0) return "...";
+    return "";
+  }
 
  private:
   void ble_thrustalot_send(String newValue);
@@ -50,10 +60,6 @@ class device_thrustalot : public Device {
   NimBLERemoteService* thrustService;
   NimBLERemoteCharacteristic* uuid_rx_Characteristic;
   NimBLERemoteCharacteristic* uuid_tx_Characteristic;
-
-  int thrustcb_pos;
-  int thrustcb_count;
-  int thrustcb_left;
 
   byte mkbuffer[mkbuffer_maxlen];
   byte mkwptr = 0;

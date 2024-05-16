@@ -84,8 +84,11 @@ device_thrustalot::~device_thrustalot() {
 
 
 void device_thrustalot::ble_thrustalot_send(String newValue) {
-  ESP_LOGI("Thrustalot","Sending %s" ,newValue);
-  device_thrustalot::uuid_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+  if (is_connected) {
+    ESP_LOGI("Thrustalot","Sending %s" ,newValue);
+    device_thrustalot::uuid_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+  } else 
+    ESP_LOGE("Thrustalot","cant send not connected");
 }
 
 void device_thrustalot::thrustallthewayin(void) {
@@ -119,7 +122,7 @@ void device_thrustalot::ble_mk_callback(
         thrustcb_count = x.toInt();
       } else if (bug[0] == 'S') {
         if (bug[1] != '0') {
-          thrustcb_pos = 0;
+          //thrustcb_pos = 0;
         } else {
           thrustcb_left = 0;
         }
@@ -128,7 +131,7 @@ void device_thrustalot::ble_mk_callback(
         Serial.println(x.toInt());
         thrustcb_left = x.toInt();
       }
-      ESP_LOGI("thrusthardware","%s",bug);
+      //ESP_LOGI("thrusthardware","%s",bug);
       j = 0;
     } else {
       j++;

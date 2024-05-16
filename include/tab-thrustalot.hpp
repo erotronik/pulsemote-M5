@@ -36,6 +36,9 @@ class tab_thrustalot : public Tab {
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;
-  int level_a, level_b;
+  int knob_speed, knob_tempo;
   int timermillis = 0;
+  unsigned long tempotimer = 0;
+  int tempo_to_ms(int x);
+
 };
