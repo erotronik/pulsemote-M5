@@ -6,7 +6,6 @@
 #include "tab-coyote.hpp"
 #include "lvgl-utils.h"
 #include "hsv.h"
-void m5io_showanalogrgb(byte sw, const CRGB &rgb);
 
 const char *coyote_main_modes_c =
     "Manual\nTimer\nRandom\nSync";  
@@ -158,18 +157,21 @@ void tab_coyote::loop(bool active) {
   if (active && need_refresh) {
     device_coyote2 *md = static_cast<device_coyote2*>(device);
     need_refresh = false;
-    lv_arc_set_value(arc[0], md->get().chan_a().get_power_pc()); 
-    lv_obj_t *arclabel = lv_obj_get_child(arc[0],0);
-    if (arclabel) lv_label_set_text_fmt(arclabel, "A\n%" LV_PRId32 "%%", lv_arc_get_value(arc[0]));
-    lv_arc_set_value(arc[1], md->get().chan_b().get_power_pc()); 
-    arclabel = lv_obj_get_child(arc[1],0);
-    if (arclabel) lv_label_set_text_fmt(arclabel, "B\n%" LV_PRId32 "%%", lv_arc_get_value(arc[1]));
+
+    int power = md->get().chan_a().get_power_pc();
+    buttonbar->setvalue(0, power); 
+    buttonbar->settextfmt(0, "A\n%" LV_PRId32 "%%", power);
+    buttonbar->setrgb(0, hsvToRgb(0, 255, power * 2 + 5));
+
+    power = md->get().chan_b().get_power_pc();
+    buttonbar->setvalue(1, power); 
+    buttonbar->settextfmt(1, "B\n%" LV_PRId32 "%%", power);
+    buttonbar->setrgb(1, hsvToRgb(0, 255, power *2 + 5));
+
     if (ison) {
       mode_a = md->get().chan_a().get_mode();
       mode_b = md->get().chan_b().get_mode();
     } 
-    m5io_showanalogrgb(2, hsvToRgb(0, 255, md->get().chan_a().get_power_pc() * 2 + 5));
-    m5io_showanalogrgb(1, hsvToRgb(0, 255, md->get().chan_b().get_power_pc() * 2 + 5));
     lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED),
                                 LV_PART_MAIN);
 
@@ -185,22 +187,22 @@ void tab_coyote::loop(bool active) {
                           md->getModeName(ison?mode_b:M_NONE));
     }
     if (main_mode == MODE_MANUAL) {
-      lv_label_set_text_fmt(lv_obj_get_child(arc[2], 0), "On\nOff");
-      lv_arc_set_value(arc[2], ison ? 100 : 0);
+      buttonbar->settext(2,"On\nOff");
+      buttonbar->setvalue(2, ison ? 100: 0);
     } else {
-      lv_arc_set_value(arc[2], 0);
-      lv_label_set_text_fmt(lv_obj_get_child(arc[2], 0), "");
+      buttonbar->settext(2,"");
+      buttonbar->setvalue(2,  0);
     }
   
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      lv_label_set_text_fmt(lv_obj_get_child(arc[4], 0), LV_SYMBOL_BELL);
+      buttonbar->settext(4, LV_SYMBOL_BELL);
       if (main_mode == MODE_RANDOM && rand_timer->has_active_button() ||
           main_mode == MODE_TIMER && timer->has_active_button())
-        lv_arc_set_value(arc[4], 100);
+        buttonbar->setvalue(4,  100);
       else
-        lv_arc_set_value(arc[4], 0);
+        buttonbar->setvalue(4,  0);
     } else 
-      lv_label_set_text(lv_obj_get_child(arc[4], 0), "");
+      buttonbar->settext(4, "");
   }
 }
 
@@ -254,32 +256,8 @@ void tab_coyote::coyote_tab_create() {
   lv_dropdown_set_options(dd, coyote_main_modes_c);
   lv_obj_add_event_cb(dd, coyote_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
   
-  lv_obj_t *container = lv_obj_create(tv1);
-  // Set the container to be transparent and have no effect
-  lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
-  lv_obj_set_style_border_opa(container, LV_OPA_TRANSP, 0);
-  lv_obj_set_style_outline_opa(container, LV_OPA_TRANSP, 0);
-  lv_obj_set_style_shadow_opa(container, LV_OPA_TRANSP, 0);
-  lv_obj_set_style_pad_all(container, 0, 0);
-  lv_obj_set_align(container, LV_ALIGN_BOTTOM_LEFT);
-  lv_obj_set_width(container, LV_PCT(100));
-  lv_obj_set_height(container, LV_SIZE_CONTENT);
+  buttonbar = new ButtonBar(tv1);
 
-  for (byte i=0; i<5; i++) {
-    arc[i] = lv_arc_create(container);
-    lv_obj_set_size(arc[i],60,60);
-    lv_obj_set_align(arc[i], LV_ALIGN_BOTTOM_LEFT);
-    lv_obj_set_x(arc[i], (64* i)); //((320-62*5)/4+62)
-    lv_arc_set_rotation(arc[i], 270);
-    lv_arc_set_bg_angles(arc[i], 0, 360);
-    lv_arc_set_value(arc[i],0);
-    lv_obj_remove_style(arc[i], NULL, LV_PART_KNOB);
-    lv_obj_remove_flag(arc[i], LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_t *xarclabel = lv_label_create(arc[i]);
-    lv_obj_set_style_text_align(xarclabel, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_text(xarclabel, "");
-    lv_obj_center(xarclabel);
-  }
   page = tv1;
   int tabid = lv_get_tabview_idx_from_page(tv, tv1);
   tab_create_status(tv1);
