@@ -139,14 +139,7 @@ void device_change_handler(type_of_change t, Device *d) {
   }
 }
 
-void main_loop(void);
-void TaskMain(void *pvParameters) {
-  vTaskDelay(200);
-  ESP_LOGD("main", "Main task started: %s on %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
-
-  while (true) main_loop();
-}
+void TaskMain(void *pvParameters);
 
 void setup() {
   M5.begin();
@@ -180,8 +173,6 @@ void setup() {
   xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 12, nullptr, 2,
                           nullptr, 0);
 }
-
-void loop() {};
 
 void handlehardwarecallbacks() {
   for (int i = 0; i < tabs.size(); i++) {
@@ -217,4 +208,14 @@ void main_loop() {
   handlerotaryencoders();
   handletabloops();
   vTaskDelay(1);
+}
+
+void loop() {}; // We use FreeRTOS tasks instead
+
+void TaskMain(void *pvParameters) {
+  vTaskDelay(200);
+  ESP_LOGD("main", "Main task started: %s on %d",
+           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
+
+  while (true) main_loop();
 }
