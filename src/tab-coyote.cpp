@@ -233,6 +233,7 @@ void tab_coyote::tab_create_status(lv_obj_t *tv2) {
   lv_label_set_text(extra_label, "");
   lv_obj_set_style_text_align(extra_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
+  lv_obj_set_scrollbar_mode(square, LV_SCROLLBAR_MODE_OFF);
   tab_status = square;
 }
 
@@ -242,7 +243,8 @@ void tab_coyote::coyote_tab_create() {
 
   lv_obj_set_style_pad_left(tv1, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_right(tv1,0, LV_PART_MAIN);
-  lv_obj_set_style_pad_top(tv1, 5, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(tv1, 10, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(tv1, 0, LV_PART_MAIN);
 
   lv_obj_t *dd = lv_dropdown_create(tv1);
   lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
@@ -264,10 +266,10 @@ void tab_coyote::coyote_tab_create() {
   lv_obj_set_height(container, LV_SIZE_CONTENT);
 
   for (byte i=0; i<5; i++) {
-    arc[i] = lv_arc_create(tv1);
-    lv_obj_set_size(arc[i],62,62);
+    arc[i] = lv_arc_create(container);
+    lv_obj_set_size(arc[i],60,60);
     lv_obj_set_align(arc[i], LV_ALIGN_BOTTOM_LEFT);
-    lv_obj_set_x(arc[i], ((320 - 62 * 5) / 4 + 62) * (i));
+    lv_obj_set_x(arc[i], (64* i)); //((320-62*5)/4+62)
     lv_arc_set_rotation(arc[i], 270);
     lv_arc_set_bg_angles(arc[i], 0, 360);
     lv_arc_set_value(arc[i],0);
