@@ -6,6 +6,7 @@
 #include "Rotary.h"
 #include "RotaryEncOverMCP.h"
 #include "hsv.h"
+#include "lvgl-utils.h"
 
 typedef struct {
   int target;
@@ -14,7 +15,6 @@ typedef struct {
 
 QueueHandle_t event_queue;
 
-void printf_log(const char* format, ...);
 void RotaryEncoderChanged(bool clockwise, int id);
 
 // MCP23017 is port expander on I2C x021 and INT on pin 6/7 (different if not

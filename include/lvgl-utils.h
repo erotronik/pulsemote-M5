@@ -10,3 +10,4 @@ void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area,uint8_t *px_ma
 uint32_t lvgl_tick_function(void);
 void lvgl_touchpad_read(lv_indev_t *drv, lv_indev_data_t *data);
 void lv_hide_tab(lv_obj_t *page);
+void printf_log(const char *format, ...);

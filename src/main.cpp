@@ -218,19 +218,3 @@ void main_loop() {
   handletabloops();
   vTaskDelay(1);
 }
-
-void printf_log(const char *format, ...) {
-  static char buf[256];
-  va_list args;
-  va_start(args, format);
-  vsnprintf(buf, 255, format, args);
-  va_end(args);
-  Serial.print(buf);
-  if (tabs.size() > 0) {
-    Tab *t = tabs.get(0);
-    if (t->page) {
-      lv_obj_t *child = lv_obj_get_child(t->page, 0);
-      lv_textarea_add_text(child, buf);
-    }
-  }
-}

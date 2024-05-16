@@ -35,5 +35,3 @@ class Tab {
 };
 
 extern LinkedList<Tab *> tabs;
-
-void printf_log(const char *format, ...);
