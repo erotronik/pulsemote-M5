@@ -109,12 +109,12 @@ lv_obj_t *tab_object_timer::view(lv_obj_t *tv2) {
   container = timerc;
 
   value[0] = 5;
-  value[1] = 20;
+  value[1] = 10;
   value[2] = 20;
   value[3] = 30;
   if (!moderandom) {
-    value[0] = 20;
-    value[1] = 40;
+    value[0] = 5;
+    value[1] = 10;
   }
   static uint32_t id1 = 1, id2 = 2, id3 = 3, id4 = 4;
 
