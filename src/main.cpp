@@ -95,6 +95,7 @@ void tabview_event_cb(lv_event_t *event) {
 
 void setup_tabs(void) {
   tv = lv_tabview_create(lv_screen_active());
+  lv_obj_set_scrollbar_mode(lv_tabview_get_content(tv), LV_SCROLLBAR_MODE_OFF); // uses bottom 10 pixels and not needed but this doesn't work
   lv_obj_set_style_text_font(lv_tabview_get_tab_bar(tv), &lv_font_montserrat_16, LV_PART_MAIN);
   lv_obj_add_event_cb(tv, tabview_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
   lv_tabview_set_tab_bar_size(tv, 34);
@@ -103,6 +104,9 @@ void setup_tabs(void) {
   sp->setup();
   tabs.add(sp);
 }
+
+// This is called when our scanner detects a new device; figure out
+// the appropriate tab we need to handle that device and add it
 
 void device_change_handler(type_of_change t, Device *d) {
   ESP_LOGD("main", "change handler task called from %s on %d\n",
@@ -174,6 +178,9 @@ void setup() {
                           nullptr, 0);
 }
 
+// Handle any tabs that have changed status, this includes
+// cleaning up and removing a tab if it's gone away
+
 void handlehardwarecallbacks() {
   for (int i = 0; i < tabs.size(); i++) {
     Tab *t = tabs.get(i);
@@ -191,6 +198,8 @@ void handlehardwarecallbacks() {
     }
   }
 }
+
+// Call the loop() function for each of the tabs, note if the tab is active (currently visible)
 
 void handletabloops(void) {
   lv_obj_t *activetab = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
