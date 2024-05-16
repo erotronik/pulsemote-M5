@@ -6,6 +6,7 @@
 #include "device-coyote2.hpp"
 #include "device-mk312.hpp"
 #include "device.hpp"
+#include "buttonbar.hpp"
 
 #define COLOUR_RED 0x882211
 #define COLOUR_GREEN 0x118822
@@ -25,6 +26,8 @@ class Tab {
   virtual void setup(void) {};
   virtual void gotsyncdata(Tab *t, sync_data syncdata) {};
   virtual boolean hardware_changed(void) { return true; };
+
+  ButtonBar *buttonbar;
 
   DeviceType type;
   lv_obj_t *page;  // the content of the tab, don't use tab_id as we need to

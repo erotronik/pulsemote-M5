@@ -8,8 +8,7 @@
 #include "tab-object-timer.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
-
-void m5io_showanalogrgb(byte sw, const CRGB &rgb);
+#include "buttonbar.hpp"
 
 const char *mk312_main_modes_c =
     "Manual\nTimer\nRandom\nSync";
@@ -172,53 +171,46 @@ void tab_mk312::loop(boolean activetab) {
   if (activetab && need_knob_refresh) {
     device_mk312 *md = static_cast<device_mk312 *>(device);
 
-    for (int i = 2; i < 5; i++) {
-      m5io_showanalogrgb(i + 1, hsvToRgb(0, 0, 0));
-    }
-
     need_knob_refresh = false;
     for (int i = 0; i < 5; i++)
-      lv_label_set_text(lv_obj_get_child(arc[i], 0), "");
+      buttonbar->settext(i,"");
     if (main_mode == MODE_MANUAL) {
-      lv_label_set_text_fmt(lv_obj_get_child(arc[2], 0), "On\nOff");
-      lv_arc_set_value(arc[2], ison ? 100 : 0);
+      buttonbar->settextfmt(2,"On\nOff");
+      buttonbar->setvalue(2,ison? 100:0);
     } else
-      lv_arc_set_value(arc[2], 0);
+      buttonbar->setvalue(2,0);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      lv_label_set_text_fmt(lv_obj_get_child(arc[4], 0), LV_SYMBOL_BELL);
+      buttonbar->settext(4, LV_SYMBOL_BELL);
       if (main_mode == MODE_RANDOM && rand_timer->has_active_button() ||
           main_mode == MODE_TIMER && timer->has_active_button())
-        lv_arc_set_value(arc[4], 100);
+        buttonbar->setvalue(4,100);
       else
-        lv_arc_set_value(arc[4], 0);
+        buttonbar->setvalue(4,0);
     }
 
     if (lockpanel) {
-      lv_arc_set_value(arc[0], level_a);
-      lv_label_set_text_fmt(lv_obj_get_child(arc[0], 0), "A\n%" LV_PRId32 "%%",
-                            level_a);
-      m5io_showanalogrgb(2, hsvToRgb(0, 255, level_a * 2 + 5));
-      m5io_showanalogrgb(1, hsvToRgb(0, 255, level_b * 2 + 5));
-
-      lv_arc_set_value(arc[1], level_b);
-      lv_label_set_text_fmt(lv_obj_get_child(arc[1], 0), "B\n%" LV_PRId32 "%%",
-                            level_b);
-      lv_label_set_text_fmt(lv_obj_get_child(arc[3], 0), "MA\nmode");
+      buttonbar->setvalue(0,level_a);
+      buttonbar->settextfmt(0, "A\n%" LV_PRId32 "%%", level_a);
+      buttonbar->setrgb(0, hsvToRgb(0, 255, level_a * 2 + 5));
+      buttonbar->setvalue(1,level_b);
+      buttonbar->settextfmt(1, "B\n%" LV_PRId32 "%%", level_b);
+      buttonbar->setrgb(1, hsvToRgb(0, 255, level_b * 2 + 5));
+      buttonbar->settext(3, "MA\nmode");
     } else {
-      m5io_showanalogrgb(1, hsvToRgb(0, 0, 0));
-      m5io_showanalogrgb(2, hsvToRgb(0, 0, 0));
-
-      lv_arc_set_value(arc[0], 0);
-      lv_label_set_text_fmt(lv_obj_get_child(arc[0], 0), LV_SYMBOL_CHARGE);
-      lv_arc_set_value(arc[1], 0);
-      lv_label_set_text_fmt(lv_obj_get_child(arc[1], 0), LV_SYMBOL_CHARGE);
+      buttonbar->setrgb(0, hsvToRgb(0, 0, 0));
+      buttonbar->setrgb(1, hsvToRgb(0, 0, 0));
+      buttonbar->setvalue(0,0);
+      buttonbar->setvalue(1,0);
+      buttonbar->settext(0, LV_SYMBOL_CHARGE);
+      buttonbar->settext(1, LV_SYMBOL_CHARGE);
     }
   }
 }
 
 // Pushed the screen on an arc?
 
+#if 0
 void mk312_arc_event_handler(lv_event_t *event) {
   tab_mk312 *mk312_tab =
       static_cast<tab_mk312 *>(lv_event_get_user_data(event));
@@ -233,6 +225,7 @@ void mk312_arc_event_handler(lv_event_t *event) {
     }
   }
 }
+#endif
 
 void mk312_mode_change_cb(lv_event_t *event) {
   tab_mk312 *mk312_tab =
@@ -251,6 +244,9 @@ void tab_mk312::focus_change(boolean focus) {
   ESP_LOGD("mk312", "focus cb %s on %d: %d",
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
+  for (int i = 0; i < 5; i++) {
+      buttonbar->setrgb(i,hsvToRgb(0, 0, 0));
+  }
 }
 
 void tab_mk312::tab_create_status(lv_obj_t *tv2) {
@@ -281,7 +277,7 @@ void tab_mk312::tab_create() {
   tv3 = lv_tabview_add_tab(tv, md->getShortName());
 
   lv_obj_set_style_pad_left(tv3, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_top(tv3, 8, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(tv3, 10, LV_PART_MAIN);
   lv_obj_set_style_pad_right(tv3, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_bottom(tv3, 0, LV_PART_MAIN);
 
@@ -293,33 +289,7 @@ void tab_mk312::tab_create() {
   lv_dropdown_set_options(dd, mk312_main_modes_c);
   lv_obj_add_event_cb(dd, mk312_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
-  lv_obj_t *container = lv_obj_create(tv3);
-  // Set the container to be transparent and have no effect
-  lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
-  lv_obj_set_style_border_opa(container, LV_OPA_TRANSP, 0);
-  lv_obj_set_style_outline_opa(container, LV_OPA_TRANSP, 0);
-  lv_obj_set_style_shadow_opa(container, LV_OPA_TRANSP, 0);
-  lv_obj_set_style_pad_all(container, 0, 0);
-  lv_obj_set_align(container, LV_ALIGN_BOTTOM_LEFT);
-  lv_obj_set_width(container, LV_PCT(100));
-  lv_obj_set_height(container, LV_SIZE_CONTENT);
-
-  for (byte i = 0; i < 5; i++) {
-    arc[i] = lv_arc_create(container);
-    lv_obj_set_size(arc[i], 60, 60);
-    lv_obj_set_align(arc[i], LV_ALIGN_BOTTOM_LEFT);
-    lv_obj_set_x(arc[i], (64* i)); //((320-62*5)/4+62)
-    lv_arc_set_rotation(arc[i], 270);
-    lv_arc_set_bg_angles(arc[i], 0, 360);
-    lv_arc_set_value(arc[i], 0);
-    lv_obj_remove_style(arc[i], NULL, LV_PART_KNOB);
-    lv_obj_remove_flag(arc[i], LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_t *xarclabel = lv_label_create(arc[i]);
-    lv_label_set_text(xarclabel, "");
-    lv_obj_set_style_text_align(xarclabel, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_center(xarclabel);
-    //lv_obj_add_event_cb(arc[i], mk312_arc_event_handler, LV_EVENT_ALL, this);
-  }
+  buttonbar = new ButtonBar(tv3);
 
   tab_create_status(tv3);
 

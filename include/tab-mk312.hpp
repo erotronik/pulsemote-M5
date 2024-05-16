@@ -27,7 +27,6 @@ class tab_mk312 : public Tab {
 
   main_modes main_mode;
   bool need_refresh = false;
-  lv_obj_t *arc[5];
 
  private:
   lv_obj_t *tab_status;
