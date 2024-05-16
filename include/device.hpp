@@ -3,7 +3,10 @@
 #include <functional>
 #include <memory>
 
-enum class DeviceType { splashscreen, device_mk312, device_coyote2, device_wifi };
+enum type_of_change { D_NONE, D_DISCONNECTED, D_CONNECTING, D_CONNECTED };
+
+enum class DeviceType { splashscreen, device_mk312, device_coyote2, device_thrustalot
+ };
 
 class Device {
  public:

@@ -8,7 +8,6 @@
 class device_mk312_NimBLEClientCallback;
 class device_mk312;
 
-enum type_of_change { D_NONE, D_DISCONNECTED, D_CONNECTING, D_CONNECTED };
 typedef std::function<void(type_of_change change, Device* d)> device_callback;
 
 #define mkbuffer_maxlen 100
