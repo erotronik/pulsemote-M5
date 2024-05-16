@@ -134,7 +134,7 @@ void TaskCommsBT(void *pvParameters) {
   device_thrustalot_controller->set_callback(device_change_handler);
 
   scan_comms_init();
-  vTaskDelay(pdMS_TO_TICKS(5000)); // time for serial/debug to be ready
+  vTaskDelay(pdMS_TO_TICKS(2000)); // time for serial/debug to be ready
   while (true) {
     scan_loop();
     vTaskDelay(pdMS_TO_TICKS(1000));  // Scan for 60 seconds, wait for 1 second
