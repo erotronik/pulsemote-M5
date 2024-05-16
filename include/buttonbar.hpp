@@ -39,14 +39,16 @@ class ButtonBar {
     void settext(int button, const char *text) {
         lv_label_set_text(lv_obj_get_child(arc[button], 0), text);
     }
+
     void settextfmt(int button, const char *format, ...) {
         static char buf[256];
         va_list args;
         va_start(args, format);
-        vsnprintf(buf, 255, format, args);
+        vsnprintf(buf, sizeof(buf), format, args);
         va_end(args);
         lv_label_set_text(lv_obj_get_child(arc[button], 0), buf);
     }
+
     void setvalue(int button, int value) {
         lv_arc_set_value(arc[button], value);
     }
