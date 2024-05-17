@@ -206,7 +206,7 @@ void handlehardwarecallbacks() {
                (int)t->old_last_change);
       if (!t->hardware_changed()) {
         // false means the device has gone away, get rid of the tab
-        lv_hide_tab(t->page);
+        if (t->page != nullptr) lv_hide_tab(t->page);
         tabs.remove(i);
         break;  // any other tab changes pick up next time
       }
