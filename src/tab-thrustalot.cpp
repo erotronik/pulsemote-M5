@@ -56,11 +56,9 @@ void tab_thrustalot::switch_change(int sw, boolean value) {
     if (sw == 4 && value && ison == 0) {
       ison = 1;
       md->thrustonetime(knob_speed);
-      //md->thrustallthewayin();
       send_sync_data(SYNC_ON);
     } else if (sw == 4 && value && ison == 1) {
       ison = 0;
-      //md->thrustallthewayout();
       send_sync_data(SYNC_OFF);
     }
   }

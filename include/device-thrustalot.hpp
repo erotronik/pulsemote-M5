@@ -34,6 +34,7 @@ class device_thrustalot : public Device {
   void thrustallthewayin();
   void thrustallthewayout();
   void thrustonetime(int speed);
+  void thrustsendspeed(int speed);
   int thrustcb_pos;
   int thrustcb_count;
   int thrustcb_left;

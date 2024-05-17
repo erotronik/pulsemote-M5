@@ -91,6 +91,14 @@ void device_thrustalot::ble_thrustalot_send(String newValue) {
     ESP_LOGE("Thrustalot","cant send not connected");
 }
 
+void device_thrustalot::thrustsendspeed(int speed) {
+  // have to scale it, we're passed pc from 0 (5 actually) to 100 map it to 45 to 255
+  char speeds[20];
+  sprintf(speeds, "!S%03dX", map(speed, 0, 100, 45, 255));
+  ble_thrustalot_send(speeds);
+}
+
+
 void device_thrustalot::thrustallthewayin(void) {
   ble_thrustalot_send("!B711X"); // to maximum position!
 }
