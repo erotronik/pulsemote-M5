@@ -5,7 +5,7 @@
 
 enum type_of_change { D_NONE, D_DISCONNECTED, D_CONNECTING, D_CONNECTED };
 
-enum class DeviceType { splashscreen, device_mk312, device_coyote2, device_thrustalot
+enum class DeviceType { splashscreen, device_mk312, device_coyote2, device_thrustalot, device_bubblebottle
  };
 
 class Device {
