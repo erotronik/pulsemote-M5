@@ -96,17 +96,16 @@ int tab_thrustalot::tempo_to_ms(int tempo) {
 
 void tab_thrustalot::loop(boolean activetab) {
   device_thrustalot *md = static_cast<device_thrustalot *>(device);
-  static int thrustcb_pos_last = -1;
+  int thruststate;
 
   if (tempotimer !=0 && millis() >= tempotimer) {
     tempotimer = 0;
     if (ison)
       md->thrustonetime(knob_speed);
   }
-  if (md->thrustcb_pos != thrustcb_pos_last) {
-    thrustcb_pos_last = md->thrustcb_pos;
-    ESP_LOGI("thrust","Position is now %d", thrustcb_pos_last);
-    if (ison && thrustcb_pos_last == 2) { // it's out, send it in again!
+  if (xQueueReceive(md->events,&thruststate, 0)) {
+    ESP_LOGI("thrust","Position is now %d", thruststate);
+    if (ison && thruststate == 2) { // it's out, send it in again!
       if (knob_tempo == 0) 
         md->thrustonetime(knob_speed);
       else 
@@ -289,6 +288,8 @@ boolean tab_thrustalot::hardware_changed(void) {
     tab_create();
     send_sync_data(SYNC_START);
     send_sync_data(SYNC_OFF);
+    device_thrustalot *md = static_cast<device_thrustalot *>(device);
+    xQueueReset(md->events);
     ison = false;
     printf_log("Connected %s\n", device->getShortName());
   } else if (last_change == D_DISCONNECTED) {

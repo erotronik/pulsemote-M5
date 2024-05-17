@@ -74,7 +74,9 @@ bool getCharacteristic(NimBLERemoteService* service,
                        NimBLERemoteCharacteristic*& c, NimBLEUUID uuid,
                        notify_callback notifyCallback);
 
-device_thrustalot::device_thrustalot() {}
+device_thrustalot::device_thrustalot() {
+  events = xQueueCreate(10,sizeof(int));
+}
 
 device_thrustalot::~device_thrustalot() {
   // bleClient->deleteServices(); // deletes all services, which should delete
@@ -123,8 +125,10 @@ void device_thrustalot::ble_mk_callback(
       bug[j + 1] = 0;
       if (bug[0] == 'I') {
         thrustcb_pos = 2;
+        xQueueSend(events, &thrustcb_pos, 0);
       } else if (bug[0] == 'A') {
         thrustcb_pos = 1;
+        xQueueSend(events, &thrustcb_pos, 1);
         String x = String(bug + 1);
         Serial.println(x.toInt());
         thrustcb_count = x.toInt();

@@ -39,6 +39,8 @@ class device_thrustalot : public Device {
   int thrustcb_count;
   int thrustcb_left;
 
+  QueueHandle_t events;
+
   const char *getpostext(void) {
     if (thrustcb_pos ==1) return "In";
     if (thrustcb_pos ==2) return "Out";
