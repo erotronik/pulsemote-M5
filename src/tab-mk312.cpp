@@ -295,6 +295,7 @@ boolean tab_mk312::hardware_changed(void) {
     printf_log("Connected %s\n", device->getShortName());
   } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());
+    send_sync_data(SYNC_BYE);
     return false;
   }
   return true;

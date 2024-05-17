@@ -285,6 +285,7 @@ boolean tab_coyote::hardware_changed(void) {
     send_sync_data(SYNC_ON);
   } else if (cdlast == C_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());
+    send_sync_data(SYNC_BYE);
     return false;
   } //else if (cdlast == C_POWER) {
   //  printf_log("Power Level Changed %s\n", device->getShortName());
