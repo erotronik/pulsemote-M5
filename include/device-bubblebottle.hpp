@@ -26,6 +26,9 @@ class device_bubblebottle : public Device {
   DeviceType getType() const override { return DeviceType::device_bubblebottle; }
   const char* getShortName() const override { return "Bubbler"; }
 
+  int bottle_state;
+  bool bottle_changed_state = false;
+
  private:
   bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic,
@@ -40,10 +43,5 @@ class device_bubblebottle : public Device {
   NimBLERemoteService* bubblebottleService;
   NimBLERemoteCharacteristic* uuid_rx_Characteristic;
   NimBLERemoteCharacteristic* uuid_tx_Characteristic;
-
-  byte mkbuffer[mkbuffer_maxlen];
-  byte mkwptr = 0;
-  int bottle_state;
-  bool bottle_changed_state = false;
 
 };

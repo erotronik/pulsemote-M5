@@ -13,7 +13,6 @@ NimBLEUUID BUBBLEBOTTLE_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
 bool device_bubblebottle::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
    if (advertisedDevice->isAdvertisingService(BUBBLEBOTTLE_SERVICE_BLEUUID)) {
     uint8_t *md = (uint8_t *)advertisedDevice->getManufacturerData().data();
-    if (md) ESP_LOGD("bubblebottle","%x - %x",md[0],md[1]);
     if (md && md[0] == 0xf1 && md[1] == 0xf1) 
       return true;
    }
@@ -153,6 +152,8 @@ bool device_bubblebottle::connect_to_device(NimBLEAdvertisedDevice* device) {
     bleClient->disconnect();
     return false;
   }
+  // don't really need to transmit to it, so don't bother with the tx characteristic
+  #if 0
   res &= getCharacteristic(
       bubblebottleService, uuid_tx_Characteristic, BUBBLEBOTTLE_UUID_TX, nullptr);
 
@@ -161,6 +162,7 @@ bool device_bubblebottle::connect_to_device(NimBLEAdvertisedDevice* device) {
     bleClient->disconnect();
     return false;
   }
+  #endif
 
   ESP_LOGI(getShortName(), "Found services and characteristics");
   is_connected = true;

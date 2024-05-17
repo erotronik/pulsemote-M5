@@ -251,7 +251,7 @@ void tab_thrustalot::tab_create_status(lv_obj_t *tv2) {
 
 void tab_thrustalot::tab_create() {
   lv_obj_t *tv3;
-  device_mk312 *md = static_cast<device_mk312 *>(device);
+  device_thrustalot *md = static_cast<device_thrustalot *>(device);
 
   tv3 = lv_tabview_add_tab(tv, md->getShortName());
 

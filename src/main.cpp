@@ -16,6 +16,7 @@
 #include "tab-mk312.hpp"
 #include "tab-thrustalot.hpp"
 #include "tab-splashscreen.hpp"
+#include "tab-bubblebottle.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
 
@@ -142,6 +143,13 @@ void device_change_handler(type_of_change t, Device *d) {
       tabs.add(ta);
     } else if (type == DeviceType::device_thrustalot) {
       Tab *ta = new tab_thrustalot();
+      ta->type = type;
+      ta->device = d;
+      ta->last_change = t;
+      ta->setup();
+      tabs.add(ta);
+    } else if (type == DeviceType::device_bubblebottle) {
+      Tab *ta = new tab_bubblebottle();
       ta->type = type;
       ta->device = d;
       ta->last_change = t;

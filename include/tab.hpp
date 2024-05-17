@@ -4,7 +4,6 @@
 #include <lvgl.h>
 
 #include "device-coyote2.hpp"
-#include "device-mk312.hpp"
 #include "device.hpp"
 #include "tab-object-buttonbar.hpp"
 
