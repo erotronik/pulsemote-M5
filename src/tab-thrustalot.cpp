@@ -62,7 +62,7 @@ void tab_thrustalot::switch_change(int sw, boolean value) {
       send_sync_data(SYNC_OFF);
     }
   }
-  if (sw == 2) {
+  if (sw == 2 && !ison && main_mode == MODE_MANUAL) {
     md->thrustonetime(knob_speed);
   }
 }
@@ -180,7 +180,11 @@ void tab_thrustalot::loop(boolean activetab) {
       buttonbar->setvalue(2,ison? 100:0);
     } else
       buttonbar->setvalue(2,0);
-    buttonbar->settext(3,ison?"":"One\nThrust");
+    if (!ison && main_mode == MODE_MANUAL) {
+      buttonbar->settext(3,"One\nThrust");
+    } else {
+      buttonbar->settext(3,"");
+    }
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       buttonbar->settext(4, LV_SYMBOL_BELL);
