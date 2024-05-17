@@ -34,7 +34,6 @@ class tab_mk312 : public Tab {
   lv_obj_t *tab_status;
   void tab_create(void);
   void tab_create_status(lv_obj_t *tv2);
-  void send_sync_data(sync_data syncstatus);
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;

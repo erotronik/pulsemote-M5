@@ -88,15 +88,6 @@ void tab_mk312::switch_change(int sw, boolean value) {
   }
 }
 
-void tab_mk312::send_sync_data(sync_data syncstatus) {
-  for (int i=0; i<tabs.size(); i++) {
-    Tab *st = tabs.get(i);
-    if (st != this) {
-      st->gotsyncdata(this,syncstatus);
-    }
-  }
-}
-
 // another device can push data to us when they connect, disconnect, turn on, turn off
 
 void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {

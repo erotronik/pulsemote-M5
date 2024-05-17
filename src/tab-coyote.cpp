@@ -23,16 +23,6 @@ tab_coyote::tab_coyote() {
 }
 tab_coyote::~tab_coyote() {}
 
-void tab_coyote::send_sync_data(sync_data syncstatus) {
-  for (int i=0; i<tabs.size(); i++) {
-    Tab *st = tabs.get(i);
-    if (st != static_cast<Tab *>(this)) {
-      st->gotsyncdata(this,syncstatus);
-    }
-  }
-}
-
-
 void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
   ESP_LOGD("coyote", "got sync data %d from %s\n", syncstatus, t->device->getShortName());
   if (main_mode == MODE_SYNC) {

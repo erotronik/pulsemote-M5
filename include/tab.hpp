@@ -12,10 +12,13 @@
 
 extern lv_obj_t *tv;
 
+class Tab;
+extern LinkedList<Tab *> tabs;
+
 class Tab {
  public:
   enum sync_data {
-    SYNC_START =0, SYNC_ON, SYNC_OFF
+    SYNC_START =0, SYNC_ON, SYNC_OFF, SYNC_BYE
   };
 
   virtual void switch_change(int sw, boolean state) {};
@@ -34,6 +37,15 @@ class Tab {
   type_of_change old_last_change;
   type_of_change last_change;
   Device *device;
+
+  virtual void send_sync_data(sync_data syncstatus) {
+    for (int i=0; i<tabs.size(); i++) {
+      Tab *st = tabs.get(i);
+      if (st != this) {
+        st->gotsyncdata(this,syncstatus);
+      }
+    }
+  };
+
 };
 
-extern LinkedList<Tab *> tabs;

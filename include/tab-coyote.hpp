@@ -34,7 +34,6 @@ class tab_coyote: public Tab {
         void coyote_tab_create(void);
         lv_obj_t *tab_status;
         void tab_create_status(lv_obj_t *tv2);
-        void send_sync_data(sync_data syncstatus);
         bool ison;
         coyote_mode mode_a;
         coyote_mode mode_b;
