@@ -76,7 +76,9 @@ bool getCharacteristic(NimBLERemoteService* service,
                        NimBLERemoteCharacteristic*& c, NimBLEUUID uuid,
                        notify_callback notifyCallback);
 
-device_bubblebottle::device_bubblebottle() {}
+device_bubblebottle::device_bubblebottle() {
+  events = xQueueCreate(10,sizeof(int));
+}
 
 device_bubblebottle::~device_bubblebottle() {
   // bleClient->deleteServices(); // deletes all services, which should delete
@@ -107,7 +109,7 @@ void device_bubblebottle::ble_mk_callback(
           bottle_state = 1;
         else if (bug[1] == 'R') 
           bottle_state = 2;
-        bottle_changed_state = true;
+        xQueueSend(events, &bottle_state, 0);
       } 
       j = 0;
     } else

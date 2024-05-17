@@ -17,6 +17,8 @@ class device_bubblebottle : public Device {
   device_bubblebottle();
   ~device_bubblebottle();
 
+  QueueHandle_t events;
+
   boolean get_isconnected();
   static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
   bool connect_to_device(NimBLEAdvertisedDevice* device);
@@ -26,10 +28,8 @@ class device_bubblebottle : public Device {
   DeviceType getType() const override { return DeviceType::device_bubblebottle; }
   const char* getShortName() const override { return "Bubbler"; }
 
-  int bottle_state;
-  bool bottle_changed_state = false;
-
  private:
+  int bottle_state;
   bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic,
                        uint8_t* pData, size_t length, bool isNotify);

@@ -15,10 +15,10 @@ class tab_bubblebottle : public Tab {
 
   void loop(boolean activetab) override {
     device_bubblebottle *md = static_cast<device_bubblebottle *>(device);
-    if (md && md->bottle_changed_state) {
-      printf_log("Bubbler breath %s\n",md->bottle_state==1?"in":"release");
-      send_sync_data(md->bottle_state==1?SYNC_ON:SYNC_OFF);
-      md->bottle_changed_state = false;
+    int state;
+    if (xQueueReceive(md->events,&state, 0)) {
+      printf_log("Bubbler breath %s\n",state==1?"in":"release");
+      send_sync_data(state==1?SYNC_ON:SYNC_OFF);
     }
   };
   
@@ -27,8 +27,10 @@ class tab_bubblebottle : public Tab {
     if (last_change == D_CONNECTING) {
       printf_log("Connecting %s\n", device->getShortName());
     } else if (last_change == D_CONNECTED) {
+      device_bubblebottle *md = static_cast<device_bubblebottle *>(device);
       send_sync_data(SYNC_START);
       send_sync_data(SYNC_OFF);
+      xQueueReset(md->events);
       //ison = false;
       printf_log("Connected %s\n", device->getShortName());
     } else if (last_change == D_DISCONNECTED) {
