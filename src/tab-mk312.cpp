@@ -5,10 +5,8 @@
 #include "device-mk312.hpp"
 #include "hsv.h"
 #include "tab-mk312.hpp"
-#include "tab-object-timer.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
-#include "buttonbar.hpp"
 
 const char *mk312_main_modes_c =
     "Manual\nTimer\nRandom\nSync";
@@ -210,25 +208,6 @@ void tab_mk312::loop(boolean activetab) {
   }
 }
 
-// Pushed the screen on an arc?
-
-#if 0
-void mk312_arc_event_handler(lv_event_t *event) {
-  tab_mk312 *mk312_tab =
-      static_cast<tab_mk312 *>(lv_event_get_user_data(event));
-  lv_event_code_t code = lv_event_get_code(event);
-  if (code == LV_EVENT_CLICKED) {
-  ESP_LOGD("mk312","touched an arc");
-    for (int i=0;i<5;i++) {
-      if ((lv_obj_t *)lv_event_get_target(event) == mk312_tab->arc[i]) {
-          ESP_LOGD("mk312","touched arc %d",i);
-          mk312_tab->switch_change(i, true);
-      }
-    }
-  }
-}
-#endif
-
 void mk312_mode_change_cb(lv_event_t *event) {
   tab_mk312 *mk312_tab =
       static_cast<tab_mk312 *>(lv_event_get_user_data(event));
@@ -292,7 +271,7 @@ void tab_mk312::tab_create() {
   lv_dropdown_set_options(dd, mk312_main_modes_c);
   lv_obj_add_event_cb(dd, mk312_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
-  buttonbar = new ButtonBar(tv3);
+  buttonbar = new tab_object_buttonbar(tv3);
 
   tab_create_status(tv3);
 

@@ -7,7 +7,6 @@
 #include "tab-thrustalot.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
-#include "buttonbar.hpp"
 
 const char *thrustalot_main_modes_c =
     "Manual\nTimer\nRandom\nSync";
@@ -271,7 +270,7 @@ void tab_thrustalot::tab_create() {
   lv_dropdown_set_options(dd, thrustalot_main_modes_c);
   lv_obj_add_event_cb(dd, thrustalot_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
-  buttonbar = new ButtonBar(tv3);
+  buttonbar = new tab_object_buttonbar(tv3);
 
   tab_create_status(tv3);
 

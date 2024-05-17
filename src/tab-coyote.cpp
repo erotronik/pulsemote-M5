@@ -259,7 +259,7 @@ void tab_coyote::coyote_tab_create() {
   lv_dropdown_set_options(dd, coyote_main_modes_c);
   lv_obj_add_event_cb(dd, coyote_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
   
-  buttonbar = new ButtonBar(tv1);
+  buttonbar = new tab_object_buttonbar(tv1);
 
   page = tv1;
   int tabid = lv_get_tabview_idx_from_page(tv, tv1);

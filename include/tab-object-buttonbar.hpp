@@ -5,9 +5,28 @@
 #include "hsv.h"
 void m5io_showanalogrgb(byte sw, const CRGB& rgb);
 
-class ButtonBar {
+// Pushed the screen on an arc?
+
+#if 0
+void mk312_arc_event_handler(lv_event_t *event) {
+  tab_mk312 *mk312_tab =
+      static_cast<tab_mk312 *>(lv_event_get_user_data(event));
+  lv_event_code_t code = lv_event_get_code(event);
+  if (code == LV_EVENT_CLICKED) {
+  ESP_LOGD("mk312","touched an arc");
+    for (int i=0;i<5;i++) {
+      if ((lv_obj_t *)lv_event_get_target(event) == mk312_tab->arc[i]) {
+          ESP_LOGD("mk312","touched arc %d",i);
+          mk312_tab->switch_change(i, true);
+      }
+    }
+  }
+}
+#endif
+
+class tab_object_buttonbar {
   public:
-    ButtonBar(lv_obj_t *parent) {
+    tab_object_buttonbar(lv_obj_t *parent) {
         container = lv_obj_create(parent);
         // Set the container to be transparent and have no effect
         lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
