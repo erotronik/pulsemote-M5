@@ -35,7 +35,7 @@ void tab_thrustalot::encoder_change(int sw, int change) {
     timer->rotary_change(change);
   }
   if (sw == 1) {
-    knob_speed = min(99,max(0,knob_speed+change));
+    knob_speed = min(99,max(1,knob_speed+change));
   }
   if (sw == 0) {
     knob_tempo = min(99,max(0,knob_tempo+change));
@@ -210,7 +210,6 @@ void thrustalot_mode_change_cb(lv_event_t *event) {
   thrustalot_tab->rand_timer->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_RANDOM));
   thrustalot_tab->timer->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_TIMER));
   thrustalot_tab->sync->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_SYNC));
-
 }
 
 void tab_thrustalot::focus_change(boolean focus) {
