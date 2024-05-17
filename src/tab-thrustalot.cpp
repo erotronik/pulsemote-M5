@@ -180,7 +180,7 @@ void tab_thrustalot::loop(boolean activetab) {
       buttonbar->setvalue(2,ison? 100:0);
     } else
       buttonbar->setvalue(2,0);
-    buttonbar->settext(3,"One\nThrust");
+    buttonbar->settext(3,ison?"":"One\nThrust");
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       buttonbar->settext(4, LV_SYMBOL_BELL);
