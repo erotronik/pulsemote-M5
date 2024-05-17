@@ -96,30 +96,38 @@ void scan_loop() {
 
     if (scanthread_found_something) {
       scanthread_found_something = false;
+
       if (coyote_ble_device) {
-        coyote_device_controller->get().connect_to_device(coyote_ble_device);
+        device_coyote2 *connected_device_coyote2 = new device_coyote2();
+        connected_device_coyote2->get().set_callback(coyote_change_handler);
+        boolean connected = connected_device_coyote2->get().connect_to_device(coyote_ble_device);
         delete coyote_ble_device;
         coyote_ble_device = nullptr;
+        if (!connected) delete connected_device_coyote2;
+
       } else if (device_mk312_device) {
-        boolean connected =
-            device_mk312_controller->connect_to_device(device_mk312_device);
+        device_mk312 *connected_device_mk312 = new device_mk312();
+        connected_device_mk312->set_callback(device_change_handler);
+        boolean connected = connected_device_mk312->connect_to_device(device_mk312_device);
         delete device_mk312_device;
         device_mk312_device = nullptr;
-        if (!connected) {
-          delete device_mk312_controller;
-          device_mk312_controller = new device_mk312();
-          device_mk312_controller->set_callback(device_change_handler);
-        }
+        if (!connected) delete connected_device_mk312;
+
       } else if (device_thrustalot_device) {
-        boolean connected =
-            device_thrustalot_controller->connect_to_device(device_thrustalot_device);
+        device_thrustalot *connected_device_thrustalot = new device_thrustalot();
+        connected_device_thrustalot->set_callback(device_change_handler);
+        boolean connected = connected_device_thrustalot->connect_to_device(device_thrustalot_device);
         delete device_thrustalot_device;
         device_thrustalot_device = nullptr;
+        if (!connected) delete connected_device_thrustalot;
+
       } else if (device_bubblebottle_device) {
-        boolean connected =
-            device_bubblebottle_controller->connect_to_device(device_bubblebottle_device);
+        device_bubblebottle *connected_device_bubblebottle = new device_bubblebottle();
+        connected_device_bubblebottle->set_callback(device_change_handler);
+        boolean connected = connected_device_bubblebottle->connect_to_device(device_bubblebottle_device);
         delete device_bubblebottle_device;
         device_bubblebottle_device = nullptr;
+        if (!connected) delete connected_device_bubblebottle;
       }
       repeatscan = true;
       vTaskDelay(pdMS_TO_TICKS(100));
@@ -138,15 +146,12 @@ void scan_loop() {
 // pushing a manual start scan button)
 
 void TaskCommsBT(void *pvParameters) {
+
+  // An instance of each device is used for scanning
   coyote_device_controller = new device_coyote2();
   device_mk312_controller = new device_mk312();
   device_thrustalot_controller = new device_thrustalot();
   device_bubblebottle_controller = new device_bubblebottle();
-
-  coyote_device_controller->get().set_callback(coyote_change_handler);
-  device_mk312_controller->set_callback(device_change_handler);
-  device_thrustalot_controller->set_callback(device_change_handler);
-  device_bubblebottle_controller->set_callback(device_change_handler);
 
   scan_comms_init();
   vTaskDelay(pdMS_TO_TICKS(2000)); // time for serial/debug to be ready
