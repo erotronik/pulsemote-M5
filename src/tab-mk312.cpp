@@ -19,6 +19,7 @@ tab_mk312::tab_mk312() {
   main_mode = MODE_MANUAL;
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
+  sync = new tab_object_sync();
   page = nullptr;
   old_last_change = last_change = D_NONE;
   device = nullptr;
@@ -103,11 +104,12 @@ void tab_mk312::send_sync_data(sync_data syncstatus) {
 void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
   ESP_LOGD("mk312", "got sync data %d from %s\n", syncstatus, t->device->getShortName());
   if (main_mode == MODE_SYNC) {
+    bool isinverted = sync->isinverted();
     device_mk312 *md = static_cast<device_mk312 *>(device);
-    if (syncstatus == SYNC_ON) {
+    if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
       md->etbox_on(0);
-    } else if (syncstatus == SYNC_OFF) {
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
       ison = false;
       md->etbox_off();
     }
@@ -238,6 +240,7 @@ void mk312_mode_change_cb(lv_event_t *event) {
   mk312_tab->need_refresh = true;
   mk312_tab->rand_timer->show((mk312_tab->main_mode == tab_mk312::MODE_RANDOM));
   mk312_tab->timer->show((mk312_tab->main_mode == tab_mk312::MODE_TIMER));
+  mk312_tab->sync->show((mk312_tab->main_mode == tab_mk312::MODE_SYNC));
 }
 
 void tab_mk312::focus_change(boolean focus) {
@@ -300,6 +303,10 @@ void tab_mk312::tab_create() {
   lt = timer->view(tv3);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   timer->show(false);
+
+  lt = sync->view(tv3);
+  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  sync->show(false);
 
   page = tv3;
 

@@ -16,6 +16,7 @@ tab_coyote::tab_coyote() {
     main_mode = MODE_MANUAL;
     timer = new tab_object_timer(false);
     rand_timer = new tab_object_timer(true);
+    sync = new tab_object_sync();
     device = nullptr;
     bool need_refresh =false;
     ison = true;
@@ -36,12 +37,13 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
   ESP_LOGD("coyote", "got sync data %d from %s\n", syncstatus, t->device->getShortName());
   if (main_mode == MODE_SYNC) {
     device_coyote2 *md = static_cast<device_coyote2*>(device);
-    if (syncstatus == SYNC_ON) {
+    bool isinverted = sync->isinverted();
+    if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
       ison = 1;
       md->get().chan_a().put_setmode(mode_a);
       md->get().chan_b().put_setmode(mode_b); 
-    } else if (syncstatus == SYNC_OFF) {
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
       ison = false;
       md->get().chan_a().put_setmode(M_NONE);
       md->get().chan_b().put_setmode(M_NONE); 
@@ -216,6 +218,7 @@ void coyote_mode_change_cb(lv_event_t *event) {
   ctab->need_refresh = true;
   ctab->rand_timer->show((ctab->main_mode == tab_coyote::MODE_RANDOM));
   ctab->timer->show((ctab->main_mode == tab_coyote::MODE_TIMER));
+  ctab->sync->show((ctab->main_mode == tab_coyote::MODE_SYNC));
 }
 
 void tab_coyote::tab_create_status(lv_obj_t *tv2) {
@@ -269,6 +272,10 @@ void tab_coyote::coyote_tab_create() {
   lt = timer->view(tv1);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   timer->show(false);
+
+  lt = sync->view(tv1);
+  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  sync->show(false);
 
   lv_tabview_set_act(tv,tabid, LV_ANIM_OFF);
 }

@@ -5,7 +5,6 @@
 #include "device-thrustalot.hpp"
 #include "hsv.h"
 #include "tab-thrustalot.hpp"
-#include "tab-object-timer.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
 #include "buttonbar.hpp"
@@ -19,6 +18,7 @@ tab_thrustalot::tab_thrustalot() {
   main_mode = MODE_MANUAL;
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
+  sync = new tab_object_sync();
   page = nullptr;
   old_last_change = last_change = D_NONE;
   device = nullptr;
@@ -85,10 +85,12 @@ void tab_thrustalot::gotsyncdata(Tab *t, sync_data syncstatus) {
   ESP_LOGD("thrustalot", "got sync data %d from %s\n", syncstatus, t->device->getShortName());
   if (main_mode == MODE_SYNC) {
     device_thrustalot *md = static_cast<device_thrustalot *>(device);
-    if (syncstatus == SYNC_ON) {
+    bool isinverted = sync->isinverted();
+
+    if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
       md->thrustonetime(knob_speed);
-    } else if (syncstatus == SYNC_OFF) {
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
       ison = false;
     }
     need_refresh = true;
@@ -216,6 +218,8 @@ void thrustalot_mode_change_cb(lv_event_t *event) {
   thrustalot_tab->need_refresh = true;
   thrustalot_tab->rand_timer->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_RANDOM));
   thrustalot_tab->timer->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_TIMER));
+  thrustalot_tab->sync->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_SYNC));
+
 }
 
 void tab_thrustalot::focus_change(boolean focus) {
@@ -278,6 +282,10 @@ void tab_thrustalot::tab_create() {
   lt = timer->view(tv3);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   timer->show(false);
+
+  lt = sync->view(tv3);
+  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  sync->show(false);
 
   page = tv3;
 

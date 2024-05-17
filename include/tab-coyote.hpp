@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tab-object-timer.hpp"
+#include "tab-object-sync.hpp"
 #define LV_CONF_INCLUDE_SIMPLE
 #include <lvgl.h>
 #include "tab.hpp"
@@ -17,6 +18,7 @@ class tab_coyote: public Tab {
         void focus_change(boolean focus) override;
         tab_object_timer *rand_timer;
         tab_object_timer *timer;
+        tab_object_sync *sync;
         void gotsyncdata(Tab *t, sync_data status) override;
 
         enum main_modes {
