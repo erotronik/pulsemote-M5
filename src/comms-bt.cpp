@@ -20,45 +20,32 @@ NimBLEServer *pServer = nullptr;
 NimBLECharacteristic *pTxCharacteristic;
 NimBLEScan *pBLEScan;
 boolean scanthread_is_scanning = false;
-boolean scanthread_found_something = false;
 
 int scanTime = 60;  // Duration is in seconds in NimBLE
 
-NimBLEAdvertisedDevice *found_device = nullptr;
-DeviceType found_device_type;
+NimBLEAdvertisedDevice *found_bledevice = nullptr;
+Device *found_device;
 
 class PulsemoteAdvertisedDeviceCallbacks
     : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-    ESP_LOGI("comms-bt", "Advertised Device: %s\n",
-             advertisedDevice->toString().c_str());
+    ESP_LOGI("comms-bt", "Advertised Device: %s\n", advertisedDevice->toString().c_str());
+    // can't connect while scanning is going on - it locks up everything.
+    found_device = nullptr;
     if (coyote_device_controller->is_device(advertisedDevice)) {
-      ESP_LOGI(coyote_device_controller->getShortName(), "found device");
-      // can't connect while scanning is going on - it locks up everything.
-      scanthread_found_something = true;
-      found_device = new NimBLEAdvertisedDevice(*advertisedDevice);
-      found_device_type = DeviceType::device_coyote2;
-      NimBLEDevice::getScan()->stop();
+      found_device = new device_coyote2();
     }
     if (device_mk312_controller->is_device(advertisedDevice)) {
-      ESP_LOGI(device_mk312_controller->getShortName(), "found device");
-      scanthread_found_something = true;
-      found_device = new NimBLEAdvertisedDevice(*advertisedDevice);
-      found_device_type = DeviceType::device_mk312;
-      NimBLEDevice::getScan()->stop();
+      found_device = new device_mk312();
     }
     if (device_thrustalot_controller->is_device(advertisedDevice)) {
-      ESP_LOGI(device_thrustalot_controller->getShortName(), "found device");
-      scanthread_found_something = true;
-      found_device = new NimBLEAdvertisedDevice(*advertisedDevice);
-      found_device_type = DeviceType::device_thrustalot;
-      NimBLEDevice::getScan()->stop();
+      found_device = new device_thrustalot();
     }
     if (device_bubblebottle_controller->is_device(advertisedDevice)) {
-      ESP_LOGI(device_bubblebottle_controller->getShortName(), "found device");
-      scanthread_found_something = true;
-      found_device = new NimBLEAdvertisedDevice(*advertisedDevice);
-      found_device_type = DeviceType::device_bubblebottle;
+      found_device = new device_bubblebottle();
+    }
+    if (found_device) {
+      found_bledevice = new NimBLEAdvertisedDevice(*advertisedDevice);
       NimBLEDevice::getScan()->stop();
     }
   }
@@ -90,37 +77,13 @@ void scan_loop() {
     pBLEScan->clearResults();  // delete results fromBLEScan buffer to release
                                // memory
 
-    if (scanthread_found_something) {
-      scanthread_found_something = false;
-
-      if (found_device) {
-        if (found_device_type == DeviceType::device_coyote2) {
-          device_coyote2 *connected_device_coyote2 = new device_coyote2();
-          connected_device_coyote2->set_callback(device_change_handler);
-          boolean connected = connected_device_coyote2->connect_to_device(found_device);
-          if (!connected) delete connected_device_coyote2;
-
-        } else if (found_device_type == DeviceType::device_mk312) {
-          device_mk312 *connected_device_mk312 = new device_mk312();
-          connected_device_mk312->set_callback(device_change_handler);
-          boolean connected = connected_device_mk312->connect_to_device(found_device);
-          if (!connected) delete connected_device_mk312;
-
-        } else if (found_device_type == DeviceType::device_thrustalot) {
-          device_thrustalot *connected_device_thrustalot = new device_thrustalot();
-          connected_device_thrustalot->set_callback(device_change_handler);
-          boolean connected = connected_device_thrustalot->connect_to_device(found_device);
-          if (!connected) delete connected_device_thrustalot;
-
-        } else if (found_device_type == DeviceType::device_bubblebottle) {
-          device_bubblebottle *connected_device_bubblebottle = new device_bubblebottle();
-          connected_device_bubblebottle->set_callback(device_change_handler);
-          boolean connected = connected_device_bubblebottle->connect_to_device(found_device);
-          if (!connected) delete connected_device_bubblebottle;
-        }
-        delete found_device;
-        found_device = nullptr;
-      }
+    if (found_bledevice && found_device != nullptr) {
+      ESP_LOGI(found_device->getShortName(), "found device");
+      found_device->set_callback(device_change_handler);
+      boolean connected = found_device->connect_to_device(found_bledevice);
+      if (!connected) delete found_device;    
+      delete found_bledevice;
+      found_bledevice = nullptr;
       repeatscan = true;
       vTaskDelay(pdMS_TO_TICKS(100));
     }
