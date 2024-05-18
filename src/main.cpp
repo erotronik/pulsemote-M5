@@ -126,29 +126,17 @@ void device_change_handler(type_of_change t, Device *d) {
   if (newdevice == -1 && t != D_DISCONNECTED) {
     ESP_LOGD("main", "a new device has appeared");
     DeviceType type = d->getType();
+    Tab *ta = nullptr;
     if (type == DeviceType::device_mk312) {  // bootstrap
-      Tab *ta = new tab_mk312();
-      ta->type = type;
-      ta->device = d;
-      ta->last_change = t;
-      ta->setup();
-      tabs.add(ta);
+      ta = new tab_mk312();
     } else if (type == DeviceType::device_coyote2) {
-      Tab *ta = new tab_coyote();
-      ta->type = type;
-      ta->device = d;
-      ta->last_change = t;
-      ta->setup();
-      tabs.add(ta);
+      ta = new tab_coyote();
     } else if (type == DeviceType::device_thrustalot) {
-      Tab *ta = new tab_thrustalot();
-      ta->type = type;
-      ta->device = d;
-      ta->last_change = t;
-      ta->setup();
-      tabs.add(ta);
+      ta = new tab_thrustalot();
     } else if (type == DeviceType::device_bubblebottle) {
-      Tab *ta = new tab_bubblebottle();
+      ta = new tab_bubblebottle();
+    }
+    if (ta != nullptr) {
       ta->type = type;
       ta->device = d;
       ta->last_change = t;

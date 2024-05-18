@@ -36,7 +36,7 @@ class device_coyote2 : public Device {
     if (t == C_CONNECTING) ct = D_CONNECTING;
     if (t == C_DISCONNECTED) ct = D_DISCONNECTED;
     if (t == C_CONNECTED) ct = D_CONNECTED;
-    // we also get other change events, but don't need to do anything specia; with them
+    // we also get other change events, but don't need to do anything special with them
     device_change_handler(ct, this);
   };
 
