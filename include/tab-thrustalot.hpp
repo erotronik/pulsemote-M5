@@ -27,11 +27,14 @@ class tab_thrustalot : public Tab {
     MODE_SYNC
   };
 
+  int getcyclecount(void) override { return thrustcount; };
+
   main_modes main_mode;
   bool need_refresh = false;
 
  private:
   lv_obj_t *tab_status;
+  int thrustcount = 0;
   void tab_create(void);
   void tab_create_status(lv_obj_t *tv2);
   bool need_knob_refresh = false;

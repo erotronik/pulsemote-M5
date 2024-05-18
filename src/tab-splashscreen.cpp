@@ -24,7 +24,7 @@ void dump_connected_devices(void) {
     } else {
         printf_log("tab %d: ", i);
     }
-    printf_log("count=%d\n",t->cyclecount);
+    printf_log("count=%d\n",t->getcyclecount());
   }
 }
 

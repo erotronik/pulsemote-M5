@@ -103,7 +103,8 @@ void tab_thrustalot::loop(boolean activetab) {
     if (ison)
       md->thrustonetime(knob_speed);
   }
-  if (xQueueReceive(md->events,&thruststate, 0)) {
+  if (md && xQueueReceive(md->events,&thruststate, 0)) {
+    if (thruststate == 2) thrustcount++;
     ESP_LOGI("thrust","Position is now %d", thruststate);
     if (ison && thruststate == 2) { // it's out, send it in again!
       if (knob_tempo == 0) 

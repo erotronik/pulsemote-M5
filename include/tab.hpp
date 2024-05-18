@@ -28,6 +28,7 @@ class Tab {
   virtual void setup(void) {};
   virtual void gotsyncdata(Tab *t, sync_data syncdata) {};
   virtual boolean hardware_changed(void) { return true; };
+  virtual int getcyclecount(void) { return cyclecount; };
 
   tab_object_buttonbar *buttonbar;
 
@@ -37,7 +38,6 @@ class Tab {
   type_of_change old_last_change;
   type_of_change last_change;
   Device *device;
-  int cyclecount = 0;
 
   virtual void send_sync_data(sync_data syncstatus) {
     if (syncstatus == SYNC_OFF) cyclecount++;
@@ -48,6 +48,8 @@ class Tab {
       }
     }
   };
+  private:
+    int cyclecount = 0;
 
 };
 
