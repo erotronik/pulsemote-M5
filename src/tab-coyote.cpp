@@ -273,24 +273,19 @@ void tab_coyote::coyote_tab_create() {
 boolean tab_coyote::hardware_changed(void) {
   need_refresh = true;
   device_coyote2* cd = static_cast<device_coyote2*>(device);
-  coyote_type_of_change cdlast = static_cast<coyote_type_of_change>(last_change);
-  if (cdlast == C_CONNECTING) {
+  if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());
-  } else if (cdlast == C_CONNECTED) {
+  } else if (last_change == D_CONNECTED) {
     coyote_tab_create();
     printf_log("Connected Coyote battery %d%%\n",cd->get().get_batterylevel());
     cd->get().chan_a().put_setmode(M_BREATH);
     cd->get().chan_b().put_setmode(M_BREATH);
     send_sync_data(SYNC_START);
     send_sync_data(SYNC_ON);
-  } else if (cdlast == C_DISCONNECTED) {
+  } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());
     send_sync_data(SYNC_BYE);
     return false;
-  } //else if (cdlast == C_POWER) {
-  //  printf_log("Power Level Changed %s\n", device->getShortName());
-  //} else if (cdlast == C_WAVEMODE_A || cdlast == C_WAVEMODE_B) {
-  //  printf_log("Wave mode changed %s\n", device->getShortName());      
-  //}
+  } 
   return true;
 }

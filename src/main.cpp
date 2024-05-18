@@ -123,8 +123,7 @@ void device_change_handler(type_of_change t, Device *d) {
       break;
     }
   }
-  if (newdevice == -1 && t != D_DISCONNECTED &&
-      t != static_cast<type_of_change>(C_DISCONNECTED)) {
+  if (newdevice == -1 && t != D_DISCONNECTED) {
     ESP_LOGD("main", "a new device has appeared");
     DeviceType type = d->getType();
     if (type == DeviceType::device_mk312) {  // bootstrap

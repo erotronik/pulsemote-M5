@@ -30,8 +30,14 @@ class device_coyote2 : public Device {
   bool connect_to_device(NimBLEAdvertisedDevice* device) {
     return coyote.connect_to_device(device);
   };
-  void change_handler(coyote_type_of_change t) {
-    device_change_handler(static_cast<type_of_change>(t), this);
+  void change_handler(coyote_type_of_change t) {  // not enough states for a map
+    type_of_change ct = D_NONE;
+    if (t == C_NONE) ct = D_NONE;
+    if (t == C_CONNECTING) ct = D_CONNECTING;
+    if (t == C_DISCONNECTED) ct = D_DISCONNECTED;
+    if (t == C_CONNECTED) ct = D_CONNECTED;
+    // we also get other change events, but don't need to do anything specia; with them
+    device_change_handler(ct, this);
   };
 
   private:
