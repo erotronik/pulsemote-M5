@@ -34,14 +34,11 @@ class PulsemoteAdvertisedDeviceCallbacks
     found_device = nullptr;
     if (coyote_device_controller->is_device(advertisedDevice)) {
       found_device = new device_coyote2();
-    }
-    if (device_mk312_controller->is_device(advertisedDevice)) {
+    } else if (device_mk312_controller->is_device(advertisedDevice)) {
       found_device = new device_mk312();
-    }
-    if (device_thrustalot_controller->is_device(advertisedDevice)) {
+    } else if (device_thrustalot_controller->is_device(advertisedDevice)) {
       found_device = new device_thrustalot();
-    }
-    if (device_bubblebottle_controller->is_device(advertisedDevice)) {
+    } else if (device_bubblebottle_controller->is_device(advertisedDevice)) {
       found_device = new device_bubblebottle();
     }
     if (found_device) {
