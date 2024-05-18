@@ -3,6 +3,8 @@
 #include <coyote.hpp>
 #include <device.hpp>
 
+void device_change_handler(type_of_change t, Device *d);
+
 class device_coyote2 : public Device {
  public:
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) {
@@ -20,8 +22,11 @@ class device_coyote2 : public Device {
         return "Waves";
     }
     return "Off";
-  }
+  };
+  void coyote_change_handler(coyote_type_of_change t) {
+    return device_change_handler(static_cast<type_of_change>(t), this);
+  };
 
- private:
-  Coyote coyote;
+  private:
+    Coyote coyote;
 };
