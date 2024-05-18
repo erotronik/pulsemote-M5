@@ -16,14 +16,15 @@
 void dump_connected_devices(void) {
   for (int i = 0; i < tabs.size(); i++) {
     Tab *t = tabs.get(i);
-    printf_log("tab %d: ", i);
-    if (t->page != nullptr) {
-      printf_log("tab=%d ", lv_get_tabview_idx_from_page(tv, t->page));
-    }
+    //if (t->page != nullptr) {
+    //  printf_log("tab=%d ", lv_get_tabview_idx_from_page(tv, t->page));
+    //}
     if (t->device != nullptr) {
-      printf_log("device=%s", t->device->getShortName());
+      printf_log("%s: ", t->device->getShortName());
+    } else {
+        printf_log("tab %d: ", i);
     }
-    printf_log("\n");
+    printf_log("count=%d\n",t->cyclecount);
   }
 }
 

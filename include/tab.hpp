@@ -37,8 +37,10 @@ class Tab {
   type_of_change old_last_change;
   type_of_change last_change;
   Device *device;
+  int cyclecount = 0;
 
   virtual void send_sync_data(sync_data syncstatus) {
+    if (syncstatus == SYNC_OFF) cyclecount++;
     for (int i=0; i<tabs.size(); i++) {
       Tab *st = tabs.get(i);
       if (st != this) {
