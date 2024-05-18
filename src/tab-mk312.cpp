@@ -31,7 +31,7 @@ void tab_mk312::encoder_change(int sw, int change) {
     level_b += change;
     if (level_b < 0) level_b = 0;
     if (level_b > 99) level_b = 99;
-    md->etbox_setbyte(ETMEM_knobb, level_b * 255 / 99);
+    md->etbox_setbyte(ETMEM_knobb, (level_b * 256+99) / 100);   // Round up to match the display
     need_knob_refresh = true;
   }
   if (sw == 1 && lockpanel) {
@@ -40,7 +40,7 @@ void tab_mk312::encoder_change(int sw, int change) {
     if (level_a < 0) level_a = 0;
     if (level_a > 99) level_a = 99;
     md->etbox_setbyte(ETMEM_knoba,
-                      level_a * 255 / 99);  
+                      (level_a * 256+99) / 100);  
     need_knob_refresh = true;
   }
   if (main_mode == MODE_RANDOM && sw == 3) {
@@ -76,7 +76,7 @@ void tab_mk312::switch_change(int sw, boolean value) {
     level_a = 0;
     level_b = 0;
     md->etbox_setbyte(ETMEM_panellock, 1);
-    md->etbox_setbyte(ETMEM_knoba, level_a);
+    md->etbox_setbyte(ETMEM_knoba, level_a); // no need to scale it's 0
     md->etbox_setbyte(ETMEM_knobb, level_b);
   } else if (lockpanel == true && (sw == 1 || sw == 0) && value) {
     lockpanel = false;
