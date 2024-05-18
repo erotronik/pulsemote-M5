@@ -96,8 +96,7 @@ void scan_loop() {
       if (found_device) {
         if (found_device_type == DeviceType::device_coyote2) {
           device_coyote2 *connected_device_coyote2 = new device_coyote2();
-          connected_device_coyote2->get().set_callback(
-                std::bind(&device_coyote2::coyote_change_handler, connected_device_coyote2, std::placeholders::_1));
+          connected_device_coyote2->set_callback(device_change_handler);
           boolean connected = connected_device_coyote2->connect_to_device(found_device);
           if (!connected) delete connected_device_coyote2;
 

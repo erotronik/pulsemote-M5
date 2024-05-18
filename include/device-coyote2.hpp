@@ -4,6 +4,7 @@
 #include <device.hpp>
 
 void device_change_handler(type_of_change t, Device *d);
+typedef std::function<void(type_of_change change, Device* d)> device_callback;
 
 class device_coyote2 : public Device {
  public:
@@ -23,11 +24,14 @@ class device_coyote2 : public Device {
     }
     return "Off";
   };
+  void set_callback(device_callback c) {
+    coyote.set_callback(std::bind(&device_coyote2::change_handler, this, std::placeholders::_1));
+  };
   bool connect_to_device(NimBLEAdvertisedDevice* device) {
     return coyote.connect_to_device(device);
   };
-  void coyote_change_handler(coyote_type_of_change t) {
-    return device_change_handler(static_cast<type_of_change>(t), this);
+  void change_handler(coyote_type_of_change t) {
+    device_change_handler(static_cast<type_of_change>(t), this);
   };
 
   private:
