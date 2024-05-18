@@ -98,7 +98,7 @@ void scan_loop() {
           device_coyote2 *connected_device_coyote2 = new device_coyote2();
           connected_device_coyote2->get().set_callback(
                 std::bind(&device_coyote2::coyote_change_handler, connected_device_coyote2, std::placeholders::_1));
-          boolean connected = connected_device_coyote2->get().connect_to_device(found_device);
+          boolean connected = connected_device_coyote2->connect_to_device(found_device);
           if (!connected) delete connected_device_coyote2;
 
         } else if (found_device_type == DeviceType::device_mk312) {
@@ -112,7 +112,7 @@ void scan_loop() {
           connected_device_thrustalot->set_callback(device_change_handler);
           boolean connected = connected_device_thrustalot->connect_to_device(found_device);
           if (!connected) delete connected_device_thrustalot;
-          
+
         } else if (found_device_type == DeviceType::device_bubblebottle) {
           device_bubblebottle *connected_device_bubblebottle = new device_bubblebottle();
           connected_device_bubblebottle->set_callback(device_change_handler);

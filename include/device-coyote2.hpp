@@ -23,6 +23,9 @@ class device_coyote2 : public Device {
     }
     return "Off";
   };
+  bool connect_to_device(NimBLEAdvertisedDevice* device) {
+    return coyote.connect_to_device(device);
+  };
   void coyote_change_handler(coyote_type_of_change t) {
     return device_change_handler(static_cast<type_of_change>(t), this);
   };
