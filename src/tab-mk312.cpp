@@ -91,10 +91,11 @@ void tab_mk312::switch_change(int sw, boolean value) {
 // another device can push data to us when they connect, disconnect, turn on, turn off
 
 void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
-  ESP_LOGD("mk312", "got sync data %d from %s\n", syncstatus, t->device->getShortName());
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+  if (!md) return;
+  ESP_LOGD("mk312", "got sync data %d from %s\n", syncstatus, t->gettabname());
   if (main_mode == MODE_SYNC) {
     bool isinverted = sync->isinverted();
-    device_mk312 *md = static_cast<device_mk312 *>(device);
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
       md->etbox_on(0);

@@ -14,6 +14,17 @@ class tab_mqtt : public Tab {
   public:
     WiFiClient espClient;
     PubSubClient *client;
+    QueueHandle_t events;
+
+    tab_mqtt() {
+      events = xQueueCreate(10,sizeof(sync_data));
+    }
+
+    void loop(boolean activetab) override {
+      sync_data syncstatus;
+      if (xQueueReceive(events, &syncstatus, 0))
+        send_sync_data(syncstatus);
+    }
 
     const char* gettabname(void) override { return "(WiFi)";};
 
@@ -26,7 +37,7 @@ class tab_mqtt : public Tab {
 #ifdef CONFIG_MQTT_SERVER
       self->client = new PubSubClient(self->espClient);
       self->client->setServer(CONFIG_MQTT_SERVER,1883);
-      self->client->setCallback(callback);
+      self->client->setCallback(std::bind(&tab_mqtt::callback, self, std::placeholders::_1,std::placeholders::_2,std::placeholders::_3 ));
 
       while (true) {
         if (!self->client->connected()) {
@@ -60,14 +71,14 @@ class tab_mqtt : public Tab {
 #endif
     };
 
-    static void callback(char* topic, byte* payload, unsigned int length) {
-      Serial.print("Message arrived [");
-      Serial.print(topic);
-      Serial.print("] ");
-      for (unsigned int i = 0; i < length; i++) {
-        Serial.print((char)payload[i]);
-      }
-      Serial.println();
+    void callback(char* topic, byte* payload, unsigned int length) {
+      sync_data syncstatus = SYNC_START;
+      std::string paystring (reinterpret_cast<const char*>(payload), length); 
+      ESP_LOGI("mqtt","got topic=%s message=%s", topic, paystring);
+      if (paystring == "ON") syncstatus = SYNC_ON;
+      if (paystring == "OFF") syncstatus = SYNC_OFF;
+
+      xQueueSend(this->events, &syncstatus, 0);
     };
 
     void connectToWiFi(void) {
@@ -82,9 +93,9 @@ class tab_mqtt : public Tab {
     };
 
     void gotsyncdata(Tab *t, sync_data status) override {
-      ESP_LOGD("mqtt", "got sync data %d from %s\n", status, t->device->getShortName());
+      ESP_LOGD("mqtt", "got sync data %d from %s\n", status, t->gettabname());
       if (!client || !client->connected()) return;
-      String topic = "pulsemote/" + String(t->device->getShortName());
+      String topic = "pulsemote/" + String(t->gettabname());
       topic.replace("-","");
       topic.toLowerCase();
       char outputChar[topic.length() + 1];

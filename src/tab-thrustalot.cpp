@@ -70,9 +70,10 @@ void tab_thrustalot::switch_change(int sw, boolean value) {
 // another device can push data to us when they connect, disconnect, turn on, turn off
 
 void tab_thrustalot::gotsyncdata(Tab *t, sync_data syncstatus) {
-  ESP_LOGD("thrustalot", "got sync data %d from %s\n", syncstatus, t->device->getShortName());
+  device_thrustalot *md = static_cast<device_thrustalot *>(device);
+  if (!md) return;
+  ESP_LOGD("thrustalot", "got sync data %d from %s\n", syncstatus, t->gettabname());
   if (main_mode == MODE_SYNC) {
-    device_thrustalot *md = static_cast<device_thrustalot *>(device);
     bool isinverted = sync->isinverted();
 
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
