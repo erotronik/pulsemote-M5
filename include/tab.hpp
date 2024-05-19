@@ -3,7 +3,6 @@
 #include <LinkedList.h>
 #include <lvgl.h>
 
-#include "device-coyote2.hpp"
 #include "device.hpp"
 #include "tab-object-buttonbar.hpp"
 
@@ -52,4 +51,3 @@ class Tab {
     int cyclecount = 0;
 
 };
-

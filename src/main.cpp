@@ -17,6 +17,7 @@
 #include "tab-thrustalot.hpp"
 #include "tab-splashscreen.hpp"
 #include "tab-bubblebottle.hpp"
+#include "tab-mqtt.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
 
@@ -105,6 +106,10 @@ void setup_tabs(void) {
   Tab *sp = new tab_splashscreen();
   sp->setup();
   tabs.add(sp);
+
+  Tab *mq = new tab_mqtt();
+  mq->setup();
+  tabs.add(mq);
 }
 
 // This is called when our scanner detects a new device; figure out

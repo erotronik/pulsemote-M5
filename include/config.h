@@ -1,0 +1,5 @@
+//#define CONFIG_WIFI_SSID "yourwifi"
+//#define CONFIG_WIFI_PASSWORD "yourpassword"
+//#define CONFIG_MQTT_SERVER "192.168.0.1"
+//#define CONFIG_MQTT_USERNAME "yourmqtt"
+//#define CONFIG_MQTT_PASSWORD "yourmqtt"
