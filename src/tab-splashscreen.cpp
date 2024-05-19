@@ -19,11 +19,7 @@ void dump_connected_devices(void) {
     //if (t->page != nullptr) {
     //  printf_log("tab=%d ", lv_get_tabview_idx_from_page(tv, t->page));
     //}
-    if (t->device != nullptr) {
-      printf_log("%s: ", t->device->getShortName());
-    } else {
-        printf_log("tab %d: ", i);
-    }
+    printf_log("%i %s: ", i, t->gettabname());
     printf_log("count=%d\n",t->getcyclecount());
   }
 }

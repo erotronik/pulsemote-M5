@@ -14,6 +14,7 @@ class tab_splashscreen: public Tab {
     void encoder_change(int sw, int change) override;
     void loop(boolean activetab) override;
     void setup(void) override;
+    const char* gettabname(void) override { return "Splashscreen";};
 
     private:
      unsigned long batterycheckmillis = 0;

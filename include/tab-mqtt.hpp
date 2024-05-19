@@ -15,6 +15,8 @@ class tab_mqtt : public Tab {
     WiFiClient espClient;
     PubSubClient *client;
 
+    const char* gettabname(void) override { return "(WiFi)";};
+
     static void wifiTask(void* pvParameters) {
       ESP_LOGD("wifitask","starting up");
     

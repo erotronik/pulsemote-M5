@@ -28,6 +28,10 @@ class Tab {
   virtual void gotsyncdata(Tab *t, sync_data syncdata) {};
   virtual boolean hardware_changed(void) { return true; };
   virtual int getcyclecount(void) { return cyclecount; };
+  virtual const char *gettabname(void) { 
+    if (device) return device->getShortName();
+    return "";
+  };
 
   tab_object_buttonbar *buttonbar;
 
