@@ -28,7 +28,7 @@ Device *found_device;
 
 class PulsemoteAdvertisedDeviceCallbacks
     : public NimBLEAdvertisedDeviceCallbacks {
-  void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
+  void onResult(NimBLEAdvertisedDevice *advertisedDevice) override {
     ESP_LOGI("comms-bt", "Advertised Device: %s\n", advertisedDevice->toString().c_str());
     // can't connect while scanning is going on - it locks up everything.
     found_device = nullptr;

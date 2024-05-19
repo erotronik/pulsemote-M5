@@ -21,8 +21,8 @@ class device_bubblebottle : public Device {
 
   boolean get_isconnected();
   static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
-  bool connect_to_device(NimBLEAdvertisedDevice* device);
-  void set_callback(device_callback c);
+  bool connect_to_device(NimBLEAdvertisedDevice* device) override;
+  void set_callback(device_callback c) override;
 
   void ble_bubblebottle_send(String newValue);
   DeviceType getType() const override { return DeviceType::device_bubblebottle; }

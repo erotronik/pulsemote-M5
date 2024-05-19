@@ -20,8 +20,8 @@ class device_mk312 : public Device {
 
   boolean get_isconnected();
   static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
-  bool connect_to_device(NimBLEAdvertisedDevice* device_mk312_device);
-  void set_callback(device_callback c);
+  bool connect_to_device(NimBLEAdvertisedDevice* device_mk312_device) override;
+  void set_callback(device_callback c) override;
 
   const char* etmodes[22] = {"Waves",  "Stroke", "Climb",  "Combo",  "Intense",
                              "Rhythm", "Audio1", "Audio2", "Audio3", "Split",

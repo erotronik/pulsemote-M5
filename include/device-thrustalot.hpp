@@ -25,8 +25,8 @@ class device_thrustalot : public Device {
 
   boolean get_isconnected();
   static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
-  bool connect_to_device(NimBLEAdvertisedDevice* device);
-  void set_callback(device_callback c);
+  bool connect_to_device(NimBLEAdvertisedDevice* device) override;
+  void set_callback(device_callback c) override;
 
   DeviceType getType() const override { return DeviceType::device_thrustalot; }
   const char* getShortName() const override { return "Thrustalot"; }

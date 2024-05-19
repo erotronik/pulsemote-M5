@@ -43,7 +43,7 @@ class DeviceBubblebottleNimBLEClientCallback : public NimBLEClientCallbacks {
     device_bubblebottle_instance = instance;
   }
 
-  void onConnect(NimBLEClient* pclient) {
+  void onConnect(NimBLEClient* pclient){
     device_bubblebottle_instance->connected_callback();
   }
 

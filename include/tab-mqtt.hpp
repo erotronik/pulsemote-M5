@@ -31,15 +31,13 @@ class tab_mqtt : public Tab {
       while (true) {
         if (!self->client->connected()) {
           while (!self->client->connected()) {
-            Serial.print("Attempting MQTT connection...");
+            ESP_LOGI("wifi","Attempting MQTT connection...");
             if (self->client->connect("pulsemote",CONFIG_MQTT_USERNAME, CONFIG_MQTT_PASSWORD)) {
-              Serial.println("connected");
+              ESP_LOGI("wifi","wifi connected");
               self->client->publish("pulsemote/main","startup");
               self->client->subscribe("pulsemote/#");
             } else {
-              Serial.print("failed, rc=");
-              Serial.print(self->client->state());
-              Serial.println(" try again in 5 seconds");
+              ESP_LOGE("wifi","wifi failed, rc=%s retrying",self->client->state());
               vTaskDelay(5000/portTICK_PERIOD_MS);
             }
           }
@@ -52,7 +50,6 @@ class tab_mqtt : public Tab {
     };
 
     void setup(void) override {
-      ESP_LOGD("mqtt","setup");
       tab_mqtt *mt = static_cast<tab_mqtt *>(this);
       mt->type = DeviceType::device_mqtt;
       mt->device = nullptr;
@@ -75,13 +72,12 @@ class tab_mqtt : public Tab {
 
     void connectToWiFi(void) {
 #ifdef CONFIG_WIFI_SSID
-      Serial.println("Connecting to WiFi...");
+      ESP_LOGI("wifi","connecting to wifi");
       WiFi.begin(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
       while (WiFi.status() != WL_CONNECTED) {
         vTaskDelay(500 / portTICK_PERIOD_MS);
-        Serial.print(".");
       }
-      Serial.println("\nWiFi connected");
+      ESP_LOGI("wifi","connected to wifi");
 #endif
     };
 
