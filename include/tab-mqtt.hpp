@@ -45,7 +45,7 @@ class tab_mqtt : public Tab {
       return (client->connected()?LV_SYMBOL_WIFI:"");
     }
 
-    const char* gettabname(void) override { return "(WiFi)";};
+    const char* gettabname(void) override { return "wifi";};
 
     static void wifiTask(void* pvParameters) {
       ESP_LOGD("wifitask","starting up");
@@ -103,11 +103,11 @@ class tab_mqtt : public Tab {
       sync_data syncstatus = SYNC_START;
       std::string paystring (reinterpret_cast<const char*>(payload), length); 
       ESP_LOGI("mqtt","got topic=%s message=%s", topic, paystring.c_str());
-      //if (strncmp(topic,"pulsemote",9)) {
-      if (paystring == "ON" || paystring == "on") syncstatus = SYNC_ON;
-      if (paystring == "OFF" || paystring == "off") syncstatus = SYNC_OFF;
-      xQueueSend(this->events, &syncstatus, 0);
-      //}
+      if (!strncmp(topic,"pulsemote",9)) {
+        if (paystring == "ON" || paystring == "on") syncstatus = SYNC_ON;
+        if (paystring == "OFF" || paystring == "off") syncstatus = SYNC_OFF;
+        xQueueSend(this->events, &syncstatus, 0);
+      }
     };
 
     void connectToWiFi(void) {
@@ -121,7 +121,7 @@ class tab_mqtt : public Tab {
 #endif
     };
 
-    void gotsyncdata(Tab *t, sync_data status) override {
+    inline void gotsyncdata(Tab *t, sync_data status) override {
       ESP_LOGD("mqtt", "got sync data %d from %s\n", status, t->gettabname());
       if (!client || !client->connected()) return;
       String topic = "pulsemote/" + String(t->gettabname());

@@ -12,6 +12,7 @@
 extern lv_obj_t *tv;
 
 class Tab;
+
 extern LinkedList<Tab *> tabs;
 
 class Tab {
