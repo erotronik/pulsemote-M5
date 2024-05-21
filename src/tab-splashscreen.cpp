@@ -36,7 +36,7 @@ void m5io_showanalogrgb(byte sw, const CRGB &rgb);
 
 void tab_splashscreen::updateicons() {
   int level = min(4,M5.Power.getBatteryLevel() / 20);
-  char iconb[128];
+  char iconb[128] ="";
   for (int j = 0; j < tabs.size(); j++) {
     Tab *t = tabs.get(j);
     strncat(iconb,t->geticons(),sizeof(iconb)-1);
@@ -65,6 +65,7 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
            value ? "push" : "release");
   if (sw == 4 && value) {
     dump_connected_devices();
+    updateicons();
   }
 }
 
