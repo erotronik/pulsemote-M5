@@ -75,8 +75,8 @@ class tab_mqtt : public Tab {
       sync_data syncstatus = SYNC_START;
       std::string paystring (reinterpret_cast<const char*>(payload), length); 
       ESP_LOGI("mqtt","got topic=%s message=%s", topic, paystring);
-      if (paystring == "ON") syncstatus = SYNC_ON;
-      if (paystring == "OFF") syncstatus = SYNC_OFF;
+      if (paystring == "ON" || paystring == "on") syncstatus = SYNC_ON;
+      if (paystring == "OFF" || paystring == "off") syncstatus = SYNC_OFF;
 
       xQueueSend(this->events, &syncstatus, 0);
     };
