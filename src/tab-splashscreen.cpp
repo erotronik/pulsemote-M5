@@ -33,10 +33,6 @@ tab_splashscreen::tab_splashscreen() {
 tab_splashscreen::~tab_splashscreen(){};
 
 void m5io_showanalogrgb(byte sw, const CRGB &rgb);
-void dump_connected_devices(void);
-
-lv_obj_t *lv_debug_window;
-byte buttonhue[] = {0, 64, 128, 192, 0};
 
 void tab_splashscreen::updateicons() {
   int level = min(4,M5.Power.getBatteryLevel() / 20);
@@ -45,14 +41,13 @@ void tab_splashscreen::updateicons() {
 
 void tab_splashscreen::loop(boolean activetab) {
   if (activetab) {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
+      buttonhue[i]= (millis()%20000*256)/20000+64*i;  // cycle colours every 20s
       m5io_showanalogrgb(i + 1,
                          hsvToRgb(buttonhue[i], 255, 128));  // rotary LED
-      buttonhue[i]++;
     }
     m5io_showanalogrgb(
         5, hsvToRgb(255, 0, buttonhue[4] / 2));  // cherry LED (very bright)
-    buttonhue[4]++;
   }
   if (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 20000) { // every 20 sec
     updateicons();
@@ -81,7 +76,7 @@ void tab_splashscreen::setup(void) {
   lv_obj_set_style_pad_bottom(tv2, 0, LV_PART_MAIN);
 
   // always first child
-  lv_debug_window = lv_textarea_create(tv2);
+  lv_obj_t *lv_debug_window = lv_textarea_create(tv2);
   lv_textarea_add_text(lv_debug_window, "");
   lv_textarea_set_cursor_click_pos(lv_debug_window, false);
   lv_obj_set_size(lv_debug_window, lv_pct(100), lv_pct(60));

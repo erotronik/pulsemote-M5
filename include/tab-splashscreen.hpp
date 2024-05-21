@@ -21,5 +21,7 @@ class tab_splashscreen: public Tab {
      const char *batteryicons[6] = {LV_SYMBOL_BATTERY_EMPTY, LV_SYMBOL_BATTERY_1, LV_SYMBOL_BATTERY_2, LV_SYMBOL_BATTERY_3, LV_SYMBOL_BATTERY_FULL, LV_SYMBOL_CHARGE};
      lv_obj_t *labelicons;
      void updateicons(void);
+     byte buttonhue[5] = {0, 0, 0, 0, 0};
+
 };
 
