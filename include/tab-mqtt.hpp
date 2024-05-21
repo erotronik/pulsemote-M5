@@ -26,6 +26,10 @@ class tab_mqtt : public Tab {
         send_sync_data(syncstatus);
     }
 
+    const char *geticons(void) override {
+      return (client->connected()?LV_SYMBOL_WIFI:"");
+    }
+
     const char* gettabname(void) override { return "(WiFi)";};
 
     static void wifiTask(void* pvParameters) {

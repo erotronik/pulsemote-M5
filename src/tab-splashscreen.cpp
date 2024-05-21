@@ -36,18 +36,23 @@ void m5io_showanalogrgb(byte sw, const CRGB &rgb);
 
 void tab_splashscreen::updateicons() {
   int level = min(4,M5.Power.getBatteryLevel() / 20);
-  lv_label_set_text_fmt(labelicons, "%s%s",batteryicons[level], M5.Power.isCharging()?batteryicons[5]:"");
+  char iconb[128];
+  for (int j = 0; j < tabs.size(); j++) {
+    Tab *t = tabs.get(j);
+    strncat(iconb,t->geticons(),sizeof(iconb)-1);
+  }
+  boolean is_bluetooth_scanning = true; // todo
+  lv_label_set_text_fmt(labelicons, "%s %s %s %s",iconb, is_bluetooth_scanning?LV_SYMBOL_BLUETOOTH:"",batteryicons[level], M5.Power.isCharging()?batteryicons[5]:"");
 }
 
 void tab_splashscreen::loop(boolean activetab) {
   if (activetab) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {
       buttonhue[i]= (millis()%20000*256)/20000+64*i;  // cycle colours every 20s
       m5io_showanalogrgb(i + 1,
                          hsvToRgb(buttonhue[i], 255, 128));  // rotary LED
     }
-    m5io_showanalogrgb(
-        5, hsvToRgb(255, 0, buttonhue[4] / 2));  // cherry LED (very bright)
+    m5io_showanalogrgb(5, hsvToRgb(0, 0, 16));  // cherry LED (very bright)
   }
   if (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 20000) { // every 20 sec
     updateicons();
@@ -61,7 +66,6 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
   if (sw == 4 && value) {
     dump_connected_devices();
   }
-  if (value) buttonhue[sw] = 0;
 }
 
 void tab_splashscreen::encoder_change(int sw, int change) {
