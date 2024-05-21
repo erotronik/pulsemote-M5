@@ -13,11 +13,26 @@ class tab_mqtt;
 class tab_mqtt : public Tab {
   public:
     WiFiClient espClient;
-    PubSubClient *client;
+    PubSubClient *client = nullptr;
     QueueHandle_t events;
+
+    typedef struct {
+      const char *topic;
+      const char *message;
+    } mqttsenditem;
+
+    QueueHandle_t mqttsenthandle;
 
     tab_mqtt() {
       events = xQueueCreate(10,sizeof(sync_data));
+      mqttsenthandle = xQueueCreate(10,sizeof(mqttsenditem));
+    }
+
+    void mqttsend(const char *topic, const char *message) {
+      mqttsenditem item;
+      item.topic = topic;
+      item.message = message;
+      xQueueSend(mqttsenthandle, &item, 0);
     }
 
     void loop(boolean activetab) override {
@@ -34,6 +49,7 @@ class tab_mqtt : public Tab {
 
     static void wifiTask(void* pvParameters) {
       ESP_LOGD("wifitask","starting up");
+      mqttsenditem mqtttosend;
     
       tab_mqtt* self = static_cast<tab_mqtt *>(pvParameters);
       self->connectToWiFi();
@@ -44,6 +60,11 @@ class tab_mqtt : public Tab {
       self->client->setCallback(std::bind(&tab_mqtt::callback, self, std::placeholders::_1,std::placeholders::_2,std::placeholders::_3 ));
 
       while (true) {
+
+        // does anything want us to send a message?
+        if (self->client->connected() && xQueueReceive(self->mqttsenthandle, &mqtttosend, 0))
+          self->client->publish(mqtttosend.topic,mqtttosend.message);
+
         if (!self->client->connected()) {
           while (!self->client->connected()) {
             ESP_LOGI("wifi","Attempting MQTT connection...");
@@ -51,6 +72,9 @@ class tab_mqtt : public Tab {
               ESP_LOGI("wifi","wifi connected");
               self->client->publish("pulsemote/main","startup");
               self->client->subscribe("pulsemote/#");
+#ifdef CONFIG_MQTT_TEST
+              self->client->subscribe(CONFIG_MQTT_TEST);
+#endif
             } else {
               ESP_LOGE("wifi","wifi failed, rc=%s retrying",self->client->state());
               vTaskDelay(5000/portTICK_PERIOD_MS);
@@ -78,11 +102,12 @@ class tab_mqtt : public Tab {
     void callback(char* topic, byte* payload, unsigned int length) {
       sync_data syncstatus = SYNC_START;
       std::string paystring (reinterpret_cast<const char*>(payload), length); 
-      ESP_LOGI("mqtt","got topic=%s message=%s", topic, paystring);
+      ESP_LOGI("mqtt","got topic=%s message=%s", topic, paystring.c_str());
+      //if (strncmp(topic,"pulsemote",9)) {
       if (paystring == "ON" || paystring == "on") syncstatus = SYNC_ON;
       if (paystring == "OFF" || paystring == "off") syncstatus = SYNC_OFF;
-
       xQueueSend(this->events, &syncstatus, 0);
+      //}
     };
 
     void connectToWiFi(void) {
@@ -105,13 +130,13 @@ class tab_mqtt : public Tab {
       char outputChar[topic.length() + 1];
       topic.toCharArray(outputChar, topic.length() + 1);
       if (status == SYNC_ON) 
-        client->publish(outputChar,"on");
+        mqttsend(outputChar,"on");
       if (status == SYNC_OFF) 
-        client->publish(outputChar,"off");
+        mqttsend(outputChar,"off");
       if (status == SYNC_START) 
-        client->publish(outputChar,"hello");
+        mqttsend(outputChar,"hello");
       if (status == SYNC_BYE) 
-        client->publish(outputChar,"bye");  
+        mqttsend(outputChar,"bye");  
     };
 };
 
