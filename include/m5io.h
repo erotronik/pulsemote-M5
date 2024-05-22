@@ -12,6 +12,8 @@ typedef struct {
   int value;
 } event_t;
 
+typedef uint8_t byte;
+
 QueueHandle_t event_queue;
 
 void RotaryEncoderChanged(bool clockwise, int id);
