@@ -2,13 +2,10 @@
 
 #include <NimBLEDevice.h>
 #include <Venerate.h>
-
 #include <device.hpp>
 
 class device_mk312_NimBLEClientCallback;
 class device_mk312;
-
-typedef std::function<void(type_of_change change, Device* d)> device_callback;
 
 #define mkbuffer_maxlen 100
 #define mktx_maxlen 20  // For sending via bluetooth max is 20 bytes
@@ -18,8 +15,9 @@ class device_mk312 : public Device {
   device_mk312();
   ~device_mk312();
 
-  boolean get_isconnected();
-  static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
+  DeviceType getType() const override { return DeviceType::device_mk312; }
+  const char* getShortName() const override { return "MK-312B"; }
+
   bool connect_to_device(NimBLEAdvertisedDevice* device_mk312_device) override;
   void set_callback(device_callback c) override;
 
@@ -29,15 +27,14 @@ class device_mk312 : public Device {
                              "Phase1", "Phase2", "Phase3", "User1",  "User2",
                              "User3",  "User4"};
 
+  boolean get_isconnected();
+  static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
   void set_mode(int p);
   void etbox_on(byte mode);
   void etbox_off(void);
   int get_mode(void);
   void etbox_setbyte(word a, byte d);
   byte etbox_getbyte(word a);
-
-  DeviceType getType() const override { return DeviceType::device_mk312; }
-  const char* getShortName() const override { return "MK-312B"; }
 
  private:
   bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);

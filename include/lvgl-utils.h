@@ -11,3 +11,11 @@ uint32_t lvgl_tick_function(void);
 void lvgl_touchpad_read(lv_indev_t *drv, lv_indev_data_t *data);
 void lv_hide_tab(lv_obj_t *page);
 void printf_log(const char *format, ...);
+
+struct CRGB {
+  byte r;
+  byte g;
+  byte b;
+};
+
+CRGB hsvToRgb(uint8_t h, uint8_t s, uint8_t v);

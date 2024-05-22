@@ -6,6 +6,12 @@
 #include <functional>
 #include <map>
 
+// !B11X -- thrust to next half
+// !B21XX -- old random
+// !B51X -- speed +=21
+// !B61X -- speed -=21
+// !S000 -- speed 000 (to 255)  returns (blah)T:(\d+)\n(blah) for current thrust count
+
 NimBLEUUID THRUSTALOT_SERVICE_BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID THRUSTALOT_UUID_RX("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID THRUSTALOT_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
@@ -15,6 +21,13 @@ bool device_thrustalot::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
     if (strstr(advertisedDevice->getName().c_str(),"Thrustalot"))
         return true;
    return false;
+}
+
+const char *device_thrustalot::getpostext(void) {
+  if (thrustcb_pos ==1) return "In";
+  if (thrustcb_pos ==2) return "Out";
+  if (thrustcb_pos ==0) return "...";
+  return "";
 }
 
 bool device_thrustalot::get_isconnected() { return is_connected; }

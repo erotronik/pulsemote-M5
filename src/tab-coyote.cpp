@@ -5,7 +5,6 @@
 #include "tab.hpp"
 #include "tab-coyote.hpp"
 #include "lvgl-utils.h"
-#include "hsv.h"
 
 const char *coyote_main_modes_c =
     "Manual\nTimer\nRandom\nSync";  

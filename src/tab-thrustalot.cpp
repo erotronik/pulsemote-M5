@@ -3,7 +3,6 @@
 #include <lvgl.h>
 
 #include "device-thrustalot.hpp"
-#include "hsv.h"
 #include "tab-thrustalot.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"

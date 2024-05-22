@@ -5,7 +5,6 @@
 #include "PCA9685.h"
 #include "Rotary.h"
 #include "RotaryEncOverMCP.h"
-#include "hsv.h"
 #include "lvgl-utils.h"
 
 typedef struct {

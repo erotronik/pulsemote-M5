@@ -2,7 +2,7 @@
 
 #include <lvgl.h>
 #include <cstdio>
-#include "hsv.h"
+#include "lvgl-utils.h"
 void m5io_showanalogrgb(byte sw, const CRGB& rgb);
 
 // Pushed the screen on an arc?

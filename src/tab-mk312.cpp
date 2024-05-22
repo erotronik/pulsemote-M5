@@ -3,7 +3,6 @@
 #include <lvgl.h>
 
 #include "device-mk312.hpp"
-#include "hsv.h"
 #include "tab-mk312.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
