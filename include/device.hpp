@@ -9,7 +9,7 @@ enum type_of_change { D_NONE, D_DISCONNECTED, D_CONNECTING, D_CONNECTED };
 void device_change_handler(type_of_change t, Device *d);
 typedef std::function<void(type_of_change change, Device* d)> device_callback;
 
-enum class DeviceType { splashscreen, device_mk312, device_coyote2, device_thrustalot, device_bubblebottle, device_mqtt,
+enum class DeviceType { splashscreen, device_mk312, device_coyote2, device_thrustalot, device_bubblebottle, device_mqtt, device_loop,
  };
 
 class Device {

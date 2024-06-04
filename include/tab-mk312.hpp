@@ -29,7 +29,7 @@ class tab_mk312 : public Tab {
 
   main_modes main_mode;
   bool need_refresh = false;
-
+  
  private:
   lv_obj_t *tab_status;
   void tab_create(void);

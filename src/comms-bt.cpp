@@ -7,12 +7,14 @@
 #include "device-mk312.hpp"
 #include "device-thrustalot.hpp"
 #include "device-bubblebottle.hpp"
+#include "device-loop.hpp"
 #include "device.hpp"
 
 device_coyote2 *coyote_device_controller;
 device_mk312 *device_mk312_controller;
 device_thrustalot *device_thrustalot_controller;
 device_bubblebottle *device_bubblebottle_controller;
+device_loop *device_loop_controller;
 
 void device_change_handler(type_of_change t, Device *d);
 
@@ -40,7 +42,9 @@ class PulsemoteAdvertisedDeviceCallbacks
       found_device = new device_thrustalot();
     } else if (device_bubblebottle_controller->is_device(advertisedDevice)) {
       found_device = new device_bubblebottle();
-    }
+    } else if (device_loop_controller->is_device(advertisedDevice)) {
+      found_device = new device_loop();
+    }      
     if (found_device) {
       found_bledevice = new NimBLEAdvertisedDevice(*advertisedDevice);
       NimBLEDevice::getScan()->stop();
@@ -104,6 +108,7 @@ void TaskCommsBT(void *pvParameters) {
   device_mk312_controller = new device_mk312();
   device_thrustalot_controller = new device_thrustalot();
   device_bubblebottle_controller = new device_bubblebottle();
+  device_loop_controller = new device_loop();
 
   scan_comms_init();
   vTaskDelay(pdMS_TO_TICKS(2000)); // time for serial/debug to be ready
