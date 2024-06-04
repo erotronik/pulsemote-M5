@@ -10,15 +10,16 @@ NimBLEUUID loop_SERVICE_BLEUUID("19b10010-e8f2-537e-4f6c-d104768a1214");
 NimBLEUUID loop_UUID_RX("19b10013-e8f2-537e-4f6c-d104768a1214");
 
 bool device_loop::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
-   if (advertisedDevice->isAdvertisingService(loop_SERVICE_BLEUUID)) {
-      return true;
-   }
-   return false;
+   return (advertisedDevice->isAdvertisingService(loop_SERVICE_BLEUUID));
 }
 
-bool device_loop::get_isconnected() { return is_connected; }
+bool device_loop::get_isconnected() { 
+  return is_connected; 
+}
 
-void device_loop::set_callback(device_callback c) { update_callback = c; }
+void device_loop::set_callback(device_callback c) { 
+  update_callback = c; 
+}
 
 void device_loop::notify(type_of_change change) {
   if (update_callback) update_callback(change, this);
@@ -62,8 +63,7 @@ bool device_loop::getService(NimBLERemoteService*& service, NimBLEUUID uuid) {
   ESP_LOGD(getShortName(), "Getting service %s", uuid.toString().c_str());
   service = bleClient->getService(uuid);
   if (service == nullptr) {
-    ESP_LOGE(getShortName(), "Failed to find service UUID: %s",
-             uuid.toString().c_str());
+    ESP_LOGE(getShortName(), "Failed to find service UUID: %s", uuid.toString().c_str());
     return false;
   }
   return true;
@@ -110,8 +110,7 @@ bool device_loop::connect_to_device(NimBLEAdvertisedDevice* device) {
   notify(D_CONNECTING);
   bool res = true;
 
-  ESP_LOGI(getShortName(), "Will try to connect to %s",
-           device->getAddress().toString().c_str());
+  ESP_LOGI(getShortName(), "Will try to connect to %s", device->getAddress().toString().c_str());
 
   if (!bleClient->connect(device)) {
     ESP_LOGE(getShortName(), "Connection failed");
