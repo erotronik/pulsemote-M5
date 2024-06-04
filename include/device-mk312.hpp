@@ -25,13 +25,17 @@ class device_mk312 : public Device {
                              "User3",  "User4"};
 
   boolean get_isconnected();
-  static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
+  bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
   void set_mode(int p);
   void etbox_on(byte mode);
   void etbox_off(void);
   int get_mode(void);
   void etbox_setbyte(word a, byte d);
   byte etbox_getbyte(word a);
+
+  Device* clone() const override {
+    return new device_mk312(*this);
+  }
 
  private:
   bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);

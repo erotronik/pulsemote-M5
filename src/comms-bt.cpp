@@ -10,11 +10,8 @@
 #include "device-loop.hpp"
 #include "device.hpp"
 
-device_coyote2 *coyote_device_controller;
-device_mk312 *device_mk312_controller;
-device_thrustalot *device_thrustalot_controller;
-device_bubblebottle *device_bubblebottle_controller;
-device_loop *device_loop_controller;
+// An instance of each device is used for scanning
+std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_thrustalot(), new device_bubblebottle(), new device_coyote2() };
 
 void device_change_handler(type_of_change t, Device *d);
 
@@ -34,17 +31,13 @@ class PulsemoteAdvertisedDeviceCallbacks
     ESP_LOGI("comms-bt", "Advertised Device: %s\n", advertisedDevice->toString().c_str());
     // can't connect while scanning is going on - it locks up everything.
     found_device = nullptr;
-    if (coyote_device_controller->is_device(advertisedDevice)) {
-      found_device = new device_coyote2();
-    } else if (device_mk312_controller->is_device(advertisedDevice)) {
-      found_device = new device_mk312();
-    } else if (device_thrustalot_controller->is_device(advertisedDevice)) {
-      found_device = new device_thrustalot();
-    } else if (device_bubblebottle_controller->is_device(advertisedDevice)) {
-      found_device = new device_bubblebottle();
-    } else if (device_loop_controller->is_device(advertisedDevice)) {
-      found_device = new device_loop();
-    }      
+
+    for (int i=0; i< ble_devices.size(); i++) {
+      if (ble_devices[i]->is_device(advertisedDevice)) {
+        found_device = ble_devices[i]->clone();
+        break;
+      }
+    }   
     if (found_device) {
       found_bledevice = new NimBLEAdvertisedDevice(*advertisedDevice);
       NimBLEDevice::getScan()->stop();
@@ -102,14 +95,6 @@ void scan_loop() {
 // pushing a manual start scan button)
 
 void TaskCommsBT(void *pvParameters) {
-
-  // An instance of each device is used for scanning
-  coyote_device_controller = new device_coyote2();
-  device_mk312_controller = new device_mk312();
-  device_thrustalot_controller = new device_thrustalot();
-  device_bubblebottle_controller = new device_bubblebottle();
-  device_loop_controller = new device_loop();
-
   scan_comms_init();
   vTaskDelay(pdMS_TO_TICKS(2000)); // time for serial/debug to be ready
   while (true) {

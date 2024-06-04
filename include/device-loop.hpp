@@ -21,9 +21,13 @@ class device_loop : public Device {
   bool connect_to_device(NimBLEAdvertisedDevice* device) override;
   void set_callback(device_callback c) override;
 
-  static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
+  bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
   boolean get_isconnected();
   int get_reading(void);
+
+  Device* clone() const override {
+    return new device_loop(*this);
+  }
 
  private:
   int bottle_state;

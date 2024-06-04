@@ -48,6 +48,10 @@ class device_coyote2 : public Device {
     device_change_handler(ct, this);
   };
 
+  Device* clone() const override {
+    return new device_coyote2(*this);
+  }
+
   private:
     Coyote coyote;
 };

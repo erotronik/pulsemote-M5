@@ -23,8 +23,12 @@ class device_bubblebottle : public Device {
   bool connect_to_device(NimBLEAdvertisedDevice* device) override;
   void set_callback(device_callback c) override;
 
-  static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
+  bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
   boolean get_isconnected();
+
+  Device* clone() const override {
+    return new device_bubblebottle(*this);
+  }
 
  private:
   static const int mkbuffer_maxlen = 100;

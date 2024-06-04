@@ -22,7 +22,7 @@ class device_thrustalot : public Device {
   void set_callback(device_callback c) override;
 
   boolean get_isconnected();
-  static bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
+  bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
 
   void thrustallthewayin();
   void thrustallthewayout();
@@ -31,6 +31,10 @@ class device_thrustalot : public Device {
   const char *getpostext(void);
 
   QueueHandle_t events;
+
+  Device* clone() const override {
+    return new device_thrustalot(*this);
+  }
 
  private:
   int thrustcb_pos;
