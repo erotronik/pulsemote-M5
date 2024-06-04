@@ -59,12 +59,23 @@ void tab_splashscreen::loop(boolean activetab) {
   }
 }
 
+#include "tab-mqtt.hpp"
+
 void tab_splashscreen::switch_change(int sw, boolean value) {
   ESP_LOGI("splashscreen", "new callback button %d %s\n", sw,
            value ? "push" : "release");
   if (sw == 4 && value) {
     dump_connected_devices();
     updateicons();
+  }
+  if (sw == 1 && value) {
+    for (int i=0; i<tabs.size(); i++) {
+      Tab *st = tabs.get(i);
+      if (!strncmp(st->gettabname(),"wifi",4)) {
+        tab_mqtt *t = static_cast<tab_mqtt *>(st);
+        t->popup_add_device(page);
+      }
+    }
   }
 }
 
