@@ -96,10 +96,8 @@ void device_loop::ble_mk_callback(
     loopreading = (1024 - *pData);
     nreadings = 1;
   }
-  loopreading = 0.95*loopreading + (1024- *pData)*.05;
-  loopreading_max = min(loopreading_max, 1024-*pData);
-  loopreading_min = max(loopreading_min, 1024-*pData);
-  //xQueueSend(events, &loopreading, 0);
+  loopreading = 0.9*loopreading + (1024- *pData)*.1;
+  xQueueSend(events, &loopreading, 0);
 }
 
 bool device_loop::connect_to_device(NimBLEAdvertisedDevice* device) {

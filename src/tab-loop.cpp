@@ -14,14 +14,63 @@ tab_loop::tab_loop() {
 tab_loop::~tab_loop() {
 }
 
+void tab_loop::update_chart(int32_t new_data) {
+    static long shifttime = millis()+2000; // let data settle a bit
+    bool doshift = false;
+    if (millis() > shifttime) {
+
+      if (data[0] == 0 && ser1) {
+        for(int i = 0; i < LOOP_DATA_POINTS; i++) {
+          data[i] = new_data;
+        }
+        setpoint_min = new_data -5;
+        setpoint_max = new_data +5;
+        lv_chart_set_all_value(chart, line_min, setpoint_min);
+        lv_chart_set_all_value(chart, line_max, setpoint_max);
+
+      }
+      shifttime = millis()+1500;  // 150 points we want say 3 mins
+      doshift = true;
+    }
+    // Shift existing data to the left sometimes
+    int32_t loopreadingmin = 1024;
+    int32_t loopreadingmax = 0;
+    for (int i = 0; i < LOOP_DATA_POINTS - 1; i++) {
+        if (doshift) data[i] = data[i + 1];
+        loopreadingmin = min(data[i], loopreadingmin);
+        loopreadingmax = max(data[i], loopreadingmax);        
+    }
+    if (ser1) {
+      lv_chart_set_all_value(chart, line_current, new_data);
+    }
+    // Add new data at the end
+    data[LOOP_DATA_POINTS - 1] = new_data;
+    loopreadingmin = min(new_data, loopreadingmin);
+    loopreadingmax = max(new_data, loopreadingmax);       
+    loopreadingmin = min(setpoint_min, loopreadingmin);
+    loopreadingmax = max(setpoint_max, loopreadingmax);  
+    // Update chart
+    if (ser1) {
+      lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, loopreadingmin, loopreadingmax);
+    }
+}
+
+
 void tab_loop::loop(boolean activetab) {
+  int state;
   device_loop *md = static_cast<device_loop *>(device);
-  if (md && ser1) {
-    int x = md->get_reading();
-    ser1->y_points[0] = x%100;
-  }
-  if (activetab) {
-    lv_chart_refresh(chart);
+  if (md && xQueueReceive(md->events,&state, 0)) {
+    if (state > setpoint_max && is_on) {
+      is_on = false;
+      send_sync_data(SYNC_OFF);
+    } else if (state < setpoint_min && is_off) {
+      is_on = true;
+      send_sync_data(SYNC_ON);
+    }
+    update_chart(state);
+    if (activetab && ser1) {
+      lv_chart_refresh(chart);
+    }
   }
 }
 
@@ -36,17 +85,20 @@ void tab_loop::loop_tab_create() {
 
   chart = lv_chart_create(tv1);
   lv_chart_set_type(chart,LV_CHART_TYPE_LINE);
+  lv_chart_set_point_count(chart, LOOP_DATA_POINTS);
   ser1 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_GREEN), LV_CHART_AXIS_PRIMARY_Y);
-  lv_obj_set_size(chart, LV_PCT(100), 100);
+  lv_obj_set_size(chart, 240, 100);
   lv_chart_set_div_line_count(chart, 10, 90);
+  lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_CIRCULAR);
+  lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, 1024); // will autoscale later
 
-
-  uint32_t i;
-  for(i = 0; i < 240; i++) {
-    lv_chart_set_next_value(chart, ser1, lv_rand(10, 50));
-  }
-  lv_chart_refresh(chart); /*Required after direct set*/
+  lv_chart_set_ext_y_array(chart, ser1, data);
+  lv_obj_set_style_size(chart, 1, 1, LV_PART_INDICATOR); // no circles
   
+  line_max = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
+  line_min = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_PRIMARY_Y);
+  line_current = lv_chart_add_series(chart, lv_color_hex(0x005500), LV_CHART_AXIS_PRIMARY_Y);
+
   buttonbar = new tab_object_buttonbar(tv1);
   int tabid = lv_get_tabview_idx_from_page(tv, tv1);
   page = tv1;
