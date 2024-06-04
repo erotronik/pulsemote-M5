@@ -7,9 +7,6 @@
 class device_mk312_NimBLEClientCallback;
 class device_mk312;
 
-#define mkbuffer_maxlen 100
-#define mktx_maxlen 20  // For sending via bluetooth max is 20 bytes
-
 class device_mk312 : public Device {
  public:
   device_mk312();
@@ -54,6 +51,9 @@ class device_mk312 : public Device {
   void etbox_flushcb(void);
   void etbox_txcb(byte c);
   int etbox_rxcb(char* p, int x);
+
+  static const int mkbuffer_maxlen = 100;
+  static const int mktx_maxlen = 20;  // For sending via bluetooth max is 20 bytes
 
   byte mkbuffer[mkbuffer_maxlen];
   byte mkwptr = 0;

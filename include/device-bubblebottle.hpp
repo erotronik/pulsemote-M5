@@ -8,8 +8,6 @@
 class device_bubblebottle_NimBLEClientCallback;
 class device_bubblebottle;
 
-#define mkbuffer_maxlen 100
-
 typedef std::function<void(type_of_change change, Device* d)> device_callback;
 
 class device_bubblebottle : public Device {
@@ -29,6 +27,7 @@ class device_bubblebottle : public Device {
   boolean get_isconnected();
 
  private:
+  static const int mkbuffer_maxlen = 100;
   int bottle_state;
   void ble_bubblebottle_send(String newValue);
   bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);

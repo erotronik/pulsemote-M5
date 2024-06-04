@@ -8,8 +8,6 @@
 class device_thrustalot_NimBLEClientCallback;
 class device_thrustalot;
 
-#define mkbuffer_maxlen 100
-
 typedef std::function<void(type_of_change change, Device* d)> device_callback;
 
 class device_thrustalot : public Device {
@@ -53,6 +51,7 @@ class device_thrustalot : public Device {
   NimBLERemoteCharacteristic* uuid_rx_Characteristic;
   NimBLERemoteCharacteristic* uuid_tx_Characteristic;
 
+  static const int mkbuffer_maxlen =100;
   byte mkbuffer[mkbuffer_maxlen];
   byte mkwptr = 0;
 
