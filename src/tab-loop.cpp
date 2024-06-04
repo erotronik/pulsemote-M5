@@ -14,6 +14,36 @@ tab_loop::tab_loop() {
 tab_loop::~tab_loop() {
 }
 
+void tab_loop::switch_change(int sw, boolean state) {
+  if (sw == 4 && state) {
+    is_on = !is_on;
+    changedstate();
+  }
+}
+
+void tab_loop::focus_change(boolean focus) {
+  buttonbar->setrgb(0, hsvToRgb(0, 255, 64)); // red
+  buttonbar->setrgb(1, hsvToRgb(170, 255, 64)); // blue 
+  for (int i=2; i<5; i++) 
+    buttonbar->setrgb(i, hsvToRgb(0, 0, 0));
+}
+
+void tab_loop::encoder_change(int sw, int change) {
+  if (sw==0 && ser1) {
+    setpoint_min += change;
+    setpoint_min = min(setpoint_min, setpoint_max-1);
+    lv_chart_set_all_value(chart, line_min, setpoint_min);
+    lv_chart_refresh(chart);
+
+  }
+  if (sw==1 && ser1) {
+    setpoint_max += change;
+    setpoint_max = max(setpoint_max, setpoint_min+1);
+    lv_chart_set_all_value(chart, line_max, setpoint_max);
+    lv_chart_refresh(chart);
+  }
+}
+
 void tab_loop::update_chart(int32_t new_data) {
     static long shifttime = millis()+2000; // let data settle a bit
     bool doshift = false;
@@ -27,7 +57,14 @@ void tab_loop::update_chart(int32_t new_data) {
         setpoint_max = new_data +5;
         lv_chart_set_all_value(chart, line_min, setpoint_min);
         lv_chart_set_all_value(chart, line_max, setpoint_max);
-
+        buttonbar->settext(0,"Max");
+        buttonbar->setvalue(0,100);
+        buttonbar->settext(1,"Min");
+        buttonbar->setvalue(1,100);
+        buttonbar->settext(2,"On\nOff");
+        buttonbar->setvalue(2,0);
+        is_on = true;
+        changedstate();
       }
       shifttime = millis()+1500;  // 150 points we want say 3 mins
       doshift = true;
@@ -55,6 +92,17 @@ void tab_loop::update_chart(int32_t new_data) {
     }
 }
 
+void tab_loop::changedstate() {
+  if (!is_on) {
+    send_sync_data(SYNC_OFF);
+    lv_obj_set_style_bg_color(tab_status, lv_color_hex(is_on?COLOUR_GREEN:COLOUR_RED),LV_PART_MAIN);
+    lv_label_set_text(lv_obj_get_child(tab_status, 0),"Off");
+  } else {
+    send_sync_data(SYNC_ON);
+    lv_obj_set_style_bg_color(tab_status, lv_color_hex(is_on?COLOUR_GREEN:COLOUR_RED),LV_PART_MAIN);
+    lv_label_set_text(lv_obj_get_child(tab_status, 0),"On");
+  }
+}
 
 void tab_loop::loop(boolean activetab) {
   int state;
@@ -62,16 +110,37 @@ void tab_loop::loop(boolean activetab) {
   if (md && xQueueReceive(md->events,&state, 0)) {
     if (state > setpoint_max && is_on) {
       is_on = false;
-      send_sync_data(SYNC_OFF);
-    } else if (state < setpoint_min && is_off) {
+      changedstate();
+    } else if (state < setpoint_min && !is_on) {
       is_on = true;
-      send_sync_data(SYNC_ON);
+      changedstate();
     }
     update_chart(state);
     if (activetab && ser1) {
       lv_chart_refresh(chart);
     }
   }
+}
+
+void tab_loop::tab_create_status(lv_obj_t *tv2) {
+  lv_obj_t *square = lv_obj_create(tv2);
+  lv_obj_set_size(square, 64, 46);
+  lv_obj_align(square, LV_ALIGN_TOP_RIGHT, 0, 0);
+  lv_obj_set_style_bg_color(square, lv_color_hex(0xFF0000), LV_PART_MAIN);
+  lv_obj_t *labelx = lv_label_create(square);
+  lv_label_set_text(labelx, "-");
+  lv_obj_set_style_text_font(labelx, &lv_font_montserrat_24, LV_PART_MAIN);
+  lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_set_style_pad_top(square, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(square, 3, LV_PART_MAIN);
+  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_t *extra_label = lv_label_create(square);
+  lv_obj_set_style_text_font(extra_label, &lv_font_montserrat_24, LV_PART_MAIN);
+  lv_label_set_text(extra_label, "");
+  lv_obj_set_style_text_align(extra_label, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
+  lv_obj_set_scrollbar_mode(square, LV_SCROLLBAR_MODE_OFF);
+  tab_status = square;
 }
 
 void tab_loop::loop_tab_create() {
@@ -98,6 +167,8 @@ void tab_loop::loop_tab_create() {
   line_max = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
   line_min = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_PRIMARY_Y);
   line_current = lv_chart_add_series(chart, lv_color_hex(0x005500), LV_CHART_AXIS_PRIMARY_Y);
+
+  tab_create_status(tv1);
 
   buttonbar = new tab_object_buttonbar(tv1);
   int tabid = lv_get_tabview_idx_from_page(tv, tv1);
