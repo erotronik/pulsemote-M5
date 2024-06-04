@@ -127,4 +127,125 @@ void tab_mqtt::gotsyncdata(Tab *t, sync_data status) {
     mqttsend(outputChar,"bye");  
 }
 
+// Add a device menu
 
+// Callback function for Close (X) button
+void tab_mqtt::popup_add_device_close_event_cb(lv_event_t * e) {
+    tab_mqtt *t = static_cast<tab_mqtt *>(lv_event_get_user_data(e));
+    lv_obj_del(t->popup_add_device_modal); // Close the message box
+    t->popup_add_device_open = false;
+}
+
+// Callback function for list selection
+void tab_mqtt::popup_add_device_list_event_handler(lv_event_t * e) {
+  lv_event_code_t code = lv_event_get_code(e);
+  lv_obj_t * btn = static_cast<lv_obj_t *>(lv_event_get_target(e));
+  tab_mqtt *t = static_cast<tab_mqtt *>(lv_event_get_user_data(e));
+    
+  if(code == LV_EVENT_CLICKED) {
+    if(t->selected_btn == btn) {
+      // Unhighlight the button if it's already selected
+      lv_obj_clear_state(t->selected_btn, LV_STATE_CHECKED);
+                  lv_obj_remove_style(t->selected_btn, &t->style_selected, 0);
+
+       t->selected_btn = NULL;
+    } else {
+      // Unhighlight the previous button if there was one
+      if(t->selected_btn != NULL) {
+        lv_obj_clear_state(t->selected_btn, LV_STATE_CHECKED);
+                        lv_obj_remove_style(t->selected_btn, &t->style_selected, 0);
+
+      }
+      // Highlight the current button
+      lv_obj_add_state(btn, LV_STATE_CHECKED);
+                  lv_obj_add_style(btn, &t->style_selected, 0);
+
+      t->selected_btn = btn;
+    }
+  }
+}
+
+void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
+  tab_mqtt *t = static_cast<tab_mqtt *>(lv_event_get_user_data(e));
+  if(t->selected_btn != NULL) {
+      //const char * txt = lv_list_get_btn_text(selected_btn);
+      //printf("Selected option: %s\n", txt);
+      // Perform the desired action with the selected option here
+  }
+  lv_obj_del(t->popup_add_device_modal); // Close the message box
+  t->popup_add_device_open = false;
+}
+
+void tab_mqtt::popup_add_device(lv_obj_t *base) {
+    if (popup_add_device_open) {
+        lv_obj_del(popup_add_device_modal); // Close the message box
+        popup_add_device_open = false;
+        return;
+    }
+    popup_add_device_open = true;
+    selected_btn = NULL;
+
+    lv_style_init(&style_selected);
+    lv_style_set_bg_color(&style_selected, lv_palette_main(LV_PALETTE_BLUE));
+    lv_style_set_bg_opa(&style_selected, LV_OPA_50);
+
+    popup_add_device_modal = lv_obj_create(base);
+    lv_obj_set_size(popup_add_device_modal, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_style_bg_opa(popup_add_device_modal, LV_OPA_50, 0);
+    lv_obj_set_style_bg_color(popup_add_device_modal, lv_color_black(), 0);
+    lv_obj_align(popup_add_device_modal, LV_ALIGN_CENTER, 0, 0);
+
+    // Create a container for the message box content
+    lv_obj_t * container = lv_obj_create(popup_add_device_modal);
+    lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(container, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+    lv_obj_set_size(container, 320, 150); // todo better dynamic
+    lv_obj_align(container, LV_ALIGN_CENTER, 0, 0);
+
+    // Create a label for the message box title
+    lv_obj_t * title = lv_label_create(container);
+    lv_label_set_text(title, "Add a device");
+    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 0, 10);
+
+    // Create a list
+    lv_obj_t * list = lv_list_create(container);
+    lv_obj_set_size(list, 320, 100); // todo better dynamic
+    lv_obj_align(list, LV_ALIGN_CENTER, 0, 10);
+
+    // Add items to the list
+    for(int i = 1; i <= 3; i++) {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "Option %d", i);
+        lv_obj_t * list_btn = lv_list_add_btn(list, NULL, buf);
+        lv_obj_add_event_cb(list_btn, popup_add_device_list_event_handler, LV_EVENT_CLICKED, this);
+    }
+
+    // Create a container for the buttons
+    lv_obj_t * btn_container = lv_obj_create(container);
+    lv_obj_set_width(btn_container, lv_pct(100));
+    lv_obj_set_height(btn_container, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(btn_container, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(btn_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_top(btn_container, 10, 0);
+
+    // Create OK button
+    lv_obj_t * ok_btn = lv_btn_create(btn_container);
+    lv_obj_set_size(ok_btn, 100, 40);
+    lv_obj_align(ok_btn, LV_ALIGN_BOTTOM_LEFT, 10, 0);
+    lv_obj_add_event_cb(ok_btn, popup_add_device_ok_event_cb, LV_EVENT_CLICKED, this);
+
+    lv_obj_t * ok_label = lv_label_create(ok_btn);
+    lv_label_set_text(ok_label, "OK");
+    lv_obj_center(ok_label);
+
+    // Create Close (X) button
+    lv_obj_t * close_btn = lv_btn_create(btn_container);
+    lv_obj_set_size(close_btn, 100, 40);
+    lv_obj_align(close_btn, LV_ALIGN_BOTTOM_RIGHT, -10, 0);
+    lv_obj_add_event_cb(close_btn, popup_add_device_close_event_cb, LV_EVENT_CLICKED, this);
+
+    lv_obj_t * close_label = lv_label_create(close_btn);
+    lv_label_set_text(close_label, "CANCEL");
+    lv_obj_center(close_label);
+
+}
