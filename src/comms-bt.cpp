@@ -1,8 +1,6 @@
 #include <NimBLEDevice.h>
 #include <esp_log.h>
 
-#include <memory>
-
 #include "device-coyote2.hpp"
 #include "device-mk312.hpp"
 #include "device-thrustalot.hpp"
@@ -13,20 +11,15 @@
 // An instance of each device is used for scanning
 std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_thrustalot(), new device_bubblebottle(), new device_coyote2() };
 
-void device_change_handler(type_of_change t, Device *d);
-
-NimBLEServer *pServer = nullptr;
-NimBLECharacteristic *pTxCharacteristic;
 NimBLEScan *pBLEScan;
-boolean scanthread_is_scanning = false;
+boolean scanthread_is_scanning;
 
 int scanTime = 60;  // Duration is in seconds in NimBLE
 
-NimBLEAdvertisedDevice *found_bledevice = nullptr;
+NimBLEAdvertisedDevice *found_bledevice;
 Device *found_device;
 
-class PulsemoteAdvertisedDeviceCallbacks
-    : public NimBLEAdvertisedDeviceCallbacks {
+class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) override {
     ESP_LOGI("comms-bt", "Advertised Device: %s\n", advertisedDevice->toString().c_str());
     // can't connect while scanning is going on - it locks up everything.
@@ -47,42 +40,33 @@ class PulsemoteAdvertisedDeviceCallbacks
 
 void scan_comms_init(void) {
   NimBLEDevice::init("x");
-  NimBLEDevice::setPower(
-      ESP_PWR_LVL_P6, ESP_BLE_PWR_TYPE_ADV);  // send advertisements with 6 dbm
+  NimBLEDevice::setPower(ESP_PWR_LVL_P6, ESP_BLE_PWR_TYPE_ADV);  // send advertisements with 6 dbm
   pBLEScan = NimBLEDevice::getScan();         // create new scan
-  pBLEScan->setAdvertisedDeviceCallbacks(
-      new PulsemoteAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(
-      true);  // active scan uses more power, but get results faster
+  pBLEScan->setAdvertisedDeviceCallbacks(new PulsemoteAdvertisedDeviceCallbacks());
+  pBLEScan->setActiveScan(true);  // active scan uses more power, but get results faster
   pBLEScan->setInterval(250);
   pBLEScan->setWindow(125);  // less or equal setInterval value
   ESP_LOGI("comms-bt", "Started ble scanning task\n");
 }
 
 void scan_loop() {
-  boolean repeatscan = true;  // if we found something and connected to it, keep
-                              // scanning for more
-  scanthread_is_scanning = true;
+  boolean repeatscan = false;  // if we found something and connected to it, keep scanning for more
 
-  while (repeatscan) {
+  do {
     ESP_LOGI("comms-nt", "Scanning for %ds\n", scanTime);
     pBLEScan->start(scanTime, false);  // up to one minute
-    repeatscan = false;
-    pBLEScan->clearResults();  // delete results fromBLEScan buffer to release
-                               // memory
+    pBLEScan->clearResults();  // delete results fromBLEScan buffer to release memory
 
-    if (found_bledevice && found_device != nullptr) {
+    if (found_device) {
       ESP_LOGI(found_device->getShortName(), "found device");
       found_device->set_callback(device_change_handler);
       boolean connected = found_device->connect_to_device(found_bledevice);
       if (!connected) delete found_device;    
       delete found_bledevice;
-      found_bledevice = nullptr;
       repeatscan = true;
       vTaskDelay(pdMS_TO_TICKS(100));
     }
-  }
-  scanthread_is_scanning = false;
+  } while (repeatscan);
 }
 
 // On the ESP32, we scan in a separate task - scanning is a blocking
@@ -95,10 +79,13 @@ void scan_loop() {
 // pushing a manual start scan button)
 
 void TaskCommsBT(void *pvParameters) {
+  scanthread_is_scanning = false;
   scan_comms_init();
   vTaskDelay(pdMS_TO_TICKS(2000)); // time for serial/debug to be ready
   while (true) {
+    scanthread_is_scanning = true;
     scan_loop();
+    scanthread_is_scanning = false;
     vTaskDelay(pdMS_TO_TICKS(1000));  // Scan for 60 seconds, wait for 1 second
   }
 }
