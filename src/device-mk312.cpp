@@ -10,7 +10,12 @@ NimBLEUUID MK312_SERVICE_BLEUUID("0000ffe0-0000-1000-8000-00805f9b34fb");
 NimBLEUUID MK312_UUID_RXTX("0000ffe1-0000-1000-8000-00805f9b34fb");
 
 bool device_mk312::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
-  return (advertisedDevice->isAdvertisingService(MK312_SERVICE_BLEUUID));
+  if (advertisedDevice->isAdvertisingService(MK312_SERVICE_BLEUUID)) {
+    // any BLE UART will match this so only try to connect to something with name MK or 312 in the name
+    if (strstr(advertisedDevice->getName().c_str(),"312")) return true;
+    if (!strcmp(advertisedDevice->getName().c_str(),"MK")) return true;
+  }
+  return false;
 }
 
 bool device_mk312::get_isconnected() { return is_connected; }

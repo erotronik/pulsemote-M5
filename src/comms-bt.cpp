@@ -28,7 +28,7 @@ class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallback
     for (int i=0; i< ble_devices.size(); i++) {
       if (ble_devices[i]->is_device(advertisedDevice)) {
         found_device = ble_devices[i]->clone();
-       break;
+        break;
       }
     }   
     if (found_device) {
@@ -58,6 +58,7 @@ void scan_loop() {
 
     if (found_device && found_bledevice) {
       ESP_LOGI(found_device->getShortName(), "found device");
+      vTaskDelay(pdMS_TO_TICKS(100));
       found_device->set_callback(device_change_handler);
       boolean connected = found_device->connect_to_device(found_bledevice);
       if (!connected) {
@@ -72,12 +73,12 @@ void scan_loop() {
   } while (repeatscan);
 }
 
-// On the ESP32, we scan in a separate task - scanning is a blocking
-// operation. All the communication with the Coyote also happens
+// We scan in a separate task - scanning is a blocking
+// operation. All the communication with the Bluetooth devices also happens
 // in this task.
 
 // Currently we scan forever, but we might want to stop after the first
-// scan_loop() (which runs for 60 seconds after the last thing is connected)
+// scan_loop() (which runs for some number of seconds after the last thing is connected)
 // until something manual causes it to start again (like a disconnection or
 // pushing a manual start scan button)
 
