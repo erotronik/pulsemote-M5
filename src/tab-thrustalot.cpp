@@ -244,10 +244,7 @@ void tab_thrustalot::tab_create_status(lv_obj_t *tv2) {
 }
 
 void tab_thrustalot::tab_create() {
-  lv_obj_t *tv3;
-  device_thrustalot *md = static_cast<device_thrustalot *>(device);
-
-  tv3 = lv_tabview_add_tab(tv, md->getShortName());
+  lv_obj_t *tv3 = lv_tabview_add_tab(tv, gettabname());
 
   lv_obj_set_style_pad_left(tv3, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_top(tv3, 10, LV_PART_MAIN);

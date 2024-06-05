@@ -233,8 +233,7 @@ void tab_coyote::tab_create_status(lv_obj_t *tv2) {
 }
 
 void tab_coyote::coyote_tab_create() {
-  device_coyote2* md = static_cast<device_coyote2*>(device);
-  lv_obj_t *tv1 = lv_tabview_add_tab(tv, md->getShortName());
+  lv_obj_t *tv1 = lv_tabview_add_tab(tv, gettabname());
 
   lv_obj_set_style_pad_left(tv1, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_right(tv1,0, LV_PART_MAIN);

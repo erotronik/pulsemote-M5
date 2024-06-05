@@ -125,8 +125,7 @@ void tab_loop::tab_create_status(void) {
 }
 
 void tab_loop::loop_tab_create() {
-  device_loop* md = static_cast<device_loop*>(device);
-  page = lv_tabview_add_tab(tv, md->getShortName());
+  page = lv_tabview_add_tab(tv, gettabname());
 
   lv_obj_set_style_pad_left(page, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_right(page, 0, LV_PART_MAIN);
