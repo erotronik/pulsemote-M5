@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "tab.hpp"
 #include "device-loop.hpp" 
 #include "tab-loop.hpp"
@@ -33,7 +35,6 @@ void tab_loop::encoder_change(int sw, int change) {
     setpoint_min = min(setpoint_min, setpoint_max-1);
     lv_chart_set_all_value(chart, line_min, setpoint_min);
     lv_chart_refresh(chart);
-
   }
   if (sw==1 && chart) {
     setpoint_max += change;
@@ -45,7 +46,6 @@ void tab_loop::encoder_change(int sw, int change) {
 
 void tab_loop::update_chart(int32_t new_data) {
   static long shifttime = millis()+2000; // let data settle a bit
-  bool doshift = false;
   if (millis() > shifttime) {
     if (data[0] == 0 && graph_data) {
       for(int i = 0; i < LOOP_DATA_POINTS; i++) {
@@ -65,29 +65,18 @@ void tab_loop::update_chart(int32_t new_data) {
       changed_state();
     }
     shifttime = millis()+1500;  // 150 points we want say 3 mins
-    doshift = true;
+    // Shift existing data to the left sometimes
+    std::rotate(data, data+1, data+LOOP_DATA_POINTS);
   }
-  // Shift existing data to the left sometimes
-  int32_t loopreadingmin = 1024;
-  int32_t loopreadingmax = 0;
-  for (int i = 0; i < LOOP_DATA_POINTS - 1; i++) {
-    if (doshift) data[i] = data[i + 1];
-    loopreadingmin = min(data[i], loopreadingmin);
-    loopreadingmax = max(data[i], loopreadingmax);        
-  }
-  if (chart) 
-    lv_chart_set_all_value(chart, line_current, new_data);
+  if (chart) lv_chart_set_all_value(chart, line_current, new_data);
     
   // Add new data at the end
   data[LOOP_DATA_POINTS - 1] = new_data;
 
-  loopreadingmin = min(new_data, loopreadingmin);
-  loopreadingmax = max(new_data, loopreadingmax);       
-  loopreadingmin = min(setpoint_min, loopreadingmin);
-  loopreadingmax = max(setpoint_max, loopreadingmax);  
+  int loopreadingmin = std::min({1024, setpoint_min, *std::min_element(data,data+LOOP_DATA_POINTS)});
+  int loopreadingmax = std::max({0, setpoint_max, *std::max_element(data,data+LOOP_DATA_POINTS)});
 
-  if (chart)
-    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, loopreadingmin, loopreadingmax);
+  if (chart) lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, loopreadingmin, loopreadingmax);
 }
 
 void tab_loop::changed_state() {
