@@ -8,8 +8,6 @@
 class device_thrustalot_NimBLEClientCallback;
 class device_thrustalot;
 
-typedef std::function<void(type_of_change change, Device* d)> device_callback;
-
 class device_thrustalot : public Device {
  public:
   device_thrustalot();

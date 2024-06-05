@@ -8,8 +8,6 @@
 class device_bubblebottle_NimBLEClientCallback;
 class device_bubblebottle;
 
-typedef std::function<void(type_of_change change, Device* d)> device_callback;
-
 class device_bubblebottle : public Device {
  public:
   device_bubblebottle();

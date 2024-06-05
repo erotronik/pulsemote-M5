@@ -6,8 +6,6 @@
 class device_loop_NimBLEClientCallback;
 class device_loop;
 
-typedef std::function<void(type_of_change change, Device* d)> device_callback;
-
 class device_loop : public Device {
  public:
   device_loop();
