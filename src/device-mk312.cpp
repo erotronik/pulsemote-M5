@@ -6,6 +6,14 @@
 #include <functional>
 #include <map>
 
+// This code works with a MK-312BT box that has a bluetooth serial BLE board installed
+// or with an original ET-312B that has a bluetooth serial dongle attached. In both
+// cases the name of the device must be "MK" or have a "312" inside it.
+//
+// I connected a cheap BT578v3 to an ET-312B. To start you need to connect it to a PC
+// and issue a command like AT+NAMBET312\r\n to set the name and AT+BAUD5 to set it to
+// 19200 (it defaults to 9600) see http://www.irxon.com/pdf/docs/BT578_V3_EN.pdf
+
 NimBLEUUID MK312_SERVICE_BLEUUID("0000ffe0-0000-1000-8000-00805f9b34fb");
 NimBLEUUID MK312_UUID_RXTX("0000ffe1-0000-1000-8000-00805f9b34fb");
 
