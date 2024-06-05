@@ -73,8 +73,8 @@ void tab_loop::update_chart(int32_t new_data) {
   // Add new data at the end
   data[LOOP_DATA_POINTS - 1] = new_data;
 
-  int loopreadingmin = std::min({1024, setpoint_min, *std::min_element(data,data+LOOP_DATA_POINTS)});
-  int loopreadingmax = std::max({0, setpoint_max, *std::max_element(data,data+LOOP_DATA_POINTS)});
+  int loopreadingmin = std::min({setpoint_min, *std::min_element(data,data+LOOP_DATA_POINTS)});
+  int loopreadingmax = std::max({setpoint_max, *std::max_element(data,data+LOOP_DATA_POINTS)});
 
   if (chart) lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, loopreadingmin, loopreadingmax);
 }
@@ -107,9 +107,9 @@ void tab_loop::tab_create_status(void) {
   lv_obj_t *square = lv_obj_create(page);
   lv_obj_set_size(square, 64, 46);
   lv_obj_align(square, LV_ALIGN_TOP_LEFT, 4, 0);
-  lv_obj_set_style_bg_color(square, lv_color_hex(0xFF0000), LV_PART_MAIN);
+  lv_obj_set_style_bg_color(square, lv_color_hex(0x0000FF), LV_PART_MAIN);
   lv_obj_t *labelx = lv_label_create(square);
-  lv_label_set_text(labelx, "-");
+  lv_label_set_text(labelx, "Wait");
   lv_obj_set_style_text_font(labelx, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_set_style_pad_top(square, 3, LV_PART_MAIN);
