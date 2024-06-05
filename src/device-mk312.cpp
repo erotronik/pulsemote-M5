@@ -147,7 +147,7 @@ void device_mk312::ble_mk_callback(
     BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData,
     size_t length, bool isNotify) {
   for (byte i = 0; i < length; i++) {
-    if (mkwptr == mkbuffer_maxlen) mkwptr = 0;
+    if (mkwptr == mkbuffer_maxlen-1) mkwptr = 0;
     mkbuffer[mkwptr++] = (byte)(*(pData + i));
   }
 }
@@ -195,20 +195,22 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
             std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1,
                       std::placeholders::_2),
             std::bind(&device_mk312::etbox_flushcb, this));
-  BOX.setdebug(Serial, 0);
+  BOX.setdebug(Serial, 1);
   BOX.newhello();
   if (!BOX.isconnected()) {
     ESP_LOGE(getShortName(), "couldnt do hello handshake to box");
-    bleClient->disconnect();
+    //bleClient->disconnect();
     NimBLEDevice::deleteClient(bleClient);
+    bleClient = NULL;
     notify(D_DISCONNECTED);
     return false;
   }
   int y = BOX.getbyte(ETMEM_knoba); // any location really just to ensure the handshake worked
   if (y == -1) {
     ESP_LOGE(getShortName(), "couldnt get data from box");
-    bleClient->disconnect();
+    //bleClient->disconnect();
     NimBLEDevice::deleteClient(bleClient);
+    bleClient = NULL;
     notify(D_DISCONNECTED);
     return false;
   }

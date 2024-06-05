@@ -14,7 +14,7 @@ std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new 
 NimBLEScan *pBLEScan;
 boolean scanthread_is_scanning;
 
-int scanTime = 60;  // Duration is in seconds in NimBLE
+int scanTime = 30;  // Duration is in seconds in NimBLE
 
 NimBLEAdvertisedDevice *found_bledevice;
 Device *found_device;
@@ -57,7 +57,7 @@ void scan_loop() {
     pBLEScan->start(scanTime, false);  // up to one minute
     pBLEScan->clearResults();  // delete results fromBLEScan buffer to release memory
 
-    if (found_device) {
+    if (found_device && found_bledevice) {
       ESP_LOGI(found_device->getShortName(), "found device");
       found_device->set_callback(device_change_handler);
       boolean connected = found_device->connect_to_device(found_bledevice);
@@ -86,6 +86,6 @@ void TaskCommsBT(void *pvParameters) {
     scanthread_is_scanning = true;
     scan_loop();
     scanthread_is_scanning = false;
-    vTaskDelay(pdMS_TO_TICKS(1000));  // Scan for 60 seconds, wait for 1 second
+    vTaskDelay(pdMS_TO_TICKS(1000));  // Scan for X seconds, wait for 1 second
   }
 }

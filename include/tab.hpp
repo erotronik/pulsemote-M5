@@ -66,7 +66,7 @@ class Tab {
   };
 
   DeviceType type;
-  lv_obj_t *page;  // the content of the tab, don't use tab_id as we need to remove tabs
+  lv_obj_t *page = NULL;  // the content of the tab, don't use tab_id as we need to remove tabs
   type_of_change old_last_change;
   type_of_change last_change;
   Device *device;
