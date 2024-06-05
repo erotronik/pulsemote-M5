@@ -28,14 +28,14 @@ lv_indev_t *indev;
 
 LinkedList<Tab *> tabs = LinkedList<Tab *>();
 
-byte lastencodertest[numencoders] = {128, 128, 128, 128};
-byte encodertest[numencoders] = {128, 128, 128, 128};
+byte lastencodervalue[numencoders] = {128, 128, 128, 128};
+byte encodervalue[numencoders] = {128, 128, 128, 128};
 
 void RotaryEncoderChanged(bool clockwise, int id) {
   if (clockwise) {
-    encodertest[id]++;
+    encodervalue[id]++;
   } else {
-    encodertest[id]--;
+    encodervalue[id]--;
   }
 }
 
@@ -64,9 +64,9 @@ void handlebuttonpushes() {
 
 void handlerotaryencoders() {
   for (int i = 0; i < numencoders; i++) {
-    int change = encodertest[i] - lastencodertest[i];
+    int change = encodervalue[i] - lastencodervalue[i];
     if (change != 0) {
-      lastencodertest[i] = encodertest[i] = 128;
+      lastencodervalue[i] = encodervalue[i] = 128;
       // find what device tab is active as encoders must only work on active tab
       lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
       for (int j = 0; j < tabs.size(); j++) {
@@ -125,7 +125,7 @@ void device_change_handler(type_of_change t, Device *d) {
   int newdevice = -1;
   for (int i = 0; i < tabs.size(); i++) {
     Tab *tt = tabs.get(i);
-    if (tt->device == d) {
+    if (tt->device == d) { // found an existing tab that matches the device instance
       tt->last_change = t;
       newdevice = i;
       break;
