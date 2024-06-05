@@ -46,7 +46,7 @@ class device_coyote2 : public Device {
   };
 
   Device* clone() const override {
-    return new device_coyote2(*this);
+    return new device_coyote2();
   }
 
   private:

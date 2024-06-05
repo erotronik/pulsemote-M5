@@ -9,13 +9,7 @@
 #include "device.hpp"
 
 // An instance of each device is used for scanning
-//std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_thrustalot(), new device_bubblebottle(), new device_coyote2() };
-
-device_coyote2 *coyote_device_controller;
-device_mk312 *device_mk312_controller;
-device_thrustalot *device_thrustalot_controller;
-device_bubblebottle *device_bubblebottle_controller;
-device_loop *device_loop_controller;
+std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_thrustalot(), new device_bubblebottle(), new device_coyote2() };
 
 NimBLEScan *pBLEScan;
 boolean scanthread_is_scanning;
@@ -31,24 +25,12 @@ class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallback
     // can't connect while scanning is going on - it locks up everything.
     found_device = nullptr;
 
-    if (coyote_device_controller->is_device(advertisedDevice)) {
-      found_device = new device_coyote2();
-    } else if (device_mk312_controller->is_device(advertisedDevice)) {
-      found_device = new device_mk312();
-    } else if (device_thrustalot_controller->is_device(advertisedDevice)) {
-      found_device = new device_thrustalot();
-    } else if (device_bubblebottle_controller->is_device(advertisedDevice)) {
-      found_device = new device_bubblebottle();
-    } else if (device_loop_controller->is_device(advertisedDevice)) {
-      found_device = new device_loop();
-    }
-
-    //for (int i=0; i< ble_devices.size(); i++) {
-    //  if (ble_devices[i]->is_device(advertisedDevice)) {
-    //    found_device = ble_devices[i]->clone();
-    //   break;
-    //  }
-    //}   
+    for (int i=0; i< ble_devices.size(); i++) {
+      if (ble_devices[i]->is_device(advertisedDevice)) {
+        found_device = ble_devices[i]->clone();
+       break;
+      }
+    }   
     if (found_device) {
       found_bledevice = new NimBLEAdvertisedDevice(*advertisedDevice);
       NimBLEDevice::getScan()->stop();
@@ -101,14 +83,6 @@ void scan_loop() {
 
 void TaskCommsBT(void *pvParameters) {
   scanthread_is_scanning = false;
-
-  // An instance of each device is used for scanning
-  coyote_device_controller = new device_coyote2();
-  device_mk312_controller = new device_mk312();
-  device_thrustalot_controller = new device_thrustalot();
-  device_bubblebottle_controller = new device_bubblebottle();
-  device_loop_controller = new device_loop();
-
   scan_comms_init();
   vTaskDelay(pdMS_TO_TICKS(2000)); // time for serial/debug to be ready
   while (true) {

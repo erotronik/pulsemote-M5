@@ -25,7 +25,7 @@ class device_bubblebottle : public Device {
   boolean get_isconnected();
 
   Device* clone() const override {
-    return new device_bubblebottle(*this);
+    return new device_bubblebottle();
   }
 
  private:

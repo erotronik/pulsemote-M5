@@ -34,7 +34,7 @@ class device_mk312 : public Device {
   byte etbox_getbyte(word a);
 
   Device* clone() const override {
-    return new device_mk312(*this);
+    return new device_mk312();
   }
 
  private:

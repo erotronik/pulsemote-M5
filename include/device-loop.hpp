@@ -19,7 +19,7 @@ class device_loop : public Device {
   void set_callback(device_callback c) override;
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
   Device* clone() const override {
-    return new device_loop(*this);
+    return new device_loop();
   }
 
   boolean get_isconnected();

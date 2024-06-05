@@ -31,7 +31,7 @@ class device_thrustalot : public Device {
   QueueHandle_t events;
 
   Device* clone() const override {
-    return new device_thrustalot(*this);
+    return new device_thrustalot();
   }
 
  private:
