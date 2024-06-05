@@ -38,7 +38,7 @@ class tab_mqtt : public Tab {
     void connectToWiFi(void);
     void callback(char* topic, byte* payload, unsigned int length);
     WiFiClient espClient;
-    PubSubClient *client = nullptr;
+    PubSubClient *client = NULL;
     QueueHandle_t events;
 
     typedef struct {

@@ -285,6 +285,7 @@ void tab_mk312::tab_create() {
 
 // return false if we removed ourselves from the connected devices list
 boolean tab_mk312::hardware_changed(void) {
+  ESP_LOGD("mk312","hardware changed %d", last_change);
   need_refresh = true;
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());

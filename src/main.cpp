@@ -108,9 +108,11 @@ void setup_tabs(void) {
   sp->setup();
   tabs.add(sp);
 
+  #if 0
   Tab *mq = new tab_mqtt();
   mq->setup();
   tabs.add(mq);
+  #endif
 }
 
 // This is called when our scanner detects a new device; figure out
