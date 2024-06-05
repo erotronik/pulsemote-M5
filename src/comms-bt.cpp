@@ -40,7 +40,7 @@ class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallback
     } else if (device_bubblebottle_controller->is_device(advertisedDevice)) {
       found_device = new device_bubblebottle();
     } else if (device_loop_controller->is_device(advertisedDevice)) {
-     found_device = new device_loop();
+      found_device = new device_loop();
     }
 
     //for (int i=0; i< ble_devices.size(); i++) {
@@ -73,17 +73,20 @@ void scan_loop() {
   do {
     ESP_LOGI("comms-nt", "Scanning for %ds\n", scanTime);
     pBLEScan->start(scanTime, false);  // up to one minute
-    pBLEScan->clearResults();  // delete results fromBLEScan buffer to release memory
 
     if (found_device && found_bledevice) {
       ESP_LOGI(found_device->getShortName(), "found device");
       found_device->set_callback(device_change_handler);
       boolean connected = found_device->connect_to_device(found_bledevice);
-      if (!connected) delete found_device;    
+      if (!connected) {
+        delete found_device;    
+        found_device = NULL;
+      }
       delete found_bledevice;
       repeatscan = true;
       vTaskDelay(pdMS_TO_TICKS(100));
     }
+    pBLEScan->clearResults();  // delete results fromBLEScan buffer to release memory
   } while (repeatscan);
 }
 

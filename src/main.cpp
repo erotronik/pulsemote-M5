@@ -108,7 +108,7 @@ void setup_tabs(void) {
   sp->setup();
   tabs.add(sp);
 
-  #if 0
+  #ifdef CONFIG_WIFI_SSID
   Tab *mq = new tab_mqtt();
   mq->setup();
   tabs.add(mq);
@@ -186,9 +186,8 @@ void setup() {
   printf_log("Version %s\n",__DATE__);
   printf_log("Scanning for devices...\n");
 
-  xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 10, nullptr, 1, nullptr, 1);
-  xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 12, nullptr, 2,
-                          nullptr, 0);
+  xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 0);
+  xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 20, nullptr, 2, nullptr, 1);
 }
 
 // Handle any tabs that have changed status, this includes
