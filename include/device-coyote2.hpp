@@ -3,9 +3,6 @@
 #include <coyote.hpp>
 #include <device.hpp>
 
-void device_change_handler(type_of_change t, Device *d);
-typedef std::function<void(type_of_change change, Device* d)> device_callback;
-
 class device_coyote2 : public Device {
  public:
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) {

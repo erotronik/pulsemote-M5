@@ -22,7 +22,7 @@ void tab_loop::switch_change(int sw, boolean state) {
 
 void tab_loop::focus_change(boolean focus) {
   buttonbar->setrgb(0, hsvToRgb(0, 255, 64)); // red
-  buttonbar->setrgb(1, hsvToRgb(170, 255, 64)); // blue 
+  buttonbar->setrgb(1, hsvToRgb(85, 255, 64)); // green
   for (int i=2; i<5; i++) 
     buttonbar->setrgb(i, hsvToRgb(0, 0, 0));
 }
@@ -117,7 +117,7 @@ void tab_loop::loop(boolean activetab) {
 void tab_loop::tab_create_status(void) {
   lv_obj_t *square = lv_obj_create(page);
   lv_obj_set_size(square, 64, 46);
-  lv_obj_align(square, LV_ALIGN_TOP_RIGHT, 0, 0);
+  lv_obj_align(square, LV_ALIGN_TOP_LEFT, 4, 0);
   lv_obj_set_style_bg_color(square, lv_color_hex(0xFF0000), LV_PART_MAIN);
   lv_obj_t *labelx = lv_label_create(square);
   lv_label_set_text(labelx, "-");
@@ -140,25 +140,28 @@ void tab_loop::loop_tab_create() {
   page = lv_tabview_add_tab(tv, md->getShortName());
 
   lv_obj_set_style_pad_left(page, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_right(page,0, LV_PART_MAIN);
+  lv_obj_set_style_pad_right(page, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_top(page, 10, LV_PART_MAIN);
   lv_obj_set_style_pad_bottom(page, 0, LV_PART_MAIN);
 
   chart = lv_chart_create(page);
+  lv_obj_align(chart, LV_ALIGN_TOP_RIGHT, -4, 0);
   lv_chart_set_type(chart,LV_CHART_TYPE_LINE);
   lv_chart_set_point_count(chart, LOOP_DATA_POINTS);
-  graph_data = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_GREEN), LV_CHART_AXIS_PRIMARY_Y);
-  lv_obj_set_size(chart, 240, 100);
+  graph_data = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_PRIMARY_Y);
+  lv_obj_set_size(chart, 240, 120);
   lv_chart_set_div_line_count(chart, 10, 90);
   lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_CIRCULAR);
   lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, 1024); // will autoscale later
 
   lv_chart_set_ext_y_array(chart, graph_data, data);
-  lv_obj_set_style_size(chart, 1, 1, LV_PART_INDICATOR); // no circles
+  lv_obj_set_style_size(chart, 0, 0, LV_PART_INDICATOR); // no circles
   
   line_max = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
-  line_min = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_PRIMARY_Y);
-  line_current = lv_chart_add_series(chart, lv_color_hex(0x005500), LV_CHART_AXIS_PRIMARY_Y);
+  line_min = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_GREEN), LV_CHART_AXIS_PRIMARY_Y);
+  line_current = lv_chart_add_series(chart, lv_color_hex(0x000088), LV_CHART_AXIS_PRIMARY_Y);
+
+  lv_chart_set_div_line_count(chart, 0, 3); 
 
   tab_create_status();
 
