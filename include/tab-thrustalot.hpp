@@ -26,6 +26,7 @@ class tab_thrustalot : public Tab {
     MODE_RANDOM,
     MODE_SYNC
   };
+  const char *thrustalot_main_modes_c = "Manual\nTimer\nRandom\nSync";
 
   int getcyclecount(void) override { return thrustcount; };
 
@@ -36,7 +37,7 @@ class tab_thrustalot : public Tab {
   lv_obj_t *tab_status;
   int thrustcount = 0;
   void tab_create(void);
-  void tab_create_status(lv_obj_t *tv2);
+  void tab_create_status(void);
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;

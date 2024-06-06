@@ -5,6 +5,8 @@
 #include <lvgl.h>
 #include "tab.hpp"
 
+void m5io_showanalogrgb(byte sw, const CRGB &rgb);
+
 class tab_splashscreen: public Tab {
     public:
         tab_splashscreen();
@@ -14,7 +16,7 @@ class tab_splashscreen: public Tab {
     void encoder_change(int sw, int change) override;
     void loop(boolean activetab) override;
     void setup(void) override;
-    const char* gettabname(void) override { return "Splashscreen";};
+    const char* gettabname(void) override { return "Pulsemote";};
 
     private:
      unsigned long batterycheckmillis = 0;
@@ -22,6 +24,7 @@ class tab_splashscreen: public Tab {
      lv_obj_t *labelicons;
      void updateicons(void);
      byte buttonhue[5] = {0, 0, 0, 0, 0};
+     void dump_connected_devices(void);
 
 };
 

@@ -7,9 +7,6 @@
 #include "tab.hpp"
 #include "lvgl-utils.h"
 
-const char *thrustalot_main_modes_c =
-    "Manual\nTimer\nRandom\nSync";
-
 tab_thrustalot::tab_thrustalot() {
   ison = true;
   lockpanel = false;
@@ -26,7 +23,6 @@ tab_thrustalot::tab_thrustalot() {
 tab_thrustalot::~tab_thrustalot() {}
 
 void tab_thrustalot::encoder_change(int sw, int change) {
-  ESP_LOGD("thrustalot", "encoder change and tab stuff %d", ison);
   if (main_mode == MODE_RANDOM && sw == 3) {
     rand_timer->rotary_change(change);
   }
@@ -150,8 +146,7 @@ void tab_thrustalot::loop(boolean activetab) {
              pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
     device_thrustalot *md = static_cast<device_thrustalot *>(device);
-    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED),
-                                LV_PART_MAIN);
+    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
@@ -200,10 +195,8 @@ void tab_thrustalot::loop(boolean activetab) {
 }
 
 void thrustalot_mode_change_cb(lv_event_t *event) {
-  tab_thrustalot *thrustalot_tab =
-      static_cast<tab_thrustalot *>(lv_event_get_user_data(event));
-  thrustalot_tab->main_mode = static_cast<tab_thrustalot::main_modes>(
-      lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
+  tab_thrustalot *thrustalot_tab = static_cast<tab_thrustalot *>(lv_event_get_user_data(event));
+  thrustalot_tab->main_mode = static_cast<tab_thrustalot::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("thrustalot", "cb %s on %d: new mode %d",
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
            thrustalot_tab->main_mode);
@@ -214,44 +207,42 @@ void thrustalot_mode_change_cb(lv_event_t *event) {
 }
 
 void tab_thrustalot::focus_change(boolean focus) {
-  ESP_LOGD("thrustalot", "focus cb %s on %d: %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
+  ESP_LOGD("thrustalot", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   for (int i = 0; i < 5; i++) {
       buttonbar->setrgb(i,hsvToRgb(0, 0, 0));
   }
 }
 
-void tab_thrustalot::tab_create_status(lv_obj_t *tv2) {
-  lv_obj_t *square = lv_obj_create(tv2);
-  lv_obj_set_size(square, 150, 64);
-  lv_obj_align(square, LV_ALIGN_TOP_LEFT, 4, 0);
-  lv_obj_set_style_bg_color(square, lv_color_hex(0xFF0000), LV_PART_MAIN);
-  lv_obj_t *labelx = lv_label_create(square);
+void tab_thrustalot::tab_create_status() {
+  tab_status = lv_obj_create(page);
+  lv_obj_set_size(tab_status, 150, 64);
+  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
+  lv_obj_set_style_bg_color(tab_status, lv_color_hex(0xFF0000), LV_PART_MAIN);
+  lv_obj_t *labelx = lv_label_create(tab_status);
   lv_label_set_text(labelx, "-");
   lv_obj_set_style_text_font(labelx, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_pad_top(square, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(square, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(tab_status, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(tab_status, 3, LV_PART_MAIN);
   lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_t *extra_label = lv_label_create(square);
+  lv_obj_t *extra_label = lv_label_create(tab_status);
   lv_obj_set_style_text_font(extra_label, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_label_set_text(extra_label, "");
   lv_obj_set_style_text_align(extra_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_scrollbar_mode(square, LV_SCROLLBAR_MODE_OFF);
-  tab_status = square;
+  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 }
 
 void tab_thrustalot::tab_create() {
-  lv_obj_t *tv3 = lv_tabview_add_tab(tv, gettabname());
+  page = lv_tabview_add_tab(tv, gettabname());
 
-  lv_obj_set_style_pad_left(tv3, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_top(tv3, 10, LV_PART_MAIN);
-  lv_obj_set_style_pad_right(tv3, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(tv3, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_left(page, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(page, 10, LV_PART_MAIN);
+  lv_obj_set_style_pad_right(page, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(page, 0, LV_PART_MAIN);
 
-  lv_obj_t *dd = lv_dropdown_create(tv3);
+  lv_obj_t *dd = lv_dropdown_create(page);
   lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
   lv_obj_set_align(dd, LV_ALIGN_TOP_RIGHT);
   lv_obj_set_size(dd, 160, 36);  // match the timer box width
@@ -259,25 +250,23 @@ void tab_thrustalot::tab_create() {
   lv_dropdown_set_options(dd, thrustalot_main_modes_c);
   lv_obj_add_event_cb(dd, thrustalot_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
-  buttonbar = new tab_object_buttonbar(tv3);
+  buttonbar = new tab_object_buttonbar(page);
 
-  tab_create_status(tv3);
+  tab_create_status();
 
-  lv_obj_t *lt = rand_timer->view(tv3);
+  lv_obj_t *lt = rand_timer->view(page);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   rand_timer->show(false);
 
-  lt = timer->view(tv3);
+  lt = timer->view(page);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   timer->show(false);
 
-  lt = sync->view(tv3);
+  lt = sync->view(page);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   sync->show(false);
 
-  page = tv3;
-
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, tv3), LV_ANIM_OFF);
+  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
 // return false if we removed ourselves from the connected devices list

@@ -1,7 +1,10 @@
 #pragma once
 
+#include <Arduino.h>
 #include <lvgl.h>
 #include "lvgl-utils.h"
+
+void m5io_showanalogrgb(byte sw, const CRGB& rgb);
 
 class tab_object_buttonbar {
   public:
@@ -10,8 +13,9 @@ class tab_object_buttonbar {
     void settextfmt(int button, const char *format, ...);
     void setvalue(int button, int value);
     void setrgb(int button, CRGB rgb);
+    static const int maxbuttons = 5;
 
   private:
     lv_obj_t *container;
-    lv_obj_t *arc[5];
+    lv_obj_t *arc[maxbuttons];
 };

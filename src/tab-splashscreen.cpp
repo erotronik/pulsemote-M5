@@ -8,19 +8,6 @@
 #include "tab.hpp"
 #include "lvgl-utils.h"
 
-// just a test mode to display what we think all the connected
-// devices are to the debug window when you push a button
-// on the splashscreen
-
-void dump_connected_devices(void) {
-  int i=0;
-  for (const auto& t: tabs) {
-    printf_log("%i %s: ", i, t->gettabname());
-    printf_log("count=%d\n",t->getcyclecount());
-    i++;
-  }
-}
-
 tab_splashscreen::tab_splashscreen() {
   page = nullptr;
   old_last_change = last_change = D_NONE;
@@ -29,7 +16,18 @@ tab_splashscreen::tab_splashscreen() {
 };
 tab_splashscreen::~tab_splashscreen(){};
 
-void m5io_showanalogrgb(byte sw, const CRGB &rgb);
+// just a test mode to display what we think all the connected
+// devices are to the debug window when you push a button
+// on the splashscreen
+
+void tab_splashscreen::dump_connected_devices(void) {
+  int i=0;
+  for (const auto& t: tabs) {
+    printf_log("%i %s: ", i, t->gettabname());
+    printf_log("count=%d\n",t->getcyclecount());
+    i++;
+  }
+}
 
 void tab_splashscreen::updateicons() {
   int level = min(4,M5.Power.getBatteryLevel() / 20);
@@ -45,8 +43,7 @@ void tab_splashscreen::loop(boolean activetab) {
   if (activetab) {
     for (int i = 0; i < 4; i++) {
       buttonhue[i]= (millis()%20000*256)/20000+64*i;  // cycle colours every 20s
-      m5io_showanalogrgb(i + 1,
-                         hsvToRgb(buttonhue[i], 255, 128));  // rotary LED
+      m5io_showanalogrgb(i + 1, hsvToRgb(buttonhue[i], 255, 128));  // rotary LED
     }
     m5io_showanalogrgb(5, hsvToRgb(0, 0, 16));  // cherry LED (very bright)
   }
@@ -59,8 +56,7 @@ void tab_splashscreen::loop(boolean activetab) {
 #include "tab-mqtt.hpp"
 
 void tab_splashscreen::switch_change(int sw, boolean value) {
-  ESP_LOGI("splashscreen", "new callback button %d %s\n", sw,
-           value ? "push" : "release");
+  ESP_LOGI("splashscreen", "new callback button %d %s\n", sw, value ? "push" : "release");
   if (sw == 4 && value) {
     dump_connected_devices();
     updateicons();
@@ -80,24 +76,22 @@ void tab_splashscreen::encoder_change(int sw, int change) {
 }
 
 void tab_splashscreen::setup(void) {
-  lv_obj_t *tv2 = lv_tabview_add_tab(tv, "Pulsemote");
+  page = lv_tabview_add_tab(tv, gettabname());
 
-  lv_obj_set_style_pad_left(tv2, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_right(tv2, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(tv2, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_left(page, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_right(page, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(page, 0, LV_PART_MAIN);
 
   // always first child
-  lv_obj_t *lv_debug_window = lv_textarea_create(tv2);
+  lv_obj_t *lv_debug_window = lv_textarea_create(page);
   lv_textarea_add_text(lv_debug_window, "");
   lv_textarea_set_cursor_click_pos(lv_debug_window, false);
   lv_obj_set_size(lv_debug_window, lv_pct(100), lv_pct(60));
   lv_obj_set_align(lv_debug_window, LV_ALIGN_BOTTOM_LEFT);
 
-  labelicons = lv_label_create(tv2);
+  labelicons = lv_label_create(page);
   lv_label_set_text(labelicons, "");
   lv_obj_set_style_text_align(labelicons, LV_TEXT_ALIGN_RIGHT, 0);
   lv_obj_align(labelicons, LV_ALIGN_TOP_RIGHT, -8, 0);
   lv_obj_set_style_text_font(labelicons, &lv_font_montserrat_24, LV_PART_MAIN);
-
-  page = tv2;
 }

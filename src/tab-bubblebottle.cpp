@@ -30,7 +30,6 @@ boolean tab_bubblebottle::hardware_changed(void) {
     send_sync_data(SYNC_START);
     send_sync_data(SYNC_OFF);
     xQueueReset(md->events);
-    //ison = false;
     printf_log("Connected %s\n", device->getShortName());
   } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());

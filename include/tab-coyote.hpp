@@ -27,6 +27,8 @@ class tab_coyote: public Tab {
             MODE_RANDOM,
             MODE_SYNC,
         };
+        const char *coyote_main_modes_c =  "Manual\nTimer\nRandom\nSync";  
+
         main_modes main_mode;
         bool need_refresh;
 

@@ -6,9 +6,6 @@
 #include "tab-coyote.hpp"
 #include "lvgl-utils.h"
 
-const char *coyote_main_modes_c =
-    "Manual\nTimer\nRandom\nSync";  
-
 tab_coyote::tab_coyote() {
     page = nullptr;
     old_last_change = last_change = D_NONE;
@@ -30,7 +27,6 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
     bool isinverted = sync->isinverted();
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
-      ison = 1;
       md->get().chan_a().put_setmode(mode_a);
       md->get().chan_b().put_setmode(mode_b); 
     } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
@@ -70,7 +66,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
   if (sw == 1 || sw ==0) { // click to move to the next mode, then back to start
     device_coyote2 *md = static_cast<device_coyote2*>(device);
     coyote_mode mode;
-    if (sw ==1) 
+    if (sw == 1) 
       mode = md->get().chan_a().get_mode();
     else 
       mode = md->get().chan_b().get_mode();
@@ -81,9 +77,9 @@ void tab_coyote::switch_change(int sw, boolean state) {
     if (md->modes[i] == M_NONE || md->modes[i+1] == M_NONE) {
       i = 0;
     } else {
-      i = i+1;
+      i++;
     }
-    if (sw ==1)  {
+    if (sw == 1)  {
       md->get().chan_a().put_setmode(md->modes[i]);
       mode_a = md->modes[i];
     } else {
@@ -96,9 +92,9 @@ void tab_coyote::switch_change(int sw, boolean state) {
 void tab_coyote::encoder_change(int sw, int change) {
   device_coyote2 *md = static_cast<device_coyote2*>(device);
   need_refresh = true;
-  if (sw==1) 
+  if (sw == 1) 
     md->get().chan_a().put_power_diff(change);
-  else if (sw==0)
+  else if (sw == 0)
     md->get().chan_b().put_power_diff(change); 
   if (main_mode == MODE_RANDOM && sw == 3)
     rand_timer->rotary_change(change);
@@ -164,8 +160,7 @@ void tab_coyote::loop(bool active) {
       mode_a = md->get().chan_a().get_mode();
       mode_b = md->get().chan_b().get_mode();
     } 
-    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED),
-                                LV_PART_MAIN);
+    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
@@ -199,8 +194,7 @@ void tab_coyote::loop(bool active) {
 }
 
 void coyote_mode_change_cb(lv_event_t *event) {
-  tab_coyote *ctab =
-      static_cast<tab_coyote *>(lv_event_get_user_data(event));
+  tab_coyote *ctab = static_cast<tab_coyote *>(lv_event_get_user_data(event));
   ctab->main_mode = static_cast<tab_coyote::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("coyote", "cb %s on %d: new mode %d",
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
@@ -212,35 +206,34 @@ void coyote_mode_change_cb(lv_event_t *event) {
 }
 
 void tab_coyote::tab_create_status(lv_obj_t *tv2) {
-  lv_obj_t *square = lv_obj_create(tv2);
-  lv_obj_set_size(square, 108, 96);
-  lv_obj_align(square, LV_ALIGN_TOP_LEFT, 4, 0);
-  lv_obj_set_style_bg_color(square, lv_color_hex(0xFF0000), LV_PART_MAIN);
-  lv_obj_t *labelx = lv_label_create(square);
+  tab_status = lv_obj_create(tv2);
+  lv_obj_set_size(tab_status, 108, 96);
+  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
+  lv_obj_set_style_bg_color(tab_status, lv_color_hex(0xFF0000), LV_PART_MAIN);
+  lv_obj_t *labelx = lv_label_create(tab_status);
   lv_label_set_text(labelx, "-");
   lv_obj_set_style_text_font(labelx, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_pad_top(square, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(square, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(tab_status, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(tab_status, 3, LV_PART_MAIN);
   lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_t *extra_label = lv_label_create(square);
+  lv_obj_t *extra_label = lv_label_create(tab_status);
   lv_obj_set_style_text_font(extra_label, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_label_set_text(extra_label, "");
   lv_obj_set_style_text_align(extra_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_scrollbar_mode(square, LV_SCROLLBAR_MODE_OFF);
-  tab_status = square;
+  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 }
 
 void tab_coyote::coyote_tab_create() {
-  lv_obj_t *tv1 = lv_tabview_add_tab(tv, gettabname());
+  page = lv_tabview_add_tab(tv, gettabname());
 
-  lv_obj_set_style_pad_left(tv1, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_right(tv1,0, LV_PART_MAIN);
-  lv_obj_set_style_pad_top(tv1, 10, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(tv1, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_left(page, 0, LV_PART_MAIN);
+  lv_obj_set_style_pad_right(page,0, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(page, 10, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(page, 0, LV_PART_MAIN);
 
-  lv_obj_t *dd = lv_dropdown_create(tv1);
+  lv_obj_t *dd = lv_dropdown_create(page);
   lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
   lv_obj_set_align(dd, LV_ALIGN_TOP_RIGHT);
   lv_obj_set_size(dd, 160, 36);  // match the timer box width
@@ -248,25 +241,23 @@ void tab_coyote::coyote_tab_create() {
   lv_dropdown_set_options(dd, coyote_main_modes_c);
   lv_obj_add_event_cb(dd, coyote_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
   
-  buttonbar = new tab_object_buttonbar(tv1);
+  buttonbar = new tab_object_buttonbar(page);
 
-  page = tv1;
-  int tabid = lv_get_tabview_idx_from_page(tv, tv1);
-  tab_create_status(tv1);
+  tab_create_status(page);
 
-  lv_obj_t *lt = rand_timer->view(tv1);
+  lv_obj_t *lt = rand_timer->view(page);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   rand_timer->show(false);
 
-  lt = timer->view(tv1);
+  lt = timer->view(page);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   timer->show(false);
 
-  lt = sync->view(tv1);
+  lt = sync->view(page);
   lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
   sync->show(false);
 
-  lv_tabview_set_act(tv,tabid, LV_ANIM_OFF);
+  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
 boolean tab_coyote::hardware_changed(void) {

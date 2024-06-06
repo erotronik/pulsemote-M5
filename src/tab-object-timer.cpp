@@ -1,10 +1,11 @@
-#include "tab-object-timer.hpp"
-
-#include <NimBLEDevice.h>
-#include <esp_log.h>
-
 #include <functional>
 #include <map>
+#include <Arduino.h>
+
+#define LV_CONF_INCLUDE_SIMPLE
+#include <lvgl.h>
+
+#include "tab-object-timer.hpp"
 
 tab_object_timer::tab_object_timer(bool irandom) { moderandom = irandom; }
 
@@ -15,8 +16,7 @@ void tab_object_timer::rotary_change(int change) {
   if (!active_btn) return;
   uint32_t *id_ptr = (uint32_t *)lv_obj_get_user_data(active_btn);
   int32_t id = *id_ptr - 1;
-  value[id] += change;
-  value[id] = max(1, value[id]);
+  value[id] = max(1, value[id]+change);
   if (moderandom) {
     // special cases so ranges make sense
     if (id == 0) value[1] = max(value[0], value[1]);

@@ -2,8 +2,6 @@
 #include <cstdio>
 #include "lvgl-utils.h"
 #include "tab-object-buttonbar.hpp"
-typedef uint8_t byte;
-void m5io_showanalogrgb(byte sw, const CRGB& rgb);
 
 // Pushed the screen on an arc?
 
