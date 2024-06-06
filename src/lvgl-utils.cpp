@@ -15,7 +15,7 @@ void printf_log(const char *format, ...) {
   va_end(args);
   Serial.print(buf);
   if (tabs.size() > 0) {
-    Tab *t = tabs.get(0);
+    Tab *t = tabs.front();
     if (t->page) {
       lv_obj_t *child = lv_obj_get_child(t->page, 0);
       lv_textarea_add_text(child, buf);

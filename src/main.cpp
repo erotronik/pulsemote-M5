@@ -1,4 +1,3 @@
-#include <LinkedList.h>
 #include <M5Unified.h>
 #include <freertos/queue.h>
 #include <freertos/task.h>
@@ -26,7 +25,7 @@ lv_obj_t *tv;
 lv_display_t *display;
 lv_indev_t *indev;
 
-LinkedList<Tab *> tabs = LinkedList<Tab *>();
+std::list<Tab*> tabs;
 
 byte lastencodervalue[numencoders] = {128, 128, 128, 128};
 byte encodervalue[numencoders] = {128, 128, 128, 128};
@@ -50,8 +49,8 @@ void handlebuttonpushes() {
     // find what device tab is active as physical buttons must only work on
     // active tab
     lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
-    for (int j = 0; j < tabs.size(); j++) {
-      Tab *t = tabs.get(j);
+    ESP_LOGD("buttons","tabs is %d",tabs.size());
+    for (const auto& t : tabs) {
       if (activepage == t->page) 
         t->switch_change(received_event.target, received_event.value);
     }
@@ -69,8 +68,7 @@ void handlerotaryencoders() {
       lastencodervalue[i] = encodervalue[i] = 128;
       // find what device tab is active as encoders must only work on active tab
       lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
-      for (int j = 0; j < tabs.size(); j++) {
-        Tab *t = tabs.get(j);
+      for (const auto& t : tabs) {
         if (activepage == t->page)
           t->encoder_change(i, change);
       }
@@ -87,8 +85,7 @@ void tabview_event_cb(lv_event_t *event) {
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
            lv_tabview_get_tab_act(tv));
   lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
-  for (int j = 0; j < tabs.size(); j++) {
-    Tab *t = tabs.get(j);
+  for (const auto& t : tabs) {
     if (activepage == t->page)
       t->focus_change(true);  // true means is the new active tab
   }
@@ -106,7 +103,7 @@ void setup_tabs(void) {
 
   Tab *sp = new tab_splashscreen();
   sp->setup();
-  tabs.add(sp);
+  tabs.emplace_back(sp);
 
   #ifdef CONFIG_WIFI_SSID
   Tab *mq = new tab_mqtt();
@@ -122,16 +119,15 @@ void device_change_handler(type_of_change t, Device *d) {
   ESP_LOGD("main", "change handler task called from %s on %d\n",
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
-  int newdevice = -1;
-  for (int i = 0; i < tabs.size(); i++) {
-    Tab *tt = tabs.get(i);
+  bool newdevice = true;
+  for (const auto& tt : tabs) {
     if (tt->device == d) { // found an existing tab that matches the device instance
       tt->last_change = t;
-      newdevice = i;
+      newdevice = false;
       break;
     }
   }
-  if (newdevice == -1 && t != D_DISCONNECTED) {
+  if (newdevice && t != D_DISCONNECTED) {
     ESP_LOGD("main", "a new device has appeared");
     DeviceType type = d->getType();
     Tab *ta = nullptr;
@@ -151,7 +147,7 @@ void device_change_handler(type_of_change t, Device *d) {
       ta->device = d;
       ta->last_change = t;
       ta->setup();
-      tabs.add(ta);
+      tabs.emplace_back(ta);
     }
   }
 }
@@ -194,17 +190,17 @@ void setup() {
 // cleaning up and removing a tab if it's gone away
 
 void handlehardwarecallbacks() {
-  for (int i = 0; i < tabs.size(); i++) {
-    Tab *t = tabs.get(i);
+  for (auto st = tabs.begin(); st != tabs.end(); ++st) {
+    Tab *t = *st;
     if (t->old_last_change != t->last_change) {
-      ESP_LOGD("main", "%s (%d) changed state: %d %d\n",
-               t->device->getShortName(), i, (int)t->last_change,
+      ESP_LOGD("main", "%s changed state: %d %d\n",
+               t->device->getShortName(), (int)t->last_change,
                (int)t->old_last_change);
       if (!t->hardware_changed()) {
         // false means the device has gone away, get rid of the tab
         ESP_LOGD("main","removing tab");
         if (t->page) lv_hide_tab(t->page);
-        tabs.remove(i);
+        st = tabs.erase(st);
         break;  // any other tab changes pick up next time
       }
       t->old_last_change = t->last_change;
@@ -216,8 +212,7 @@ void handlehardwarecallbacks() {
 
 void handletabloops(void) {
   lv_obj_t *activetab = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
-  for (int i = 0; i < tabs.size(); i++) {
-    Tab *t = tabs.get(i);
+  for (const auto& t : tabs) {
     t->loop((activetab == t->page));
   }
 }

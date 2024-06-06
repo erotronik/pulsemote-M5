@@ -13,13 +13,14 @@
 // on the splashscreen
 
 void dump_connected_devices(void) {
-  for (int i = 0; i < tabs.size(); i++) {
-    Tab *t = tabs.get(i);
+  int i=0;
+  for (const auto& t: tabs) {
     //if (t->page != nullptr) {
     //  printf_log("tab=%d ", lv_get_tabview_idx_from_page(tv, t->page));
     //}
     printf_log("%i %s: ", i, t->gettabname());
     printf_log("count=%d\n",t->getcyclecount());
+    i++;
   }
 }
 
@@ -36,8 +37,7 @@ void m5io_showanalogrgb(byte sw, const CRGB &rgb);
 void tab_splashscreen::updateicons() {
   int level = min(4,M5.Power.getBatteryLevel() / 20);
   char iconb[128] ="";
-  for (int j = 0; j < tabs.size(); j++) {
-    Tab *t = tabs.get(j);
+  for (const auto& t : tabs) {
     strncat(iconb,t->geticons(),sizeof(iconb)-1);
   }
   boolean is_bluetooth_scanning = true; // todo
@@ -69,8 +69,7 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
     updateicons();
   }
   if (sw == 1 && value) {
-    for (int i=0; i<tabs.size(); i++) {
-      Tab *st = tabs.get(i);
+    for (const auto& st: tabs) {
       if (!strncmp(st->gettabname(),"wifi",4)) {
         tab_mqtt *t = static_cast<tab_mqtt *>(st);
         t->popup_add_device(page);

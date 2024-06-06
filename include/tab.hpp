@@ -1,6 +1,5 @@
 #pragma once
 
-#include <LinkedList.h>
 #include <lvgl.h>
 
 #include "device.hpp"
@@ -13,7 +12,7 @@ extern lv_obj_t *tv;
 
 class Tab;
 
-extern LinkedList<Tab *> tabs;
+extern std::list<Tab *> tabs;
 
 class Tab {
  public:
@@ -57,10 +56,9 @@ class Tab {
   // Send sync data from our tab to all the others
   virtual void send_sync_data(sync_data syncstatus) {
     if (syncstatus == SYNC_OFF) cyclecount++;
-    for (int i=0; i<tabs.size(); i++) {
-      Tab *st = tabs.get(i);
-      if (st != this) {
-        st->gotsyncdata(this,syncstatus);
+    for (const auto& item : tabs) {
+      if (item != this) {
+        item->gotsyncdata(this,syncstatus);
       }
     }
   };
