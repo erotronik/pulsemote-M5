@@ -15,9 +15,6 @@
 void dump_connected_devices(void) {
   int i=0;
   for (const auto& t: tabs) {
-    //if (t->page != nullptr) {
-    //  printf_log("tab=%d ", lv_get_tabview_idx_from_page(tv, t->page));
-    //}
     printf_log("%i %s: ", i, t->gettabname());
     printf_log("count=%d\n",t->getcyclecount());
     i++;

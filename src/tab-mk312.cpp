@@ -1,4 +1,3 @@
-#include <memory>
 #define LV_CONF_INCLUDE_SIMPLE
 #include <lvgl.h>
 
@@ -6,9 +5,6 @@
 #include "tab-mk312.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
-
-const char *mk312_main_modes_c =
-    "Manual\nTimer\nRandom\nSync";
 
 tab_mk312::tab_mk312() {
   ison = true;
@@ -21,25 +17,20 @@ tab_mk312::tab_mk312() {
   old_last_change = last_change = D_NONE;
   device = nullptr;
 }
+
 tab_mk312::~tab_mk312() {}
 
 void tab_mk312::encoder_change(int sw, int change) {
-  ESP_LOGD("mk312", "encoder change and tab stuff %d", ison);
   if (sw == 0 && lockpanel) {
     device_mk312 *md = static_cast<device_mk312 *>(device);
-    level_b += change;
-    if (level_b < 0) level_b = 0;
-    if (level_b > 99) level_b = 99;
+    level_b = min(99, max(0, level_b + change));
     md->etbox_setbyte(ETMEM_knobb, (level_b * 256+99) / 100);   // Round up to match the display
     need_knob_refresh = true;
   }
   if (sw == 1 && lockpanel) {
     device_mk312 *md = static_cast<device_mk312 *>(device);
-    level_a += change;
-    if (level_a < 0) level_a = 0;
-    if (level_a > 99) level_a = 99;
-    md->etbox_setbyte(ETMEM_knoba,
-                      (level_a * 256+99) / 100);  
+    level_a = min(99, max(0, level_b + change));
+    md->etbox_setbyte(ETMEM_knoba, (level_a * 256+99) / 100);  
     need_knob_refresh = true;
   }
   if (main_mode == MODE_RANDOM && sw == 3) {
@@ -141,20 +132,16 @@ void tab_mk312::loop(boolean activetab) {
   }
 
   if (activetab && need_refresh) {
-    ESP_LOGD("mk312", "refresh active tab from %s on %d",
-             pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
+    ESP_LOGD("mk312", "refresh active tab from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
     device_mk312 *md = static_cast<device_mk312 *>(device);
-    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED),
-                                LV_PART_MAIN);
+    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d",
-                             ison?md->etmodes[md->get_mode()]:"Off", seconds);
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d", ison?md->etmodes[md->get_mode()]:"Off", seconds);
     } else {
-      lv_label_set_text(lv_obj_get_child(tab_status, 0),
-                        ison?md->etmodes[md->get_mode()]:"Off");
+      lv_label_set_text(lv_obj_get_child(tab_status, 0), ison?md->etmodes[md->get_mode()]:"Off");
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -200,10 +187,8 @@ void tab_mk312::loop(boolean activetab) {
 }
 
 void mk312_mode_change_cb(lv_event_t *event) {
-  tab_mk312 *mk312_tab =
-      static_cast<tab_mk312 *>(lv_event_get_user_data(event));
-  mk312_tab->main_mode = static_cast<tab_mk312::main_modes>(
-      lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
+  tab_mk312 *mk312_tab = static_cast<tab_mk312 *>(lv_event_get_user_data(event));
+  mk312_tab->main_mode = static_cast<tab_mk312::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("mk312", "cb %s on %d: new mode %d",
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
            mk312_tab->main_mode);
@@ -214,8 +199,7 @@ void mk312_mode_change_cb(lv_event_t *event) {
 }
 
 void tab_mk312::focus_change(boolean focus) {
-  ESP_LOGD("mk312", "focus cb %s on %d: %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
+  ESP_LOGD("mk312", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   for (int i = 0; i < 5; i++) {
       buttonbar->setrgb(i,hsvToRgb(0, 0, 0));
@@ -223,24 +207,23 @@ void tab_mk312::focus_change(boolean focus) {
 }
 
 void tab_mk312::tab_create_status(lv_obj_t *tv2) {
-  lv_obj_t *square = lv_obj_create(tv2);
-  lv_obj_set_size(square, 108, 64);
-  lv_obj_align(square, LV_ALIGN_TOP_LEFT, 4, 0);
-  lv_obj_set_style_bg_color(square, lv_color_hex(0xFF0000), LV_PART_MAIN);
-  lv_obj_t *labelx = lv_label_create(square);
+  tab_status = lv_obj_create(tv2);
+  lv_obj_set_size(tab_status, 108, 64);
+  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
+  lv_obj_set_style_bg_color(tab_status, lv_color_hex(0xFF0000), LV_PART_MAIN);
+  lv_obj_t *labelx = lv_label_create(tab_status);
   lv_label_set_text(labelx, "-");
   lv_obj_set_style_text_font(labelx, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_pad_top(square, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(square, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(tab_status, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(tab_status, 3, LV_PART_MAIN);
   lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_t *extra_label = lv_label_create(square);
+  lv_obj_t *extra_label = lv_label_create(tab_status);
   lv_obj_set_style_text_font(extra_label, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_label_set_text(extra_label, "");
   lv_obj_set_style_text_align(extra_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_scrollbar_mode(square, LV_SCROLLBAR_MODE_OFF);
-  tab_status = square;
+  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 }
 
 void tab_mk312::tab_create() {

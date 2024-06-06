@@ -26,6 +26,7 @@ class tab_mk312 : public Tab {
     MODE_RANDOM,
     MODE_SYNC
   };
+  const char *mk312_main_modes_c = "Manual\nTimer\nRandom\nSync";
 
   main_modes main_mode;
   bool need_refresh = false;
