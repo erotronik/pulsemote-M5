@@ -42,7 +42,7 @@ void tab_splashscreen::updateicons() {
 void tab_splashscreen::loop(boolean activetab) {
   if (activetab) {
     for (int i = 0; i < 4; i++) {
-      buttonhue[i]= (millis()%20000*360)/20000+64*i;  // cycle colours every 20s
+      buttonhue[i]= ((millis()%20000*360)/20000+90*i)%360;  // cycle colours every 20s
       m5io_showanalogrgb(i + 1, lv_color_hsv_to_rgb(buttonhue[i], 100, 50));  // rotary LED
     }
     m5io_showanalogrgb(5, lv_color_hsv_to_rgb(0, 0, 5));  // cherry LED (very bright)
