@@ -170,14 +170,14 @@ void tab_mk312::loop(boolean activetab) {
     if (lockpanel) {
       buttonbar->setvalue(0,level_a);
       buttonbar->settextfmt(0, "A\n%" LV_PRId32 "%%", level_a);
-      buttonbar->setrgb(0, hsvToRgb(0, 255, level_a * 2 + 5));
+      buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 100, level_a));
       buttonbar->setvalue(1,level_b);
       buttonbar->settextfmt(1, "B\n%" LV_PRId32 "%%", level_b);
-      buttonbar->setrgb(1, hsvToRgb(0, 255, level_b * 2 + 5));
+      buttonbar->setrgb(1, lv_color_hsv_to_rgb(0, 100, level_b));
       buttonbar->settext(3, "MA\nmode");
     } else {
-      buttonbar->setrgb(0, hsvToRgb(0, 0, 0));
-      buttonbar->setrgb(1, hsvToRgb(0, 0, 0));
+      buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 0, 0));
+      buttonbar->setrgb(1, lv_color_hsv_to_rgb(0, 0, 0));
       buttonbar->setvalue(0,0);
       buttonbar->setvalue(1,0);
       buttonbar->settext(0, LV_SYMBOL_CHARGE);
@@ -202,7 +202,7 @@ void tab_mk312::focus_change(boolean focus) {
   ESP_LOGD("mk312", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   for (int i = 0; i < 5; i++) {
-      buttonbar->setrgb(i,hsvToRgb(0, 0, 0));
+      buttonbar->setrgb(i,lv_color_hsv_to_rgb(0, 0, 0));
   }
 }
 

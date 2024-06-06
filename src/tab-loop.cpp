@@ -23,10 +23,10 @@ void tab_loop::switch_change(int sw, boolean state) {
 }
 
 void tab_loop::focus_change(boolean focus) {
-  buttonbar->setrgb(0, hsvToRgb(0, 255, 64)); // red
-  buttonbar->setrgb(1, hsvToRgb(85, 255, 64)); // green
+  buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 100, 25)); // red
+  buttonbar->setrgb(1, lv_color_hsv_to_rgb(120, 100, 25)); // green
   for (int i=2; i<5; i++) 
-    buttonbar->setrgb(i, hsvToRgb(0, 0, 0));
+    buttonbar->setrgb(i, lv_color_hsv_to_rgb(0, 0, 0));
 }
 
 void tab_loop::encoder_change(int sw, int change) {

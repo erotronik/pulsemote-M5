@@ -149,12 +149,12 @@ void tab_coyote::loop(bool active) {
     int power = md->get().chan_a().get_power_pc();
     buttonbar->setvalue(0, power); 
     buttonbar->settextfmt(0, "A\n%" LV_PRId32 "%%", power);
-    buttonbar->setrgb(0, hsvToRgb(0, 255, power * 2 + 5));
+    buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 100, power));
 
     power = md->get().chan_b().get_power_pc();
     buttonbar->setvalue(1, power); 
     buttonbar->settextfmt(1, "B\n%" LV_PRId32 "%%", power);
-    buttonbar->setrgb(1, hsvToRgb(0, 255, power *2 + 5));
+    buttonbar->setrgb(1, lv_color_hsv_to_rgb(0, 100, power));
 
     if (ison) {
       mode_a = md->get().chan_a().get_mode();

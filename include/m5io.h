@@ -58,15 +58,15 @@ const byte numencoders = 4;
 
 PCA9685 PCA(0x42);
 
-// Switch number 1-4 (5 for cherry, single LED), and CRGB structure from FastLED
+// Switch number 1-4 (5 for cherry, single LED), and lv_color_t
 
-void m5io_showanalogrgb(byte sw, const CRGB& rgb) {
+void m5io_showanalogrgb(byte sw, lv_color_t rgb) {
   static byte pinstarts[] = {0, 3, 11, 8, 6};
   byte base = pinstarts[sw - 1];
-  PCA.setPWM(base, rgb.r * 16);
+  PCA.setPWM(base, rgb.red * 16);
   if (sw != 5) {
-    PCA.setPWM(base + 1, rgb.g * 16);  // FastLED is 8 bit, PCA is 12 bit
-    PCA.setPWM(base + 2, rgb.b * 16);
+    PCA.setPWM(base + 1, rgb.green * 16);  // FastLED is 8 bit, PCA is 12 bit
+    PCA.setPWM(base + 2, rgb.blue * 16);
   }
 }
 

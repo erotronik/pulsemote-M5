@@ -70,7 +70,7 @@ void tab_object_buttonbar::setvalue(int button, int value) {
 }
    
 // leds and buttons are numbered differently
-void tab_object_buttonbar::setrgb(int button, CRGB rgb) {
+void tab_object_buttonbar::setrgb(int button, lv_color_t rgb) {
   static int map[5] = { 2,1,5,3,4};
   m5io_showanalogrgb(map[button], rgb);
 }

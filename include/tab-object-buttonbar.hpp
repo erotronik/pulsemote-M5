@@ -4,7 +4,7 @@
 #include <lvgl.h>
 #include "lvgl-utils.h"
 
-void m5io_showanalogrgb(byte sw, const CRGB& rgb);
+void m5io_showanalogrgb(byte sw, const lv_color_t rgb);
 
 class tab_object_buttonbar {
   public:
@@ -12,7 +12,7 @@ class tab_object_buttonbar {
     void settext(int button, const char *text);
     void settextfmt(int button, const char *format, ...);
     void setvalue(int button, int value);
-    void setrgb(int button, CRGB rgb);
+    void setrgb(int button, lv_color_t rgb);
     static const int maxbuttons = 5;
 
   private:
