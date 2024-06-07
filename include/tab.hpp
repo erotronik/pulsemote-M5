@@ -69,6 +69,7 @@ class Tab {
   type_of_change last_change;
   Device *device;
   tab_object_buttonbar *buttonbar;
+  bool needssetup = false;
 
   private:
     // See getcyclecount()

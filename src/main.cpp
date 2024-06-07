@@ -122,6 +122,7 @@ void device_change_handler(type_of_change t, Device *d) {
   bool newdevice = true;
   for (const auto& tt : tabs) {
     if (tt->device == d) { // found an existing tab that matches the device instance
+      ESP_LOGD("main","matched an existing tab %s",tt->gettabname());
       tt->last_change = t;
       newdevice = false;
       break;
@@ -146,7 +147,7 @@ void device_change_handler(type_of_change t, Device *d) {
       ta->type = type;
       ta->device = d;
       ta->last_change = t;
-      ta->setup();
+      ta->needssetup = true;
       tabs.emplace_back(ta);
     }
   }
@@ -192,6 +193,10 @@ void setup() {
 void handlehardwarecallbacks() {
   for (auto st = tabs.begin(); st != tabs.end(); ++st) {
     Tab *t = *st;
+    if (t->needssetup) {
+      t->setup();
+      t->needssetup = false;
+    }
     if (t->old_last_change != t->last_change) {
       ESP_LOGD("main", "%s changed state: %d %d\n",
                t->device->getShortName(), (int)t->last_change,

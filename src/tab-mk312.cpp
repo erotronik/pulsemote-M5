@@ -99,6 +99,7 @@ void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
 
 void tab_mk312::loop(boolean activetab) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
+  if (!md) return;
 
   if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
     if (timermillis < millis()) {
