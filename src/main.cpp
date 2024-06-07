@@ -114,6 +114,8 @@ void setup_tabs(void) {
 
 // This is called when our scanner detects a new device; figure out
 // the appropriate tab we need to handle that device and add it
+//
+// it's a callback so don't do any actual GUI stuff here, just set up structures
 
 void device_change_handler(type_of_change t, Device *d) {
   ESP_LOGD("main", "change handler task called from %s on %d\n",
@@ -121,7 +123,7 @@ void device_change_handler(type_of_change t, Device *d) {
 
   bool newdevice = true;
   for (const auto& tt : tabs) {
-    if (tt->device == d) { // found an existing tab that matches the device instance
+    if (d && tt->device == d) { // found an existing tab that matches the device instance
       ESP_LOGD("main","matched an existing tab %s",tt->gettabname());
       tt->last_change = t;
       newdevice = false;
