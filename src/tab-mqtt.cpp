@@ -110,7 +110,7 @@ void tab_mqtt::connectToWiFi(void) {
 }
 
 void tab_mqtt::gotsyncdata(Tab *t, sync_data status) {
-  ESP_LOGD("mqtt", "got sync data %d from %s\n", status, t->gettabname());
+  ESP_LOGD("mqtt", "got sync data %d from %s", status, t->gettabname());
   if (!client || !client->connected()) return;
   String topic = "pulsemote/" + String(t->gettabname());
   topic.replace("-","");

@@ -21,7 +21,7 @@ Device *found_device;
 
 class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) override {
-    ESP_LOGI("comms-bt", "Advertised Device: %s\n", advertisedDevice->toString().c_str());
+    ESP_LOGI("comms-bt", "Advertised Device: %s", advertisedDevice->toString().c_str());
     // can't connect while scanning is going on - it locks up everything.
     found_device = nullptr;
 
@@ -46,14 +46,14 @@ void scan_comms_init(void) {
   pBLEScan->setActiveScan(true);  // active scan uses more power, but get results faster
   pBLEScan->setInterval(250);
   pBLEScan->setWindow(125);  // less or equal setInterval value
-  ESP_LOGI("comms-bt", "Started ble scanning task\n");
+  ESP_LOGI("comms-bt", "Started ble scanning task");
 }
 
 void scan_loop() {
   boolean repeatscan = false;  // if we found something and connected to it, keep scanning for more
 
   do {
-    ESP_LOGI("comms-nt", "Scanning for %ds\n", scanTime);
+    ESP_LOGI("comms-nt", "Scanning for %ds", scanTime);
     pBLEScan->start(scanTime, false);  // up to one minute
 
     if (found_device && found_bledevice) {
@@ -62,6 +62,7 @@ void scan_loop() {
       found_device->set_callback(device_change_handler);
       boolean connected = found_device->connect_to_device(found_bledevice);
       if (!connected) {
+        ESP_LOGD(found_device->getShortName(),"connection failed");
         delete found_device;    
         found_device = NULL;
       }

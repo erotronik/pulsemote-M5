@@ -83,7 +83,7 @@ void tab_mk312::switch_change(int sw, boolean value) {
 void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
   if (!md) return;
-  ESP_LOGD("mk312", "got sync data %d from %s\n", syncstatus, t->gettabname());
+  ESP_LOGD("mk312", "got sync data %d from %s", syncstatus, t->gettabname());
   if (main_mode == MODE_SYNC) {
     bool isinverted = sync->isinverted();
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {

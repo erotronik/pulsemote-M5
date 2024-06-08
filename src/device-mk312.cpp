@@ -166,7 +166,7 @@ void device_mk312::ble_mk_callback(
 }
 
 bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
-  ESP_LOGI(getShortName(), "Connecting \n");
+  ESP_LOGI(getShortName(), "Connecting");
 
   if (!bleClient) {
     bleClient = NimBLEDevice::createClient();
@@ -227,7 +227,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
     notify(D_DISCONNECTED);
     return false;
   }
-  ESP_LOGI(getShortName(), "%s KNOBA=%d\n", getShortName(), y);
+  ESP_LOGI(getShortName(), "%s KNOBA=%d", getShortName(), y);
   notify(D_CONNECTED);
   return true;
 }

@@ -36,7 +36,7 @@ int lv_get_tabview_idx_from_page(lv_obj_t *l, lv_obj_t *page) {
 }
 
 void lv_hide_tab(lv_obj_t *page) {
-  if (page == nullptr) return;
+  if (!page) return;
   int tabid = lv_get_tabview_idx_from_page(tv, page);
   ESP_LOGD("main", "hide tab id %d", tabid);
   if (tabid == -1) return;

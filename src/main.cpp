@@ -81,7 +81,7 @@ void handlerotaryencoders() {
 // old tab we've gone away, could be added later if needed)
 
 void tabview_event_cb(lv_event_t *event) {
-  ESP_LOGD("main", "tabview cb %s on %d: current tab %d\n",
+  ESP_LOGD("main", "tabview cb %s on %d: current tab %d",
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
            lv_tabview_get_tab_act(tv));
   lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
@@ -118,7 +118,7 @@ void setup_tabs(void) {
 // it's a callback so don't do any actual GUI stuff here, just set up structures
 
 void device_change_handler(type_of_change t, Device *d) {
-  ESP_LOGD("main", "change handler task called from %s on %d\n",
+  ESP_LOGD("main", "change handler task called from %s on %d",
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
   bool newdevice = true;
@@ -200,15 +200,15 @@ void handlehardwarecallbacks() {
       t->needssetup = false;
     }
     if (t->old_last_change != t->last_change) {
-      ESP_LOGD("main", "%s changed state: %d %d\n",
+      ESP_LOGD("main", "%s changed state: %d %d",
                t->device->getShortName(), (int)t->last_change,
                (int)t->old_last_change);
       if (!t->hardware_changed()) {
         // false means the device has gone away, get rid of the tab
         ESP_LOGD("main","removing tab");
-        if (t->page) lv_hide_tab(t->page);
+        lv_hide_tab(t->page);
         st = tabs.erase(st);
-        break;  // any other tab changes pick up next time
+        //break;  // any other tab changes pick up next time
       }
       t->old_last_change = t->last_change;
     }

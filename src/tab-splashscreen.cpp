@@ -56,7 +56,7 @@ void tab_splashscreen::loop(boolean activetab) {
 #include "tab-mqtt.hpp"
 
 void tab_splashscreen::switch_change(int sw, boolean value) {
-  ESP_LOGI("splashscreen", "new callback button %d %s\n", sw, value ? "push" : "release");
+  ESP_LOGI("splashscreen", "new callback button %d %s", sw, value ? "push" : "release");
   if (sw == 4 && value) {
     dump_connected_devices();
     updateicons();
@@ -72,7 +72,7 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
 }
 
 void tab_splashscreen::encoder_change(int sw, int change) {
-  ESP_LOGI("splashscreen", "Encoder %d: %+d\n", sw, change);
+  ESP_LOGI("splashscreen", "Encoder %d: %+d", sw, change);
 }
 
 void tab_splashscreen::setup(void) {

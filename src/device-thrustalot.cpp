@@ -165,7 +165,7 @@ void device_thrustalot::ble_mk_callback(
 }
 
 bool device_thrustalot::connect_to_device(NimBLEAdvertisedDevice* device) {
-  ESP_LOGI(getShortName(), "Connecting \n");
+  ESP_LOGI(getShortName(), "Connecting");
 
   if (!bleClient) {
     bleClient = NimBLEDevice::createClient();

@@ -22,7 +22,7 @@ tab_coyote::~tab_coyote() {}
 void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
   device_coyote2 *md = static_cast<device_coyote2*>(device);
   if (!md) return;
-  ESP_LOGD("coyote", "got sync data %d from %s\n", syncstatus, t->gettabname());
+  ESP_LOGD("coyote", "got sync data %d from %s", syncstatus, t->gettabname());
   if (main_mode == MODE_SYNC) {
     bool isinverted = sync->isinverted();
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
