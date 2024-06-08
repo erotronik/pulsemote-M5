@@ -46,10 +46,8 @@ void handlebuttonpushes() {
   event_t received_event;
   byte count = 4;  // a few callbacks allowed per loop
   while (count > 0 && xQueueReceive(event_queue, &received_event, 0)) {
-    // find what device tab is active as physical buttons must only work on
-    // active tab
+    // find what device tab is active as physical buttons must only work on active tab
     lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
-    ESP_LOGD("buttons","tabs is %d",tabs.size());
     for (const auto& t : tabs) {
       if (activepage == t->page) 
         t->switch_change(received_event.target, received_event.value);
@@ -108,7 +106,7 @@ void setup_tabs(void) {
   #ifdef CONFIG_WIFI_SSID
   Tab *mq = new tab_mqtt();
   mq->setup();
-  tabs.add(mq);
+  tabs.emplace_back(mq);
   #endif
 }
 
@@ -200,15 +198,12 @@ void handlehardwarecallbacks() {
       t->needssetup = false;
     }
     if (t->old_last_change != t->last_change) {
-      ESP_LOGD("main", "%s changed state: %d %d",
-               t->device->getShortName(), (int)t->last_change,
-               (int)t->old_last_change);
+      ESP_LOGD("main", "%s changed state: %d %d", t->device->getShortName(), (int)t->last_change, (int)t->old_last_change);
       if (!t->hardware_changed()) {
         // false means the device has gone away, get rid of the tab
         ESP_LOGD("main","removing tab");
         lv_hide_tab(t->page);
         st = tabs.erase(st);
-        //break;  // any other tab changes pick up next time
       }
       t->old_last_change = t->last_change;
     }
@@ -238,8 +233,6 @@ void loop() {}; // We use FreeRTOS tasks instead
 
 void TaskMain(void *pvParameters) {
   vTaskDelay(200);
-  ESP_LOGD("main", "Main task started: %s on %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
-
+  ESP_LOGD("main", "Main task started: %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
   while (true) main_loop();
 }

@@ -21,14 +21,13 @@ tab_mk312::tab_mk312() {
 tab_mk312::~tab_mk312() {}
 
 void tab_mk312::encoder_change(int sw, int change) {
+  device_mk312 *md = static_cast<device_mk312 *>(device);
   if (sw == 0 && lockpanel) {
-    device_mk312 *md = static_cast<device_mk312 *>(device);
     level_b = min(99, max(0, level_b + change));
     md->etbox_setbyte(ETMEM_knobb, (level_b * 256+99) / 100);   // Round up to match the display
     need_knob_refresh = true;
   }
   if (sw == 1 && lockpanel) {
-    device_mk312 *md = static_cast<device_mk312 *>(device);
     level_a = min(99, max(0, level_a + change));
     md->etbox_setbyte(ETMEM_knoba, (level_a * 256+99) / 100);  
     need_knob_refresh = true;
@@ -38,6 +37,12 @@ void tab_mk312::encoder_change(int sw, int change) {
   }
   if (main_mode == MODE_TIMER && sw == 3) {
     timer->rotary_change(change);
+  }
+  if (sw ==2 && lockpanel) {
+    for (int i=0; i< change; i++) {
+      md->etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
+    }
+    need_refresh = true;
   }
 }
 
@@ -74,7 +79,6 @@ void tab_mk312::switch_change(int sw, boolean value) {
   }
   if (lockpanel == true && sw == 2 && value && ison == 1) {
     md->etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
-    need_refresh = true;
   }
 }
 
@@ -175,7 +179,7 @@ void tab_mk312::loop(boolean activetab) {
       buttonbar->setvalue(1,level_b);
       buttonbar->settextfmt(1, "B\n%" LV_PRId32 "%%", level_b);
       buttonbar->setrgb(1, lv_color_hsv_to_rgb(0, 100, level_b));
-      buttonbar->settext(3, "MA\nmode");
+      buttonbar->settext(3, "mode");
     } else {
       buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 0, 0));
       buttonbar->setrgb(1, lv_color_hsv_to_rgb(0, 0, 0));
