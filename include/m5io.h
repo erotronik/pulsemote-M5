@@ -88,8 +88,7 @@ void handlemcpinterrupt() {
       if (buttonpins[i] == 14) result = !result;  // cherry is inverted
       if (result != lastbuttonstates[i]) {
         event_t new_event = {.target = i, .value = result};
-        xQueueSend(event_queue, &new_event,
-                   0);  // no blocking, don't care if full
+        xQueueSend(event_queue, &new_event, 0);  // no blocking, don't care if full
         lastbuttondebounce[i] = now;
       }
     }
@@ -127,20 +126,12 @@ void m5io_init(void) {
   // initialize semaphore for reader task
   rotaryISRSemaphore = xSemaphoreCreateBinary();
 
-  if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL,
-                 PCA9685_MODE2_INVERT)) {
+  if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL, PCA9685_MODE2_INVERT)) {
     printf_log("No PCA9685 found");
     while (1) {
     }
   }
 
-#if 0
-  for (byte i = 0; i<32; i++) {
-    for (byte led = 0; led<15; led++)
-      PCA.setPWM(led, 2048 - (i*64));
-    delay(20);
-  }  // acts as a delay between setup too
-#endif
   delay(250);
 
   if (!mcp.begin_I2C(0x21)) {
@@ -162,12 +153,10 @@ void m5io_init(void) {
   for (byte i = 0; i < numencoders; i++)
     rotaryEncoders[i].init();  // currently a NOP
 
-  xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr,
-                          1);
+  xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 0); // gui core
   attachInterrupt(digitalPinToInterrupt(INTA), intactive, FALLING);
   attachInterrupt(digitalPinToInterrupt(INTB), intactive, FALLING);
 
-  Serial.printf(
-      "GPIO A 0: %d\n",
-      mcp.readGPIOA());  // no interrupts unless you do a mcp.readGPIOA();
+  mcp.readGPIOA(); // no interrupts unless you do a mcp.readGPIOA();
+  mcp.readGPIOB();
 }

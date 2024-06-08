@@ -53,7 +53,7 @@ void scan_loop() {
   boolean repeatscan = false;  // if we found something and connected to it, keep scanning for more
 
   do {
-    ESP_LOGI("comms-nt", "Scanning for %ds", scanTime);
+    ESP_LOGI("comms-bt", "Scanning for %ds", scanTime);
     pBLEScan->start(scanTime, false);  // up to one minute
 
     if (found_device && found_bledevice) {
@@ -66,6 +66,7 @@ void scan_loop() {
         delete found_device;    
         found_device = NULL;
       }
+      ESP_LOGD("comms-bt","removing bledevice and scan again");
       delete found_bledevice;
       repeatscan = true;
       vTaskDelay(pdMS_TO_TICKS(100));

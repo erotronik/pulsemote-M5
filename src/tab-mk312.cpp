@@ -29,7 +29,7 @@ void tab_mk312::encoder_change(int sw, int change) {
   }
   if (sw == 1 && lockpanel) {
     device_mk312 *md = static_cast<device_mk312 *>(device);
-    level_a = min(99, max(0, level_b + change));
+    level_a = min(99, max(0, level_a + change));
     md->etbox_setbyte(ETMEM_knoba, (level_a * 256+99) / 100);  
     need_knob_refresh = true;
   }
