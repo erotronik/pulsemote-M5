@@ -248,13 +248,8 @@ void tab_coyote::coyote_tab_create() {
   tab_create_status(page);
 
   rand_timer->view(page);
-  rand_timer->show(false);
-
   timer->view(page);
-  timer->show(false);
-
   sync->view(page);
-  sync->show(false);
 
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }

@@ -94,7 +94,7 @@ int tab_object_timer::gettimeoff(void) {
     return value[1];
 }
 
-lv_obj_t *tab_object_timer::view(lv_obj_t *tv2) {
+void tab_object_timer::view(lv_obj_t *tv2) {
   lv_obj_t *timerc = lv_obj_create(tv2);
   lv_obj_align(timerc, LV_ALIGN_TOP_RIGHT, 0, dropdown_height+6);
   lv_obj_set_style_pad_top(timerc, 3, LV_PART_MAIN);
@@ -219,6 +219,5 @@ lv_obj_t *tab_object_timer::view(lv_obj_t *tv2) {
     lv_label_set_text(t2, "Off");
     lv_obj_set_style_text_align(t2, LV_TEXT_ALIGN_CENTER, 0);
   }
-
-  return timerc;
+  show(false);
 }

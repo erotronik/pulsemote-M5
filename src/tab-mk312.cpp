@@ -252,13 +252,8 @@ void tab_mk312::tab_create() {
   tab_create_status(tv3);
 
   rand_timer->view(tv3);
-  rand_timer->show(false);
-
   timer->view(tv3);
-  timer->show(false);
-
   sync->view(tv3);
-  sync->show(false);
 
   page = tv3;
 

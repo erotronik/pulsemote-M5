@@ -253,15 +253,9 @@ void tab_thrustalot::tab_create() {
   buttonbar = new tab_object_buttonbar(page);
 
   tab_create_status();
-
   rand_timer->view(page);
-  rand_timer->show(false);
-
   timer->view(page);
-  timer->show(false);
-
   sync->view(page);
-  sync->show(false);
 
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }

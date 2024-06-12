@@ -10,7 +10,7 @@ class tab_object_sync {
   // This may get more complex later as you might want to dynamically see what is providing
   // sync data and allow the user to switch between them
   
-  lv_obj_t *view(lv_obj_t *parent);
+  void view(lv_obj_t *parent);
 
   void show(bool show);
 

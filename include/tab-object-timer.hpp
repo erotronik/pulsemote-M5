@@ -14,7 +14,7 @@ class tab_object_timer {
   int gettimeon(void);
   int gettimeoff(void);
   void rotary_change(int change);
-  lv_obj_t* view(lv_obj_t* tv2);
+  void view(lv_obj_t* tv2);
 
  private:
   int value[5];

@@ -1,7 +1,7 @@
 #include "tab-object-sync.hpp"
 #include "lvgl-utils.h"
 
-lv_obj_t *tab_object_sync::view(lv_obj_t *parent) {
+void tab_object_sync::view(lv_obj_t *parent) {
   container = lv_obj_create(parent);
   // Set the container to be transparent and have no effect
   //lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
@@ -25,7 +25,7 @@ lv_obj_t *tab_object_sync::view(lv_obj_t *parent) {
   lv_label_set_text(label, "Invert");
 
   sw = lv_switch_create(container);
-  return container;
+  show(false);
 }
 
 void tab_object_sync::show(bool show) {
