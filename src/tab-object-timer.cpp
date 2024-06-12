@@ -2,8 +2,7 @@
 #include <map>
 #include <Arduino.h>
 
-#define LV_CONF_INCLUDE_SIMPLE
-#include <lvgl.h>
+#include "lvgl-utils.h"
 
 #include "tab-object-timer.hpp"
 
@@ -97,13 +96,13 @@ int tab_object_timer::gettimeoff(void) {
 
 lv_obj_t *tab_object_timer::view(lv_obj_t *tv2) {
   lv_obj_t *timerc = lv_obj_create(tv2);
-  lv_obj_set_align(timerc, LV_ALIGN_TOP_RIGHT);
+  lv_obj_align(timerc, LV_ALIGN_TOP_RIGHT, 0, dropdown_height+6);
   lv_obj_set_style_pad_top(timerc, 3, LV_PART_MAIN);
   lv_obj_set_style_pad_bottom(timerc, 3, LV_PART_MAIN);
   lv_obj_set_style_pad_left(timerc, 3, LV_PART_MAIN);
   lv_obj_set_style_pad_right(timerc, 3, LV_PART_MAIN);
 
-  lv_obj_set_size(timerc, 160, 76);
+  lv_obj_set_size(timerc, dropdown_width, 76);
 
   active_btn = NULL;
   container = timerc;
@@ -183,7 +182,7 @@ lv_obj_t *tab_object_timer::view(lv_obj_t *tv2) {
     lv_label_set_text(t2, "Off");
     lv_obj_set_style_text_align(t2, LV_TEXT_ALIGN_CENTER, 0);
   } else {
-    // lv_obj_set_size(timerc, 160, 76);
+    // lv_obj_set_size(timerc, dropdown_width, 76);
 
     lv_obj_t *t2a = lv_button_create(timerc);
     lv_obj_align(t2a, LV_ALIGN_TOP_RIGHT, 0, 0);

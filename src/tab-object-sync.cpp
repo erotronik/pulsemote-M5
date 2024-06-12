@@ -1,6 +1,5 @@
-#define LV_CONF_INCLUDE_SIMPLE
-#include <lvgl.h>
 #include "tab-object-sync.hpp"
+#include "lvgl-utils.h"
 
 lv_obj_t *tab_object_sync::view(lv_obj_t *parent) {
   container = lv_obj_create(parent);
@@ -14,8 +13,8 @@ lv_obj_t *tab_object_sync::view(lv_obj_t *parent) {
   lv_obj_set_style_pad_bottom(container, 3, LV_PART_MAIN);
   lv_obj_set_style_pad_left(container, 3, LV_PART_MAIN);
   lv_obj_set_style_pad_right(container, 3, LV_PART_MAIN);
-  lv_obj_set_align(container, LV_ALIGN_TOP_RIGHT);
-  lv_obj_set_width(container, 160);
+  lv_obj_align(container, LV_ALIGN_TOP_RIGHT, 0, dropdown_height+6);
+  lv_obj_set_width(container, dropdown_width);
   lv_obj_set_height(container, LV_SIZE_CONTENT);
   lv_obj_set_layout(container, LV_LAYOUT_FLEX);
   lv_obj_set_style_flex_flow(container, LV_FLEX_FLOW_ROW, 0);

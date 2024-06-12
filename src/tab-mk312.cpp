@@ -242,7 +242,7 @@ void tab_mk312::tab_create() {
   lv_obj_t *dd = lv_dropdown_create(tv3);
   lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
   lv_obj_set_align(dd, LV_ALIGN_TOP_RIGHT);
-  lv_obj_set_size(dd, 160, 36);  // match the timer box width
+  lv_obj_set_size(dd, dropdown_width, dropdown_height);  // match the timer box width
 
   lv_dropdown_set_options(dd, mk312_main_modes_c);
   lv_obj_add_event_cb(dd, mk312_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
@@ -251,16 +251,13 @@ void tab_mk312::tab_create() {
 
   tab_create_status(tv3);
 
-  lv_obj_t *lt = rand_timer->view(tv3);
-  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  rand_timer->view(tv3);
   rand_timer->show(false);
 
-  lt = timer->view(tv3);
-  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  timer->view(tv3);
   timer->show(false);
 
-  lt = sync->view(tv3);
-  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  sync->view(tv3);
   sync->show(false);
 
   page = tv3;

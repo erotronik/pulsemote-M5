@@ -245,7 +245,7 @@ void tab_thrustalot::tab_create() {
   lv_obj_t *dd = lv_dropdown_create(page);
   lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
   lv_obj_set_align(dd, LV_ALIGN_TOP_RIGHT);
-  lv_obj_set_size(dd, 160, 36);  // match the timer box width
+  lv_obj_set_size(dd, dropdown_width, dropdown_height);  // match the timer box width
 
   lv_dropdown_set_options(dd, thrustalot_main_modes_c);
   lv_obj_add_event_cb(dd, thrustalot_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
@@ -254,16 +254,13 @@ void tab_thrustalot::tab_create() {
 
   tab_create_status();
 
-  lv_obj_t *lt = rand_timer->view(page);
-  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  rand_timer->view(page);
   rand_timer->show(false);
 
-  lt = timer->view(page);
-  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  timer->view(page);
   timer->show(false);
 
-  lt = sync->view(page);
-  lv_obj_align(lt, LV_ALIGN_TOP_RIGHT, 0, 40);
+  sync->view(page);
   sync->show(false);
 
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
