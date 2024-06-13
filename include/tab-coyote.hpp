@@ -2,6 +2,7 @@
 
 #include "tab-object-timer.hpp"
 #include "tab-object-sync.hpp"
+#include "tab-object-modes.hpp"
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "device-coyote2.hpp"
@@ -15,9 +16,6 @@ class tab_coyote: public Tab {
         void switch_change(int sw, boolean state) override;
         void loop(boolean activetab) override;
         void focus_change(boolean focus) override;
-        tab_object_timer *rand_timer;
-        tab_object_timer *timer;
-        tab_object_sync *sync;
         void gotsyncdata(Tab *t, sync_data status) override;
 
         enum main_modes {
@@ -32,8 +30,14 @@ class tab_coyote: public Tab {
         bool need_refresh;
 
     private:
+        static void coyote_mode_change_cb(lv_event_t *event);
+
         void coyote_tab_create(void);
         lv_obj_t *tab_status;
+        tab_object_modes *modeselect;
+        tab_object_sync *sync;
+        tab_object_timer *rand_timer;
+        tab_object_timer *timer;
         void tab_create_status(lv_obj_t *tv2);
         bool ison;
         coyote_mode mode_a;

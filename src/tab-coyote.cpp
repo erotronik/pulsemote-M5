@@ -12,6 +12,7 @@ tab_coyote::tab_coyote() {
     timer = new tab_object_timer(false);
     rand_timer = new tab_object_timer(true);
     sync = new tab_object_sync();
+    modeselect = new tab_object_modes();
     device = nullptr;
     bool need_refresh =false;
     ison = true;
@@ -40,14 +41,8 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
 void tab_coyote::switch_change(int sw, boolean state) {
   need_refresh = true;
 
-  if (sw == 2) {
-    lv_obj_t *dd = lv_obj_get_child(page,0); 
-    if (lv_dropdown_is_open(dd)) {
-      lv_dropdown_close(dd);
-      lv_obj_send_event(dd, LV_EVENT_VALUE_CHANGED, NULL);
-    } else {
-      lv_dropdown_open(dd);
-    }
+  if (sw == 2 && state) {
+    modeselect->handleclick();
   }
 
   if (main_mode == MODE_RANDOM && sw == 3 && state) {
@@ -103,13 +98,7 @@ void tab_coyote::encoder_change(int sw, int change) {
   need_refresh = true;
 
   if (sw == 2) {
-    lv_obj_t *dd = lv_obj_get_child(page,0); 
-    if (lv_dropdown_is_open(dd)) {
-      uint16_t selected_id = lv_dropdown_get_selected(dd);
-      uint16_t option_count = lv_dropdown_get_option_count(dd);
-      uint16_t next_id = (selected_id + change) % option_count;
-      lv_dropdown_set_selected(dd, next_id); 
-    }
+    modeselect->handleencoder(change);
   }
 
   if (sw == 1) 
@@ -186,13 +175,13 @@ void tab_coyote::loop(bool active) {
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%s\n%d",
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "A: %s\nB: %s\n%d",
                               md->getModeName(ison?mode_a:M_NONE),
                               md->getModeName(ison?mode_b:M_NONE),
                               seconds);
     } else {                              
       lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0),
-                          "%s\n%s",md->getModeName(ison?mode_a:M_NONE),
+                          "A: %s\nB: %s",md->getModeName(ison?mode_a:M_NONE),
                           md->getModeName(ison?mode_b:M_NONE));
     }
     if (main_mode == MODE_MANUAL) {
@@ -215,7 +204,7 @@ void tab_coyote::loop(bool active) {
   }
 }
 
-void coyote_mode_change_cb(lv_event_t *event) {
+void tab_coyote::coyote_mode_change_cb(lv_event_t *event) {
   tab_coyote *ctab = static_cast<tab_coyote *>(lv_event_get_user_data(event));
   ctab->main_mode = static_cast<tab_coyote::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("coyote", "cb %s on %d: new mode %d",
@@ -255,14 +244,8 @@ void tab_coyote::coyote_tab_create() {
   lv_obj_set_style_pad_top(page, 10, LV_PART_MAIN);
   lv_obj_set_style_pad_bottom(page, 0, LV_PART_MAIN);
 
-  lv_obj_t *dd = lv_dropdown_create(page);
-  lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
-  lv_obj_set_style_text_font(lv_dropdown_get_list(dd), &lv_font_montserrat_16, LV_PART_MAIN);
-  lv_obj_set_align(dd, LV_ALIGN_TOP_RIGHT);
-  lv_obj_set_size(dd, dropdown_width, dropdown_height);  // match the timer box width
-
-  lv_dropdown_set_options(dd, coyote_main_modes_c);
-  lv_obj_add_event_cb(dd, coyote_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
+  modeselect->createdropdown(page, coyote_main_modes_c);
+  lv_obj_add_event_cb(modeselect->getdropdownobject(), coyote_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
   
   buttonbar = new tab_object_buttonbar(page);
 
