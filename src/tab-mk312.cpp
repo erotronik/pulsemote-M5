@@ -162,8 +162,8 @@ void tab_mk312::loop(boolean activetab) {
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       buttonbar->settext(4, LV_SYMBOL_BELL);
-      if (main_mode == MODE_RANDOM && rand_timer->has_active_button() ||
-          main_mode == MODE_TIMER && timer->has_active_button())
+      if (main_mode == MODE_RANDOM && rand_timer->has_focus() ||
+          main_mode == MODE_TIMER && timer->has_focus())
         buttonbar->setvalue(4,100);
       else
         buttonbar->setvalue(4,0);

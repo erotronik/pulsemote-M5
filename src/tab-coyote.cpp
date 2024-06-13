@@ -41,15 +41,17 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
 void tab_coyote::switch_change(int sw, boolean state) {
   need_refresh = true;
 
-  if (sw == 2 && state) {
-    modeselect->handleclick();
-  }
-
-  if (main_mode == MODE_RANDOM && sw == 3 && state) {
-    rand_timer->highlight_next_field();
-  }
-  if (main_mode == MODE_TIMER && sw == 3 && state) {
-    timer->highlight_next_field();
+  if (sw == 3 && state) {
+    if (rand_timer->has_focus()) {
+      rand_timer->highlight_next_field();
+    } else if (timer->has_focus()) {
+      timer->highlight_next_field();
+    } else if (!modeselect->handleclick()) {  // false then we left focus
+      if (main_mode == MODE_RANDOM)
+        rand_timer->highlight_next_field();
+      else if (main_mode == MODE_TIMER)
+        timer->highlight_next_field();
+    }
   }
 
   if (main_mode == MODE_MANUAL) {
@@ -97,18 +99,15 @@ void tab_coyote::encoder_change(int sw, int change) {
   device_coyote2 *md = static_cast<device_coyote2*>(device);
   need_refresh = true;
 
-  if (sw == 2) {
-    modeselect->handleencoder(change);
-  }
-
   if (sw == 1) 
     md->get().chan_a().put_power_diff(change);
   else if (sw == 0)
     md->get().chan_b().put_power_diff(change); 
-  if (main_mode == MODE_RANDOM && sw == 3)
+  if (sw == 3) {
     rand_timer->rotary_change(change);
-  if (main_mode == MODE_TIMER && sw == 3) 
     timer->rotary_change(change);
+    modeselect->handleencoder(change);
+  }
 }
 
 void tab_coyote::focus_change(boolean focus) {
@@ -193,9 +192,9 @@ void tab_coyote::loop(bool active) {
     }
   
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      buttonbar->settext(4, LV_SYMBOL_BELL);
-      if (main_mode == MODE_RANDOM && rand_timer->has_active_button() ||
-          main_mode == MODE_TIMER && timer->has_active_button())
+      buttonbar->settext(4, LV_SYMBOL_SETTINGS);
+      if (main_mode == MODE_RANDOM && rand_timer->has_focus() ||
+          main_mode == MODE_TIMER && timer->has_focus())
         buttonbar->setvalue(4,  100);
       else
         buttonbar->setvalue(4,  0);

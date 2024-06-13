@@ -6,11 +6,13 @@
 
 tab_object_timer::tab_object_timer(bool irandom) { moderandom = irandom; }
 
-bool tab_object_timer::has_active_button(void) { return (active_btn != NULL); }
+bool tab_object_timer::has_focus(void) { return (active_btn != NULL); }
 
 void tab_object_timer::rotary_change(int change) {
   if (!container) return;
   if (!active_btn) return;
+  if (!is_visible) return;
+
   uint32_t *id_ptr = (uint32_t *)lv_obj_get_user_data(active_btn);
   int32_t id = *id_ptr - 1;
   value[id] = max(1, value[id]+change);
@@ -32,6 +34,7 @@ void tab_object_timer::rotary_change(int change) {
 
 void tab_object_timer::highlight_next_field() {
   if (!container) return;
+  if (!is_visible) return;
   if (!active_btn) {
     active_btn = lv_obj_get_child(container, 0);
     lv_obj_add_state(active_btn, LV_STATE_CHECKED);
@@ -74,8 +77,13 @@ void tab_object_timer::event_handler(lv_event_t *e) {
 }
 
 void tab_object_timer::show(bool show) {
-  if (container && show) lv_obj_clear_flag(container, LV_OBJ_FLAG_HIDDEN);
-  if (container && !show) lv_obj_add_flag(container, LV_OBJ_FLAG_HIDDEN);
+  if (container && show) {
+    lv_obj_clear_flag(container, LV_OBJ_FLAG_HIDDEN);
+    is_visible = true;
+  } else if (container && !show) {
+    lv_obj_add_flag(container, LV_OBJ_FLAG_HIDDEN);
+    is_visible = false;
+  }
 }
 
 int tab_object_timer::gettimeon(void) {
