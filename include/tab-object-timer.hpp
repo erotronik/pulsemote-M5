@@ -1,7 +1,6 @@
 #pragma once
 
-#define LV_CONF_INCLUDE_SIMPLE
-#include <lvgl.h>
+#include "lvgl-utils.h"
 
 class tab_object_timer;
 

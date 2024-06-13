@@ -2,8 +2,7 @@
 
 #include "tab-object-timer.hpp"
 #include "tab-object-sync.hpp"
-#define LV_CONF_INCLUDE_SIMPLE
-#include <lvgl.h>
+#include "lvgl-utils.h"
 #include "tab.hpp"
 
 class tab_thrustalot : public Tab {

@@ -1,11 +1,8 @@
 #pragma once
 
 #include "tab-object-timer.hpp"
-#define LV_CONF_INCLUDE_SIMPLE
-#include <lvgl.h>
+#include "lvgl-utils.h"
 #include "tab.hpp"
-
-void m5io_showanalogrgb(byte sw, lv_color_t rgb);
 
 class tab_splashscreen: public Tab {
     public:

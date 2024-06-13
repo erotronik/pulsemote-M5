@@ -1,10 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
-#include <lvgl.h>
 #include "lvgl-utils.h"
-
-void m5io_showanalogrgb(byte sw, const lv_color_t rgb);
 
 class tab_object_buttonbar {
   public:
