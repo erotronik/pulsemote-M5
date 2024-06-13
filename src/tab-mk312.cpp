@@ -1,6 +1,3 @@
-#define LV_CONF_INCLUDE_SIMPLE
-#include <lvgl.h>
-
 #include "device-mk312.hpp"
 #include "tab-mk312.hpp"
 #include "tab.hpp"

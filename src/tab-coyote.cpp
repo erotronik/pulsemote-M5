@@ -1,7 +1,6 @@
 #include <memory>
 #include "device-coyote2.hpp"
-#define LV_CONF_INCLUDE_SIMPLE
-#include <lvgl.h>
+#include "lvgl-utils.h"
 #include "tab.hpp"
 #include "tab-coyote.hpp"
 #include "lvgl-utils.h"

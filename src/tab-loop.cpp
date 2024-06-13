@@ -3,7 +3,6 @@
 #include "tab.hpp"
 #include "device-loop.hpp" 
 #include "tab-loop.hpp"
-#include <lvgl.h>
 #include "lvgl-utils.h"
 
 tab_loop::tab_loop() {

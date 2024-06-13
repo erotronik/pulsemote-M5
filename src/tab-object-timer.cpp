@@ -1,9 +1,7 @@
 #include <functional>
 #include <map>
-#include <Arduino.h>
 
 #include "lvgl-utils.h"
-
 #include "tab-object-timer.hpp"
 
 tab_object_timer::tab_object_timer(bool irandom) { moderandom = irandom; }

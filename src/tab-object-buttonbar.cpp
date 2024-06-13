@@ -1,4 +1,3 @@
-#include <lvgl.h>
 #include <cstdio>
 #include "lvgl-utils.h"
 #include "tab-object-buttonbar.hpp"
