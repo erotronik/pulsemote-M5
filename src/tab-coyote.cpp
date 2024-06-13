@@ -41,6 +41,16 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
 void tab_coyote::switch_change(int sw, boolean state) {
   need_refresh = true;
 
+  if (sw == 2) {
+    lv_obj_t *dd = lv_obj_get_child(page,0); 
+    if (lv_dropdown_is_open(dd)) {
+      lv_dropdown_close(dd);
+      lv_obj_send_event(dd, LV_EVENT_VALUE_CHANGED, NULL);
+    } else {
+      lv_dropdown_open(dd);
+    }
+  }
+
   if (main_mode == MODE_RANDOM && sw == 3 && state) {
     rand_timer->highlight_next_field();
   }
@@ -92,6 +102,17 @@ void tab_coyote::switch_change(int sw, boolean state) {
 void tab_coyote::encoder_change(int sw, int change) {
   device_coyote2 *md = static_cast<device_coyote2*>(device);
   need_refresh = true;
+
+  if (sw == 2) {
+    lv_obj_t *dd = lv_obj_get_child(page,0); 
+    if (lv_dropdown_is_open(dd)) {
+      uint16_t selected_id = lv_dropdown_get_selected(dd);
+      uint16_t option_count = lv_dropdown_get_option_count(dd);
+      uint16_t next_id = (selected_id + change) % option_count;
+      lv_dropdown_set_selected(dd, next_id); 
+    }
+  }
+
   if (sw == 1) 
     md->get().chan_a().put_power_diff(change);
   else if (sw == 0)
