@@ -6,7 +6,7 @@
 
 tab_object_timer::tab_object_timer(bool irandom) { moderandom = irandom; }
 
-bool tab_object_timer::has_focus(void) { return (active_btn != NULL); }
+boolean tab_object_timer::has_focus(void) { return (active_btn != NULL); }
 
 void tab_object_timer::rotary_change(int change) {
   if (!container) return;
@@ -32,9 +32,9 @@ void tab_object_timer::rotary_change(int change) {
   }
 }
 
-void tab_object_timer::highlight_next_field() {
-  if (!container) return;
-  if (!is_visible) return;
+boolean tab_object_timer::highlight_next_field() {
+  if (!container) return false;
+  if (!is_visible) return false;
   if (!active_btn) {
     active_btn = lv_obj_get_child(container, 0);
     lv_obj_add_state(active_btn, LV_STATE_CHECKED);
@@ -45,11 +45,11 @@ void tab_object_timer::highlight_next_field() {
     if ((moderandom && id > 3) || (!moderandom && id > 1)) {
       active_btn = NULL;
     } else {
-      active_btn =
-          lv_obj_get_child(container, id);  // null is okay for last one
+      active_btn = lv_obj_get_child(container, id);  // null is okay for last one
       if (active_btn) lv_obj_add_state(active_btn, LV_STATE_CHECKED);
     }
   }
+  return active_btn;
 }
 
 void tab_object_timer::event_handler(lv_event_t *e) {

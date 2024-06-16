@@ -7,8 +7,8 @@ class tab_object_timer;
 class tab_object_timer {
  public:
   tab_object_timer(bool moderandom);
-  void highlight_next_field(void);
-  bool has_focus(void);
+  boolean highlight_next_field(void);
+  boolean has_focus(void);
   void show(bool x);
   int gettimeon(void);
   int gettimeoff(void);

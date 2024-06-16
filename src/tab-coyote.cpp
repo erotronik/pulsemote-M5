@@ -46,7 +46,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
       rand_timer->highlight_next_field();
     } else if (timer->has_focus()) {
       timer->highlight_next_field();
-    } else if (!modeselect->handleclick()) {  // false then we left focus
+    } else if (!modeselect->highlight_next_field()) {  // false then we left focus
       if (main_mode == MODE_RANDOM)
         rand_timer->highlight_next_field();
       else if (main_mode == MODE_TIMER)
@@ -106,13 +106,14 @@ void tab_coyote::encoder_change(int sw, int change) {
   if (sw == 3) {
     rand_timer->rotary_change(change);
     timer->rotary_change(change);
-    modeselect->handleencoder(change);
+    modeselect->rotary_change(change);
   }
 }
 
 void tab_coyote::focus_change(boolean focus) {
   for (int i=0; i<5; i++)
     buttonbar->setrgb(i, lv_color_hsv_to_rgb(0, 0, 0));
+  buttonbar->settext(4, LV_SYMBOL_SETTINGS);
   need_refresh = true;
 }
 
@@ -192,14 +193,11 @@ void tab_coyote::loop(bool active) {
     }
   
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      buttonbar->settext(4, LV_SYMBOL_SETTINGS);
-      if (main_mode == MODE_RANDOM && rand_timer->has_focus() ||
-          main_mode == MODE_TIMER && timer->has_focus())
+      if (rand_timer->has_focus() || timer->has_focus())
         buttonbar->setvalue(4,  100);
       else
         buttonbar->setvalue(4,  0);
-    } else 
-      buttonbar->settext(4, "");
+    }
   }
 }
 
