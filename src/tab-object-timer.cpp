@@ -6,7 +6,7 @@
 
 tab_object_timer::tab_object_timer(bool irandom) { moderandom = irandom; }
 
-boolean tab_object_timer::has_focus(void) { return (active_btn != NULL); }
+boolean tab_object_timer::has_focus(void) { return (active_btn  && container && is_visible); }
 
 void tab_object_timer::rotary_change(int change) {
   if (!container) return;

@@ -11,6 +11,10 @@ void tab_object_modes::createdropdown(lv_obj_t *parent, const char *options) {
   lv_dropdown_set_options(dd, options);
 }
 
+boolean tab_object_modes::has_focus() {
+  return (lv_dropdown_is_open(dd));
+}
+
 boolean tab_object_modes::highlight_next_field() {
   if (!lv_dropdown_is_open(dd)) {
     lv_dropdown_open(dd);

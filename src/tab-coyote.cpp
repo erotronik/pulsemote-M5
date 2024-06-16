@@ -42,15 +42,19 @@ void tab_coyote::switch_change(int sw, boolean state) {
   need_refresh = true;
 
   if (sw == 3 && state) {
-    if (rand_timer->has_focus()) {
+    if (modeselect->has_focus()) {
+      if (!modeselect->highlight_next_field()) {  // false then we left focus
+        if (main_mode == MODE_RANDOM)
+          rand_timer->highlight_next_field();
+        else if (main_mode == MODE_TIMER)
+          timer->highlight_next_field();
+      }
+    } else if (rand_timer->has_focus()) {
       rand_timer->highlight_next_field();
     } else if (timer->has_focus()) {
       timer->highlight_next_field();
-    } else if (!modeselect->highlight_next_field()) {  // false then we left focus
-      if (main_mode == MODE_RANDOM)
-        rand_timer->highlight_next_field();
-      else if (main_mode == MODE_TIMER)
-        timer->highlight_next_field();
+    } else {
+      modeselect->highlight_next_field();
     }
   }
 
