@@ -118,6 +118,7 @@ void device_dgbutton::ble_mk_callback(
       if (length > 2 && pData[0] == 0x51 && pData[1] == 0x01) { // confirmed command
         state = dgbutton_state::LISTEN;
         ESP_LOGI("dgcb","Battery level might be %d",pData[3]);
+        battery = pData[3];
       } else
       if (length > 2 && pData[0] == 0x5a) {
         ESP_LOGI("dgcb","Push!");

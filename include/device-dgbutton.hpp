@@ -28,9 +28,13 @@ class device_dgbutton : public Device {
     return new device_dgbutton();
   }
 
+  int get_battery(void) { return battery; };
+
   enum class dgbutton_event { NONE, PUSH, RELEASE, HELD};
 
  private:
+
+  int battery = 0;
 
   enum class dgbutton_state { WFHELLO, SENDSTART, LISTEN};
   dgbutton_state state = dgbutton_state::WFHELLO;
