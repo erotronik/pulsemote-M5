@@ -80,6 +80,15 @@ void tab_coyote::switch_change(int sw, boolean state) {
     }
   }
 
+  if (main_mode != MODE_MANUAL && sw == 4 && state) {  // Stop
+    device_coyote2 *md = static_cast<device_coyote2*>(device);   
+    main_mode = MODE_MANUAL;
+    modeselect->reset();
+    ison = false;
+    md->get().chan_a().put_setmode(M_NONE);
+    md->get().chan_b().put_setmode(M_NONE); 
+  }
+
   if (sw == 1 || sw ==0) { // click to move to the next mode, then back to start
     device_coyote2 *md = static_cast<device_coyote2*>(device);
     coyote_mode mode;
@@ -199,7 +208,7 @@ void tab_coyote::loop(bool active) {
       buttonbar->settext(2,"On\nOff");
       buttonbar->setvalue(2, ison ? 100: 0);
     } else {
-      buttonbar->settext(2,"");
+      buttonbar->settext(2,"Stop");
       buttonbar->setvalue(2,  0);
     }
   

@@ -63,6 +63,13 @@ void tab_mk312::switch_change(int sw, boolean value) {
       send_sync_data(SYNC_OFF);
     }
   }
+  if (main_mode != MODE_MANUAL && sw == 4 && value) {  // Stop
+    device_mk312 *md = static_cast<device_mk312*>(device);   
+    main_mode = MODE_MANUAL;
+    modeselect->reset();
+    ison = false;
+    md->etbox_off();
+  }
   if (lockpanel == false && (sw == 1 || sw == 0) && value) {
     lockpanel = true;
     level_a = 0;
@@ -162,10 +169,12 @@ void tab_mk312::loop(boolean activetab) {
     for (int i = 0; i < 5; i++)
       buttonbar->settext(i,"");
     if (main_mode == MODE_MANUAL) {
-      buttonbar->settextfmt(2,"On\nOff");
+      buttonbar->settext(2,"On\nOff");
       buttonbar->setvalue(2,ison? 100:0);
-    } else
+    } else {
+      buttonbar->settext(2,"Stop");
       buttonbar->setvalue(2,0);
+    }
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       buttonbar->settext(4, LV_SYMBOL_BELL);

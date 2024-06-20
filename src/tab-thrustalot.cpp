@@ -55,6 +55,11 @@ void tab_thrustalot::switch_change(int sw, boolean value) {
       send_sync_data(SYNC_OFF);
     }
   }
+  if (main_mode != MODE_MANUAL && sw == 4 && value) {
+    ison = 0;
+    main_mode = MODE_MANUAL;
+    modeselect->reset();
+  }
   if (sw == 2 && !ison && main_mode == MODE_MANUAL) {
     md->thrustonetime(knob_speed);
   }
@@ -176,10 +181,12 @@ void tab_thrustalot::loop(boolean activetab) {
     buttonbar->setrgb(1, lv_color_hsv_to_rgb(180, 100, (99-knob_tempo)));
     buttonbar->setvalue(1,knob_tempo);
     if (main_mode == MODE_MANUAL) {
-      buttonbar->settextfmt(2,"On\nOff");
+      buttonbar->settext(2,"On\nOff");
       buttonbar->setvalue(2,ison? 100:0);
-    } else
+    } else {
+      buttonbar->settext(2,"Stop");
       buttonbar->setvalue(2,0);
+    }
     if (!ison && main_mode == MODE_MANUAL) {
       buttonbar->settext(3,"One\nThrust");
     } else {
