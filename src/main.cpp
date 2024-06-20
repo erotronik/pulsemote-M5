@@ -6,9 +6,7 @@
 
 #include "comms-bt.hpp"
 
-#define LV_CONF_INCLUDE_SIMPLE
 #include <esp_timer.h>
-#include <lvgl.h>
 
 #include "m5io.h"
 #include "tab-coyote.hpp"
@@ -16,6 +14,7 @@
 #include "tab-thrustalot.hpp"
 #include "tab-splashscreen.hpp"
 #include "tab-bubblebottle.hpp"
+#include "tab-dgbutton.hpp"
 #include "tab-loop.hpp"
 #include "tab-mqtt.hpp"
 #include "tab.hpp"
@@ -140,6 +139,8 @@ void device_change_handler(type_of_change t, Device *d) {
       ta = new tab_thrustalot();
     } else if (type == DeviceType::device_bubblebottle) {
       ta = new tab_bubblebottle();
+    } else if (type == DeviceType::device_dgbutton) {
+      ta = new tab_dgbutton();      
     } else if (type == DeviceType::device_loop) {
       ta = new tab_loop();    
     }

@@ -6,10 +6,11 @@
 #include "device-thrustalot.hpp"
 #include "device-bubblebottle.hpp"
 #include "device-loop.hpp"
+#include "device-dgbutton.hpp"
 #include "device.hpp"
 
 // An instance of each device is used for scanning
-std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_thrustalot(), new device_bubblebottle(), new device_coyote2() };
+std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_thrustalot(), new device_bubblebottle(), new device_coyote2(), new device_dgbutton() };
 
 NimBLEScan *pBLEScan;
 boolean scanthread_is_scanning;
