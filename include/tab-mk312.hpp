@@ -15,9 +15,6 @@ class tab_mk312 : public Tab {
   void focus_change(boolean focus) override;
   boolean hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
-  tab_object_timer *rand_timer;
-  tab_object_timer *timer;
-  tab_object_sync *sync;
 
   enum main_modes {
     MODE_MANUAL = 0,

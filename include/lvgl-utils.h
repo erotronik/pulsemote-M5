@@ -1,6 +1,7 @@
 #pragma once
 #define LV_CONF_INCLUDE_SIMPLE
 #include <lvgl.h>
+#include <cstdio>
 #include <Arduino.h>
 
 constexpr int32_t SCREENW = 320;

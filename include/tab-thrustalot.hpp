@@ -1,7 +1,5 @@
 #pragma once
 
-#include "tab-object-timer.hpp"
-#include "tab-object-sync.hpp"
 #include "lvgl-utils.h"
 #include "tab.hpp"
 
@@ -15,9 +13,6 @@ class tab_thrustalot : public Tab {
   void focus_change(boolean focus) override;
   boolean hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
-  tab_object_timer *rand_timer;
-  tab_object_timer *timer;
-  tab_object_sync *sync;
 
   enum main_modes {
     MODE_MANUAL = 0,

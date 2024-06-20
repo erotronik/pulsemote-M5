@@ -1,6 +1,4 @@
 #include <memory>
-#define LV_CONF_INCLUDE_SIMPLE
-#include <lvgl.h>
 
 #include "device-thrustalot.hpp"
 #include "tab-thrustalot.hpp"

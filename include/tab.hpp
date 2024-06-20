@@ -4,6 +4,9 @@
 
 #include "device.hpp"
 #include "tab-object-buttonbar.hpp"
+#include "tab-object-timer.hpp"
+#include "tab-object-sync.hpp"
+#include "tab-object-modes.hpp"
 
 #define COLOUR_RED 0x882211
 #define COLOUR_GREEN 0x118822
@@ -17,7 +20,7 @@ extern std::list<Tab *> tabs;
 class Tab {
  public:
   enum sync_data {
-    SYNC_START =0, SYNC_ON, SYNC_OFF, SYNC_BYE
+    SYNC_START =0, SYNC_ON, SYNC_OFF, SYNC_BYE, SYNC_ALLOFF,
   };
 
   // Called when a physical push switch is pushed or released
@@ -55,7 +58,7 @@ class Tab {
 
   // Send sync data from our tab to all the others
   virtual void send_sync_data(sync_data syncstatus) {
-    if (syncstatus == SYNC_OFF) cyclecount++;
+    if (syncstatus == SYNC_OFF || syncstatus == SYNC_ALLOFF) cyclecount++;
     for (const auto& item : tabs) {
       if (item != this) {
         item->gotsyncdata(this,syncstatus);
@@ -70,6 +73,11 @@ class Tab {
   Device *device;
   tab_object_buttonbar *buttonbar;
   bool needssetup = false;
+
+  tab_object_modes *modeselect;
+  tab_object_sync *sync;
+  tab_object_timer *rand_timer;
+  tab_object_timer *timer;
 
   private:
     // See getcyclecount()

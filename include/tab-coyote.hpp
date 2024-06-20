@@ -1,8 +1,5 @@
 #pragma once
 
-#include "tab-object-timer.hpp"
-#include "tab-object-sync.hpp"
-#include "tab-object-modes.hpp"
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "device-coyote2.hpp"
@@ -34,10 +31,6 @@ class tab_coyote: public Tab {
 
         void coyote_tab_create(void);
         lv_obj_t *tab_status;
-        tab_object_modes *modeselect;
-        tab_object_sync *sync;
-        tab_object_timer *rand_timer;
-        tab_object_timer *timer;
         void tab_create_status(lv_obj_t *tv2);
         bool ison;
         coyote_mode mode_a;
