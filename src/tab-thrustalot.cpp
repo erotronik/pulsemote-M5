@@ -66,6 +66,12 @@ void tab_thrustalot::gotsyncdata(Tab *t, sync_data syncstatus) {
   device_thrustalot *md = static_cast<device_thrustalot *>(device);
   if (!md) return;
   ESP_LOGD("thrustalot", "got sync data %d from %s", syncstatus, t->gettabname());
+  if (syncstatus == SYNC_ALLOFF) {
+    main_mode = MODE_MANUAL;
+    modeselect->reset();
+    ison = false;
+    need_refresh = true;
+  }
   if (main_mode == MODE_SYNC) {
     bool isinverted = sync->isinverted();
 

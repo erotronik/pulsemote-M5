@@ -10,6 +10,7 @@ class tab_object_modes {
     boolean highlight_next_field(void);
     boolean has_focus(void);
     boolean rotary_change(int change);
+    void reset();
 
   private:
     lv_obj_t *dd;

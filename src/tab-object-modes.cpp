@@ -25,6 +25,11 @@ boolean tab_object_modes::highlight_next_field() {
   return false;
 }
 
+void tab_object_modes::reset() {
+  lv_dropdown_set_selected(dd, 0);
+  lv_obj_send_event(dd, LV_EVENT_VALUE_CHANGED, NULL);
+}
+
 boolean tab_object_modes::rotary_change(int change) {
   if (lv_dropdown_is_open(dd)) {
     uint16_t selected_id = lv_dropdown_get_selected(dd);
