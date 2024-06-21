@@ -40,7 +40,6 @@ class device_dgbutton : public Device {
   dgbutton_state state = dgbutton_state::WFHELLO;
 
   void ble_dgbutton_send(String newValue);
-  bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
   friend class DevicedgbuttonNimBLEClientCallback;

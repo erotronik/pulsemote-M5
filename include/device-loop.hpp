@@ -26,7 +26,6 @@ class device_loop : public Device {
   int get_reading(void);
 
  private:
-  bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   void connected_callback();
   void disconnected_callback(int reason);

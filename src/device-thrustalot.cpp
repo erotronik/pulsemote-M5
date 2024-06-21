@@ -1,8 +1,9 @@
 #include <NimBLEDevice.h>
 #include <esp_log.h>
 
-#include <device-thrustalot.hpp>
-#include <device.hpp>
+#include "device-thrustalot.hpp"
+#include "comms-bt.hpp"
+#include "device.hpp"
 #include <functional>
 #include <map>
 
@@ -71,21 +72,6 @@ class DeviceThrustalotNimBLEClientCallback : public NimBLEClientCallbacks {
  private:
   device_thrustalot* device_thrustalot_instance;
 };
-
-bool device_thrustalot::getService(NimBLERemoteService*& service, NimBLEUUID uuid) {
-  ESP_LOGD(getShortName(), "Getting service %s", uuid.toString().c_str());
-  service = bleClient->getService(uuid);
-  if (service == nullptr) {
-    ESP_LOGE(getShortName(), "Failed to find service UUID: %s",
-             uuid.toString().c_str());
-    return false;
-  }
-  return true;
-}
-
-bool getCharacteristic(NimBLERemoteService* service,
-                       NimBLERemoteCharacteristic*& c, NimBLEUUID uuid,
-                       notify_callback notifyCallback);
 
 device_thrustalot::device_thrustalot() {
   events = xQueueCreate(10,sizeof(int));
@@ -182,27 +168,22 @@ bool device_thrustalot::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= getService(thrustService, THRUSTALOT_SERVICE_BLEUUID);
+  res &= ble_get_service(thrustService, bleClient, THRUSTALOT_SERVICE_BLEUUID);
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-
-  res &= getCharacteristic(
-      thrustService, uuid_rx_Characteristic, THRUSTALOT_UUID_RX,
-      std::bind(&device_thrustalot::ble_mk_callback, this, std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3,
-                std::placeholders::_4));
+  res &= ble_get_characteristic(thrustService, uuid_rx_Characteristic, THRUSTALOT_UUID_RX,
+      std::bind(&device_thrustalot::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");
     bleClient->disconnect();
     return false;
   }
-  res &= getCharacteristic(
-      thrustService, uuid_tx_Characteristic, THRUSTALOT_UUID_TX, nullptr);
+  res &= ble_get_characteristic(thrustService, uuid_tx_Characteristic, THRUSTALOT_UUID_TX, nullptr);
 
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing tx characteristic");

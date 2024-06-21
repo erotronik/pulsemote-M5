@@ -1,6 +1,7 @@
 #include <NimBLEDevice.h>
 #include <esp_log.h>
 
+#include "comms-bt.hpp"
 #include <device-mk312.hpp>
 #include <device.hpp>
 #include <functional>
@@ -67,21 +68,6 @@ class DeviceMK312NimBLEClientCallback : public NimBLEClientCallbacks {
  private:
   device_mk312* device_mk312_instance;
 };
-
-bool device_mk312::getService(NimBLERemoteService*& service, NimBLEUUID uuid) {
-  ESP_LOGD(getShortName(), "Getting service %s", uuid.toString().c_str());
-  service = bleClient->getService(uuid);
-  if (service == nullptr) {
-    ESP_LOGE(getShortName(), "Failed to find service UUID: %s",
-             uuid.toString().c_str());
-    return false;
-  }
-  return true;
-}
-
-bool getCharacteristic(NimBLERemoteService* service,
-                       NimBLERemoteCharacteristic*& c, NimBLEUUID uuid,
-                       notify_callback notifyCallback);
 
 device_mk312::device_mk312() {}
 
@@ -183,18 +169,16 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= getService(mk312Service, MK312_SERVICE_BLEUUID);
+  
+  res &= ble_get_service(mk312Service, bleClient, MK312_SERVICE_BLEUUID);
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-  res &= getCharacteristic(
-      mk312Service, uuid_rxtx_Characteristic, MK312_UUID_RXTX,
-      std::bind(&device_mk312::ble_mk_callback, this, std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3,
-                std::placeholders::_4));
+  res &= ble_get_characteristic(mk312Service, uuid_rxtx_Characteristic, MK312_UUID_RXTX,
+      std::bind(&device_mk312::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing characteristic");
@@ -205,8 +189,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
   is_connected = true;
 
   BOX.begin(std::bind(&device_mk312::etbox_txcb, this, std::placeholders::_1),
-            std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1,
-                      std::placeholders::_2),
+            std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&device_mk312::etbox_flushcb, this));
   BOX.setdebug(Serial, 1);
   BOX.newhello();

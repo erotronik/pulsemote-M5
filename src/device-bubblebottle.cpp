@@ -1,8 +1,9 @@
 #include <NimBLEDevice.h>
 #include <esp_log.h>
 
-#include <device-bubblebottle.hpp>
-#include <device.hpp>
+#include "comms-bt.hpp"
+#include "device-bubblebottle.hpp"
+#include "device.hpp"
 #include <functional>
 #include <map>
 
@@ -60,21 +61,6 @@ class DeviceBubblebottleNimBLEClientCallback : public NimBLEClientCallbacks {
  private:
   device_bubblebottle* device_bubblebottle_instance;
 };
-
-bool device_bubblebottle::getService(NimBLERemoteService*& service, NimBLEUUID uuid) {
-  ESP_LOGD(getShortName(), "Getting service %s", uuid.toString().c_str());
-  service = bleClient->getService(uuid);
-  if (service == nullptr) {
-    ESP_LOGE(getShortName(), "Failed to find service UUID: %s",
-             uuid.toString().c_str());
-    return false;
-  }
-  return true;
-}
-
-bool getCharacteristic(NimBLERemoteService* service,
-                       NimBLERemoteCharacteristic*& c, NimBLEUUID uuid,
-                       notify_callback notifyCallback);
 
 device_bubblebottle::device_bubblebottle() {
   events = xQueueCreate(10,sizeof(int));
@@ -135,19 +121,15 @@ bool device_bubblebottle::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= getService(bubblebottleService, BUBBLEBOTTLE_SERVICE_BLEUUID);
+  res &= ble_get_service(bubblebottleService, bleClient, BUBBLEBOTTLE_SERVICE_BLEUUID);
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-
-  res &= getCharacteristic(
-      bubblebottleService, uuid_rx_Characteristic, BUBBLEBOTTLE_UUID_RX,
-      std::bind(&device_bubblebottle::ble_mk_callback, this, std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3,
-                std::placeholders::_4));
+  res &= ble_get_characteristic(bubblebottleService, uuid_rx_Characteristic, BUBBLEBOTTLE_UUID_RX,
+      std::bind(&device_bubblebottle::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");

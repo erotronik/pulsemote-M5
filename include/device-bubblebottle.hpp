@@ -32,7 +32,6 @@ class device_bubblebottle : public Device {
   static const int mkbuffer_maxlen = 100;
   int bottle_state;
   void ble_bubblebottle_send(String newValue);
-  bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic,
                        uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;

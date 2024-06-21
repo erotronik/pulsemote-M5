@@ -1,8 +1,9 @@
 #include <NimBLEDevice.h>
 #include <esp_log.h>
 
-#include <device-dgbutton.hpp>
-#include <device.hpp>
+#include "comms-bt.hpp"
+#include "device-dgbutton.hpp"
+#include "device.hpp"
 #include <functional>
 #include <map>
 
@@ -55,17 +56,6 @@ class DevicedgbuttonNimBLEClientCallback : public NimBLEClientCallbacks {
  private:
   device_dgbutton* device_dgbutton_instance;
 };
-
-bool device_dgbutton::getService(NimBLERemoteService*& service, NimBLEUUID uuid) {
-  ESP_LOGD(getShortName(), "Getting service %s", uuid.toString().c_str());
-  service = bleClient->getService(uuid);
-  if (service == nullptr) {
-    ESP_LOGE(getShortName(), "Failed to find service UUID: %s",
-             uuid.toString().c_str());
-    return false;
-  }
-  return true;
-}
 
 bool d_getCharacteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr) {
   ESP_LOGD("dgb", "Getting characteristic %s", uuid.toString().c_str());
@@ -160,7 +150,7 @@ bool device_dgbutton::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= getService(dgbuttonService, dgbutton_SERVICE_BLEUUID);
+  res &= ble_get_service(dgbuttonService, bleClient, dgbutton_SERVICE_BLEUUID);
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();

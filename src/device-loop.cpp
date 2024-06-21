@@ -1,8 +1,9 @@
 #include <NimBLEDevice.h>
 #include <esp_log.h>
 
-#include <device-loop.hpp>
-#include <device.hpp>
+#include "comms-bt.hpp"
+#include "device-loop.hpp"
+#include "device.hpp"
 #include <functional>
 #include <map>
 
@@ -59,20 +60,6 @@ class DeviceloopNimBLEClientCallback : public NimBLEClientCallbacks {
   device_loop* device_loop_instance;
 };
 
-bool device_loop::getService(NimBLERemoteService*& service, NimBLEUUID uuid) {
-  ESP_LOGD(getShortName(), "Getting service %s", uuid.toString().c_str());
-  service = bleClient->getService(uuid);
-  if (service == nullptr) {
-    ESP_LOGE(getShortName(), "Failed to find service UUID: %s", uuid.toString().c_str());
-    return false;
-  }
-  return true;
-}
-
-bool getCharacteristic(NimBLERemoteService* service,
-                       NimBLERemoteCharacteristic*& c, NimBLEUUID uuid,
-                       notify_callback notifyCallback);
-
 device_loop::device_loop() {
   events = xQueueCreate(10,sizeof(int));
   loopreading = 1024;
@@ -117,18 +104,15 @@ bool device_loop::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= getService(loopService, loop_SERVICE_BLEUUID);
+  res &= ble_get_service(loopService, bleClient, loop_SERVICE_BLEUUID);
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-  res &= getCharacteristic(
-      loopService, uuid_rx_Characteristic, loop_UUID_RX,
-      std::bind(&device_loop::ble_mk_callback, this, std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3,
-                std::placeholders::_4));
+  res &= ble_get_characteristic(loopService, uuid_rx_Characteristic, loop_UUID_RX,
+      std::bind(&device_loop::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");

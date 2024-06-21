@@ -39,6 +39,34 @@ class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallback
   }
 };
 
+bool ble_get_service(NimBLERemoteService*& service, NimBLEClient* bleClient, NimBLEUUID uuid) {
+  ESP_LOGD("get_service", "Getting service %s", uuid.toString().c_str());
+  service = bleClient->getService(uuid);
+  if (service == nullptr) {
+    ESP_LOGE("get_service", "Failed to find service UUID: %s", uuid.toString().c_str());
+    return false;
+  }
+  return true;
+}
+
+bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr){
+  ESP_LOGD("get_char", "Getting characteristic %s", uuid.toString().c_str());
+  c = service->getCharacteristic(uuid);
+  if (c == nullptr) {
+    ESP_LOGE("get_char", "Failed to find characteristic UUID: %s", uuid.toString().c_str());
+    return false;
+  }
+  if (!notifyCallback)
+    return true;
+  // we want notifications
+  if (c->canNotify() && c->subscribe(true, notifyCallback))
+    return true;
+  else {
+    ESP_LOGE("get_char", "Failed to register for notifications for characteristic UUID: %s", uuid.toString().c_str());
+    return false;
+  }
+}
+
 void scan_comms_init(void) {
   NimBLEDevice::init("x");
   NimBLEDevice::setPower(ESP_PWR_LVL_P6, ESP_BLE_PWR_TYPE_ADV);  // send advertisements with 6 dbm

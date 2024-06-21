@@ -38,7 +38,6 @@ class device_mk312 : public Device {
   }
 
  private:
-  bool getService(NimBLERemoteService*& service, NimBLEUUID uuid);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic,
                        uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
