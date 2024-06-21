@@ -22,7 +22,6 @@ class device_dgbutton : public Device {
   void set_callback(device_callback c) override;
 
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
-  boolean get_isconnected();
 
   Device* clone() const override {
     return new device_dgbutton();
@@ -43,7 +42,6 @@ class device_dgbutton : public Device {
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
   friend class DevicedgbuttonNimBLEClientCallback;
-  bool is_connected = false;
   device_callback update_callback;
   void connected_callback();
   void disconnected_callback(int reason);

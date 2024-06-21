@@ -49,7 +49,7 @@ bool ble_get_service(NimBLERemoteService*& service, NimBLEClient* bleClient, Nim
   return true;
 }
 
-bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr){
+bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr) {
   ESP_LOGD("get_char", "Getting characteristic %s", uuid.toString().c_str());
   c = service->getCharacteristic(uuid);
   if (c == nullptr) {
@@ -63,6 +63,28 @@ bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteri
     return true;
   else {
     ESP_LOGE("get_char", "Failed to register for notifications for characteristic UUID: %s", uuid.toString().c_str());
+    return false;
+  }
+}
+
+bool ble_get_characteristic_response(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr) {
+  ESP_LOGD("dgb", "Getting characteristic %s", uuid.toString().c_str());
+  c = service->getCharacteristic(uuid);
+  if (c == nullptr) {
+    ESP_LOGE("dgb", "Failed to find characteristic UUID: %s", uuid.toString().c_str());
+    return false;
+  }
+
+  if (!notifyCallback)
+    return true;
+
+  // we want notifications
+  if (c->canNotify() && c->subscribe(true, notifyCallback, true)) {
+    ESP_LOGI("dgb","subscribed to notifications");
+    return true;
+  }
+  else {
+    ESP_LOGE("dgb", "Failed to register for notifications for characteristic UUID: %s", uuid.toString().c_str());
     return false;
   }
 }

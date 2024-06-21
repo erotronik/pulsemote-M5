@@ -31,8 +31,6 @@ const char *device_thrustalot::getpostext(void) {
   return "";
 }
 
-bool device_thrustalot::get_isconnected() { return is_connected; }
-
 void device_thrustalot::set_callback(device_callback c) { update_callback = c; }
 
 void device_thrustalot::notify(type_of_change change) {

@@ -27,8 +27,6 @@ bool device_mk312::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
   return false;
 }
 
-bool device_mk312::get_isconnected() { return is_connected; }
-
 void device_mk312::set_callback(device_callback c) { update_callback = c; }
 
 void device_mk312::notify(type_of_change change) {

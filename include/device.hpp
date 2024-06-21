@@ -29,4 +29,8 @@ class Device {
   virtual void change_handler(type_of_change t) {
     device_change_handler(t, this);
   };
+
+  virtual bool get_isconnected() { return is_connected; }
+  bool is_connected;
+
 };

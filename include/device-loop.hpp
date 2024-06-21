@@ -22,7 +22,6 @@ class device_loop : public Device {
     return new device_loop();
   }
 
-  boolean get_isconnected();
   int get_reading(void);
 
  private:
@@ -36,7 +35,6 @@ class device_loop : public Device {
   NimBLERemoteCharacteristic* uuid_rx_Characteristic;
   friend class DeviceloopNimBLEClientCallback;
 
-  bool is_connected = false;
   device_callback update_callback;
   int loopreading;
   int nreadings;

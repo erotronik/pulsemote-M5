@@ -15,8 +15,6 @@ bool device_dgbutton::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
    return (!strcmp(advertisedDevice->getName().c_str(), "47L120100"));
 }
 
-bool device_dgbutton::get_isconnected() { return is_connected; }
-
 void device_dgbutton::set_callback(device_callback c) { update_callback = c; }
 
 void device_dgbutton::notify(type_of_change change) {
@@ -56,28 +54,6 @@ class DevicedgbuttonNimBLEClientCallback : public NimBLEClientCallbacks {
  private:
   device_dgbutton* device_dgbutton_instance;
 };
-
-bool d_getCharacteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr) {
-  ESP_LOGD("dgb", "Getting characteristic %s", uuid.toString().c_str());
-  c = service->getCharacteristic(uuid);
-  if (c == nullptr) {
-    ESP_LOGE("dgb", "Failed to find characteristic UUID: %s", uuid.toString().c_str());
-    return false;
-  }
-
-  if (!notifyCallback)
-    return true;
-
-  // we want notifications
-  if (c->canNotify() && c->subscribe(true, notifyCallback, true)) {
-    ESP_LOGI("dgb","subscribed to notifications");
-    return true;
-  }
-  else {
-    ESP_LOGE("dgb", "Failed to register for notifications for characteristic UUID: %s", uuid.toString().c_str());
-    return false;
-  }
-}
 
 device_dgbutton::device_dgbutton() {
   events = xQueueCreate(10,sizeof(int));
@@ -142,8 +118,7 @@ bool device_dgbutton::connect_to_device(NimBLEAdvertisedDevice* device) {
   notify(D_CONNECTING);
   bool res = true;
 
-  ESP_LOGI(getShortName(), "Will try to connect to %s",
-           device->getAddress().toString().c_str());
+  ESP_LOGI(getShortName(), "Will try to connect to %s", device->getAddress().toString().c_str());
 
   if (!bleClient->connect(device)) {
     ESP_LOGE(getShortName(), "Connection failed");
@@ -158,7 +133,7 @@ bool device_dgbutton::connect_to_device(NimBLEAdvertisedDevice* device) {
   }
   state = dgbutton_state::WFHELLO;
 
-  res &= d_getCharacteristic( dgbuttonService, tx_Characteristic, dgbutton_UUID_TX, nullptr);
+  res &= ble_get_characteristic( dgbuttonService, tx_Characteristic, dgbutton_UUID_TX, nullptr);
 
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing tx characteristic");
@@ -166,11 +141,8 @@ bool device_dgbutton::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
 
-  res &= d_getCharacteristic(
-      dgbuttonService, rx_Characteristic, dgbutton_UUID_RX,
-      std::bind(&device_dgbutton::ble_mk_callback, this, std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3,
-                std::placeholders::_4));
+  res &= ble_get_characteristic_response(dgbuttonService, rx_Characteristic, dgbutton_UUID_RX,
+      std::bind(&device_dgbutton::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");

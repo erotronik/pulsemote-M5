@@ -14,10 +14,6 @@ bool device_loop::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
    return (advertisedDevice->isAdvertisingService(loop_SERVICE_BLEUUID));
 }
 
-bool device_loop::get_isconnected() { 
-  return is_connected; 
-}
-
 void device_loop::set_callback(device_callback c) { 
   update_callback = c; 
 }

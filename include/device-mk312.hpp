@@ -24,7 +24,6 @@ class device_mk312 : public Device {
                              "Phase1", "Phase2", "Phase3", "User1",  "User2",
                              "User3",  "User4"};
 
-  boolean get_isconnected();
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
   void set_mode(int p);
   void etbox_on(byte mode);
@@ -42,7 +41,6 @@ class device_mk312 : public Device {
                        uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
   friend class DeviceMK312NimBLEClientCallback;
-  bool is_connected = false;
   device_callback update_callback;
   void connected_callback();
   void disconnected_callback(int reason);

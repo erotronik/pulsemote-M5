@@ -20,8 +20,6 @@ bool device_bubblebottle::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
    return false;
 }
 
-bool device_bubblebottle::get_isconnected() { return is_connected; }
-
 void device_bubblebottle::set_callback(device_callback c) { update_callback = c; }
 
 void device_bubblebottle::notify(type_of_change change) {

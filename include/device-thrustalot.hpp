@@ -19,7 +19,6 @@ class device_thrustalot : public Device {
   bool connect_to_device(NimBLEAdvertisedDevice* device) override;
   void set_callback(device_callback c) override;
 
-  boolean get_isconnected();
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
 
   void thrustallthewayin();
@@ -43,7 +42,6 @@ class device_thrustalot : public Device {
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
   friend class DeviceThrustalotNimBLEClientCallback;
-  bool is_connected = false;
   device_callback update_callback;
   void connected_callback();
   void disconnected_callback(int reason);
