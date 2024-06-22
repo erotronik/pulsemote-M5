@@ -10,6 +10,7 @@ tab_mk312::tab_mk312() {
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
+  modeselect = new tab_object_modes();
   page = nullptr;
   old_last_change = last_change = D_NONE;
   device = nullptr;
@@ -29,13 +30,12 @@ void tab_mk312::encoder_change(int sw, int change) {
     md->etbox_setbyte(ETMEM_knoba, (level_a * 256+99) / 100);  
     need_knob_refresh = true;
   }
-  if (main_mode == MODE_RANDOM && sw == 3) {
+  if (sw == 3) {
     rand_timer->rotary_change(change);
-  }
-  if (main_mode == MODE_TIMER && sw == 3) {
     timer->rotary_change(change);
+    modeselect->rotary_change(change);
   }
-  if (sw ==2 && lockpanel) {
+  if (sw == 2 && lockpanel) {
     for (int i=0; i< change; i++) {
       md->etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
     }
@@ -46,12 +46,24 @@ void tab_mk312::encoder_change(int sw, int change) {
 void tab_mk312::switch_change(int sw, boolean value) {
   need_refresh = true;
   device_mk312 *md = static_cast<device_mk312 *>(device);
-  if (main_mode == MODE_RANDOM && sw == 3 && value) {
-    rand_timer->highlight_next_field();
+
+  if (sw == 3 && value) {
+    if (modeselect->has_focus()) {
+      if (!modeselect->highlight_next_field()) {  // false then we left focus                          
+	if (main_mode == MODE_RANDOM)
+          rand_timer->highlight_next_field();
+        else if (main_mode == MODE_TIMER)
+          timer->highlight_next_field();
+      }
+    } else if (rand_timer->has_focus()) {
+      rand_timer->highlight_next_field();
+    } else if (timer->has_focus()) {
+      timer->highlight_next_field();
+    } else {
+      modeselect->highlight_next_field();
+    }
   }
-  if (main_mode == MODE_TIMER && sw == 3 && value) {
-    timer->highlight_next_field();
-  }
+
   if (main_mode == MODE_MANUAL) {
     if (sw == 4 && value && ison == 0) {
       ison = 1;
@@ -166,8 +178,6 @@ void tab_mk312::loop(boolean activetab) {
     device_mk312 *md = static_cast<device_mk312 *>(device);
 
     need_knob_refresh = false;
-    for (int i = 0; i < 5; i++)
-      buttonbar->settext(i,"");
     if (main_mode == MODE_MANUAL) {
       buttonbar->settext(2,"On\nOff");
       buttonbar->setvalue(2,ison? 100:0);
@@ -177,9 +187,7 @@ void tab_mk312::loop(boolean activetab) {
     }
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      buttonbar->settext(4, LV_SYMBOL_BELL);
-      if (main_mode == MODE_RANDOM && rand_timer->has_focus() ||
-          main_mode == MODE_TIMER && timer->has_focus())
+      if (rand_timer->has_focus() || timer->has_focus())
         buttonbar->setvalue(4,100);
       else
         buttonbar->setvalue(4,0);
@@ -222,6 +230,7 @@ void tab_mk312::focus_change(boolean focus) {
   for (int i = 0; i < 5; i++) {
       buttonbar->setrgb(i,lv_color_hsv_to_rgb(0, 0, 0));
   }
+  buttonbar->settext(4, LV_SYMBOL_SETTINGS);
 }
 
 void tab_mk312::tab_create_status(lv_obj_t *tv2) {
@@ -252,15 +261,8 @@ void tab_mk312::tab_create() {
   lv_obj_set_style_pad_right(tv3, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_bottom(tv3, 0, LV_PART_MAIN);
 
-  lv_obj_t *dd = lv_dropdown_create(tv3);
-  lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
-  lv_obj_set_style_text_font(lv_dropdown_get_list(dd), &lv_font_montserrat_16, LV_PART_MAIN);
-
-  lv_obj_set_align(dd, LV_ALIGN_TOP_RIGHT);
-  lv_obj_set_size(dd, dropdown_width, dropdown_height);  // match the timer box width
-
-  lv_dropdown_set_options(dd, mk312_main_modes_c);
-  lv_obj_add_event_cb(dd, mk312_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
+  modeselect->createdropdown(tv3, mk312_main_modes_c);
+  lv_obj_add_event_cb(modeselect->getdropdownobject(), mk312_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
   buttonbar = new tab_object_buttonbar(tv3);
 

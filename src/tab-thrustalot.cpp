@@ -12,6 +12,7 @@ tab_thrustalot::tab_thrustalot() {
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
+  modeselect = new tab_object_modes();
   page = nullptr;
   old_last_change = last_change = D_NONE;
   device = nullptr;
@@ -21,10 +22,9 @@ tab_thrustalot::tab_thrustalot() {
 tab_thrustalot::~tab_thrustalot() {}
 
 void tab_thrustalot::encoder_change(int sw, int change) {
-  if (main_mode == MODE_RANDOM && sw == 3) {
+  if (sw == 3) {
+    modeselect->rotary_change(change);
     rand_timer->rotary_change(change);
-  }
-  if (main_mode == MODE_TIMER && sw == 3) {
     timer->rotary_change(change);
   }
   if (sw == 1) {
@@ -39,12 +39,24 @@ void tab_thrustalot::encoder_change(int sw, int change) {
 void tab_thrustalot::switch_change(int sw, boolean value) {
   need_refresh = true;
   device_thrustalot *md = static_cast<device_thrustalot *>(device);
-  if (main_mode == MODE_RANDOM && sw == 3 && value) {
-    rand_timer->highlight_next_field();
+
+  if (sw == 3 && value) {
+    if (modeselect->has_focus()) {
+      if (!modeselect->highlight_next_field()) {  // false then we left focus                          
+       if (main_mode == MODE_RANDOM)
+          rand_timer->highlight_next_field();
+        else if (main_mode == MODE_TIMER)
+          timer->highlight_next_field();
+      }
+    } else if (rand_timer->has_focus()) {
+      rand_timer->highlight_next_field();
+    } else if (timer->has_focus()) {
+      timer->highlight_next_field();
+    } else {
+      modeselect->highlight_next_field();
+    }
   }
-  if (main_mode == MODE_TIMER && sw == 3 && value) {
-    timer->highlight_next_field();
-  }
+
   if (main_mode == MODE_MANUAL) {
     if (sw == 4 && value && ison == 0) {
       ison = 1;
@@ -80,7 +92,7 @@ void tab_thrustalot::gotsyncdata(Tab *t, sync_data syncstatus) {
   if (main_mode == MODE_SYNC) {
     bool isinverted = sync->isinverted();
 
-    if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
+  if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
       md->thrustonetime(knob_speed);
     } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
@@ -172,8 +184,7 @@ void tab_thrustalot::loop(boolean activetab) {
     device_thrustalot *md = static_cast<device_thrustalot *>(device);
 
     need_knob_refresh = false;
-    for (int i = 0; i < 5; i++)
-      buttonbar->settext(i,"");
+ 
     buttonbar->settextfmt(0,"Speed\n%d%%",knob_speed);
     buttonbar->setvalue(0,knob_speed);
     buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 100, knob_speed));
@@ -194,9 +205,7 @@ void tab_thrustalot::loop(boolean activetab) {
     }
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      buttonbar->settext(4, LV_SYMBOL_BELL);
-      if (main_mode == MODE_RANDOM && rand_timer->has_focus() ||
-          main_mode == MODE_TIMER && timer->has_focus())
+      if (rand_timer->has_focus() || timer->has_focus())
         buttonbar->setvalue(4,100);
       else
         buttonbar->setvalue(4,0);
@@ -223,6 +232,7 @@ void tab_thrustalot::focus_change(boolean focus) {
   for (int i = 0; i < 5; i++) {
       buttonbar->setrgb(i,lv_color_hsv_to_rgb(0, 0, 0));
   }
+  buttonbar->settext(4, LV_SYMBOL_SETTINGS);
 }
 
 void tab_thrustalot::tab_create_status() {
@@ -253,15 +263,8 @@ void tab_thrustalot::tab_create() {
   lv_obj_set_style_pad_right(page, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_bottom(page, 0, LV_PART_MAIN);
 
-  lv_obj_t *dd = lv_dropdown_create(page);
-  lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
-  lv_obj_set_style_text_font(lv_dropdown_get_list(dd), &lv_font_montserrat_16, LV_PART_MAIN);
-  
-  lv_obj_set_align(dd, LV_ALIGN_TOP_RIGHT);
-  lv_obj_set_size(dd, dropdown_width, dropdown_height);  // match the timer box width
-
-  lv_dropdown_set_options(dd, thrustalot_main_modes_c);
-  lv_obj_add_event_cb(dd, thrustalot_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
+  modeselect->createdropdown(page, thrustalot_main_modes_c);
+  lv_obj_add_event_cb(modeselect->getdropdownobject(), thrustalot_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
   buttonbar = new tab_object_buttonbar(page);
 

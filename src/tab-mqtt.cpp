@@ -216,7 +216,7 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     // Add items to the list
     for(int i = 1; i <= 3; i++) {
         char buf[32];
-        snprintf(buf, sizeof(buf), "Option %d", i);
+        snprintf(buf, sizeof(buf), "Test %d", i);
         lv_obj_t * list_btn = lv_list_add_btn(list, NULL, buf);
         lv_obj_add_event_cb(list_btn, popup_add_device_list_event_handler, LV_EVENT_CLICKED, this);
     }
