@@ -67,7 +67,7 @@ void tab_thrustalot::switch_change(int sw, boolean value) {
       send_sync_data(SYNC_OFF);
     }
   }
-  if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::rotary4 && value) {
+  if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && value) {
     ison = 0;
     main_mode = MODE_MANUAL;
     modeselect->reset();
