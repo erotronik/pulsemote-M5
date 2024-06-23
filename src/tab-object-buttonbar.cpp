@@ -50,25 +50,30 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
   }
 }
 
-void tab_object_buttonbar::settext(int button, const char *text) {
-  lv_label_set_text(lv_obj_get_child(arc[button], 0), text);
+void tab_object_buttonbar::set_text(int button, const char *text) {
+  lv_label_set_text(lv_obj_get_child(arc[buttonmaptoposition[button]], 0), text);
 }
 
-void tab_object_buttonbar::settextfmt(int button, const char *format, ...) {
+void tab_object_buttonbar::set_text_fmt(int button, const char *format, ...) {
   static char buf[256];
   va_list args;
   va_start(args, format);
   vsnprintf(buf, sizeof(buf), format, args);
   va_end(args);
-  lv_label_set_text(lv_obj_get_child(arc[button], 0), buf);
+  lv_label_set_text(lv_obj_get_child(arc[buttonmaptoposition[button]], 0), buf);
 }
 
-void tab_object_buttonbar::setvalue(int button, int value) {
-  lv_arc_set_value(arc[button], value);
+void tab_object_buttonbar::set_value(int button, int value) {
+  lv_arc_set_value(arc[buttonmaptoposition[button]], value);
 }
    
 // leds and buttons are numbered differently
-void tab_object_buttonbar::setrgb(int button, lv_color_t rgb) {
-  static int map[5] = { 2,1,5,3,4};
-  m5io_showanalogrgb(map[button], rgb);
+void tab_object_buttonbar::set_rgb(int button, lv_color_t rgb) {
+  m5io_showanalogrgb(buttonmaptorgb[button], rgb);
+}
+
+void tab_object_buttonbar::set_rgb_all(lv_color_t rgb) {
+  for (int button : {tab_object_buttonbar::rotary1, tab_object_buttonbar::rotary2, tab_object_buttonbar::rotary3, tab_object_buttonbar::rotary4, tab_object_buttonbar::switch1}) {
+    m5io_showanalogrgb(buttonmaptorgb[button], rgb);
+  }
 }

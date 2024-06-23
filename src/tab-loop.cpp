@@ -15,27 +15,27 @@ tab_loop::~tab_loop() {
 }
 
 void tab_loop::switch_change(int sw, boolean state) {
-  if (sw == 4 && state) {
+  if (sw == tab_object_buttonbar::switch1 && state) {
     is_on = !is_on;
     changed_state();
   }
 }
 
 void tab_loop::focus_change(boolean focus) {
-  buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 100, 25)); // red
-  buttonbar->setrgb(1, lv_color_hsv_to_rgb(120, 100, 25)); // green
-  for (int i=2; i<5; i++) 
-    buttonbar->setrgb(i, lv_color_hsv_to_rgb(0, 0, 0));
+  buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, 25)); // red
+  buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(120, 100, 25)); // green
+  for (int i : {tab_object_buttonbar::rotary3, tab_object_buttonbar::rotary4, tab_object_buttonbar::switch1}) 
+    buttonbar->set_rgb(i, lv_color_hsv_to_rgb(0, 0, 0));
 }
 
 void tab_loop::encoder_change(int sw, int change) {
-  if (sw==0 && chart) {
+  if (sw == tab_object_buttonbar::rotary1 && chart) {
     setpoint_min += change;
     setpoint_min = min(setpoint_min, setpoint_max-1);
     lv_chart_set_all_value(chart, line_min, setpoint_min);
     lv_chart_refresh(chart);
   }
-  if (sw==1 && chart) {
+  if (sw == tab_object_buttonbar::rotary2 && chart) {
     setpoint_max += change;
     setpoint_max = max(setpoint_max, setpoint_min+1);
     lv_chart_set_all_value(chart, line_max, setpoint_max);
@@ -54,12 +54,12 @@ void tab_loop::update_chart(int32_t new_data) {
       setpoint_max = new_data +5;
       lv_chart_set_all_value(chart, line_min, setpoint_min);
       lv_chart_set_all_value(chart, line_max, setpoint_max);
-      buttonbar->settext(0,"Max");
-      buttonbar->setvalue(0,100);
-      buttonbar->settext(1,"Min");
-      buttonbar->setvalue(1,100);
-      buttonbar->settext(2,"On\nOff");
-      buttonbar->setvalue(2,0);
+      buttonbar->set_text(tab_object_buttonbar::rotary1,"Max");
+      buttonbar->set_value(tab_object_buttonbar::rotary1,100);
+      buttonbar->set_text(tab_object_buttonbar::rotary2,"Min");
+      buttonbar->set_value(tab_object_buttonbar::rotary2,100);
+      buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
+      buttonbar->set_value(tab_object_buttonbar::switch1,0);
       is_on = true;
       changed_state();
     }

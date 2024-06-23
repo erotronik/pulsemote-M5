@@ -32,5 +32,4 @@ class Device {
 
   virtual bool get_isconnected() { return is_connected; }
   bool is_connected;
-
 };

@@ -22,15 +22,15 @@ tab_thrustalot::tab_thrustalot() {
 tab_thrustalot::~tab_thrustalot() {}
 
 void tab_thrustalot::encoder_change(int sw, int change) {
-  if (sw == 3) {
+  if (sw == tab_object_buttonbar::rotary4) {
     modeselect->rotary_change(change);
     rand_timer->rotary_change(change);
     timer->rotary_change(change);
   }
-  if (sw == 1) {
+  if (sw == tab_object_buttonbar::rotary1) {
     knob_speed = min(99,max(1,knob_speed+change));
   }
-  if (sw == 0) {
+  if (sw == tab_object_buttonbar::rotary2) {
     knob_tempo = min(99,max(0,knob_tempo+change));
   }
   need_knob_refresh = true;
@@ -40,7 +40,7 @@ void tab_thrustalot::switch_change(int sw, boolean value) {
   need_refresh = true;
   device_thrustalot *md = static_cast<device_thrustalot *>(device);
 
-  if (sw == 3 && value) {
+  if (sw == tab_object_buttonbar::rotary4 && value) {
     if (modeselect->has_focus()) {
       if (!modeselect->highlight_next_field()) {  // false then we left focus                          
        if (main_mode == MODE_RANDOM)
@@ -58,21 +58,21 @@ void tab_thrustalot::switch_change(int sw, boolean value) {
   }
 
   if (main_mode == MODE_MANUAL) {
-    if (sw == 4 && value && ison == 0) {
+    if (sw == tab_object_buttonbar::rotary4 && value && ison == 0) {
       ison = 1;
       md->thrustonetime(knob_speed);
       send_sync_data(SYNC_ON);
-    } else if (sw == 4 && value && ison == 1) {
+    } else if (sw == tab_object_buttonbar::rotary4 && value && ison == 1) {
       ison = 0;
       send_sync_data(SYNC_OFF);
     }
   }
-  if (main_mode != MODE_MANUAL && sw == 4 && value) {
+  if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::rotary4 && value) {
     ison = 0;
     main_mode = MODE_MANUAL;
     modeselect->reset();
   }
-  if (sw == 2 && !ison && main_mode == MODE_MANUAL) {
+  if (sw == tab_object_buttonbar::rotary3 && !ison && main_mode == MODE_MANUAL) {
     md->thrustonetime(knob_speed);
   }
 }
@@ -185,32 +185,31 @@ void tab_thrustalot::loop(boolean activetab) {
 
     need_knob_refresh = false;
  
-    buttonbar->settextfmt(0,"Speed\n%d%%",knob_speed);
-    buttonbar->setvalue(0,knob_speed);
-    buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 100, knob_speed));
-    buttonbar->settextfmt(1,"Delay\n%.2f",(float)tempo_to_ms(knob_tempo)/1000.0);
-    buttonbar->setrgb(1, lv_color_hsv_to_rgb(180, 100, (99-knob_tempo)));
-    buttonbar->setvalue(1,knob_tempo);
+    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed);
+    buttonbar->set_value(tab_object_buttonbar::rotary1,knob_speed);
+    buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, knob_speed));
+    buttonbar->set_text_fmt(tab_object_buttonbar::rotary2,"Delay\n%.2f",(float)tempo_to_ms(knob_tempo)/1000.0);
+    buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(180, 100, (99-knob_tempo)));
+    buttonbar->set_value(tab_object_buttonbar::rotary2,knob_tempo);
     if (main_mode == MODE_MANUAL) {
-      buttonbar->settext(2,"On\nOff");
-      buttonbar->setvalue(2,ison? 100:0);
+      buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
+      buttonbar->set_value(tab_object_buttonbar::switch1,ison? 100:0);
     } else {
-      buttonbar->settext(2,"Stop");
-      buttonbar->setvalue(2,0);
+      buttonbar->set_text(tab_object_buttonbar::switch1,"Stop");
+      buttonbar->set_value(tab_object_buttonbar::switch1,0);
     }
     if (!ison && main_mode == MODE_MANUAL) {
-      buttonbar->settext(3,"One\nThrust");
+      buttonbar->set_text(tab_object_buttonbar::rotary3,"One\nThrust");
     } else {
-      buttonbar->settext(3,"");
+      buttonbar->set_text(tab_object_buttonbar::rotary3,"");
     }
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       if (rand_timer->has_focus() || timer->has_focus())
-        buttonbar->setvalue(4,100);
+        buttonbar->set_value(tab_object_buttonbar::rotary4,100);
       else
-        buttonbar->setvalue(4,0);
+        buttonbar->set_value(tab_object_buttonbar::rotary4,0);
     }
-
   }
 }
 
@@ -229,10 +228,8 @@ void thrustalot_mode_change_cb(lv_event_t *event) {
 void tab_thrustalot::focus_change(boolean focus) {
   ESP_LOGD("thrustalot", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
-  for (int i = 0; i < 5; i++) {
-      buttonbar->setrgb(i,lv_color_hsv_to_rgb(0, 0, 0));
-  }
-  buttonbar->settext(4, LV_SYMBOL_SETTINGS);
+  buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
+  buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
 }
 
 void tab_thrustalot::tab_create_status() {

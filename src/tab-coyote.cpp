@@ -48,7 +48,7 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
 void tab_coyote::switch_change(int sw, boolean state) {
   need_refresh = true;
 
-  if (sw == 3 && state) {
+  if (sw == tab_object_buttonbar::rotary4 && state) {
     if (modeselect->has_focus()) {
       if (!modeselect->highlight_next_field()) {  // false then we left focus
         if (main_mode == MODE_RANDOM)
@@ -65,14 +65,14 @@ void tab_coyote::switch_change(int sw, boolean state) {
     }
   }
 
-  if (main_mode == MODE_MANUAL) {
+  if (main_mode == MODE_MANUAL && sw == tab_object_buttonbar::switch1 && state) {
     device_coyote2 *md = static_cast<device_coyote2*>(device);
-    if (sw == 4 && state && ison == 0) {
+    if (ison == 0) {
       ison = 1;
       md->get().chan_a().put_setmode(mode_a);
       md->get().chan_b().put_setmode(mode_b); 
       send_sync_data(SYNC_ON);
-    } else if (sw == 4 && state && ison == 1) {
+    } else {
       ison = 0;
       md->get().chan_a().put_setmode(M_NONE);
       md->get().chan_b().put_setmode(M_NONE);
@@ -80,7 +80,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
     }
   }
 
-  if (main_mode != MODE_MANUAL && sw == 4 && state) {  // Stop
+  if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && state) {  // Stop
     device_coyote2 *md = static_cast<device_coyote2*>(device);   
     main_mode = MODE_MANUAL;
     modeselect->reset();
@@ -89,10 +89,10 @@ void tab_coyote::switch_change(int sw, boolean state) {
     md->get().chan_b().put_setmode(M_NONE); 
   }
 
-  if (sw == 1 || sw ==0) { // click to move to the next mode, then back to start
+  if (sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) { // click to move to the next mode, then back to start
     device_coyote2 *md = static_cast<device_coyote2*>(device);
     coyote_mode mode;
-    if (sw == 1) 
+    if (sw == tab_object_buttonbar::rotary1) 
       mode = md->get().chan_a().get_mode();
     else 
       mode = md->get().chan_b().get_mode();
@@ -105,7 +105,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
     } else {
       i++;
     }
-    if (sw == 1)  {
+    if (sw == tab_object_buttonbar::rotary1)  {
       md->get().chan_a().put_setmode(md->modes[i]);
       mode_a = md->modes[i];
     } else {
@@ -119,11 +119,11 @@ void tab_coyote::encoder_change(int sw, int change) {
   device_coyote2 *md = static_cast<device_coyote2*>(device);
   need_refresh = true;
 
-  if (sw == 1) 
+  if (sw == tab_object_buttonbar::rotary1) 
     md->get().chan_a().put_power_diff(change);
-  else if (sw == 0)
+  else if (sw == tab_object_buttonbar::rotary2)
     md->get().chan_b().put_power_diff(change); 
-  if (sw == 3) {
+  if (sw == tab_object_buttonbar::rotary4) {
     rand_timer->rotary_change(change);
     timer->rotary_change(change);
     modeselect->rotary_change(change);
@@ -131,9 +131,8 @@ void tab_coyote::encoder_change(int sw, int change) {
 }
 
 void tab_coyote::focus_change(boolean focus) {
-  for (int i=0; i<5; i++)
-    buttonbar->setrgb(i, lv_color_hsv_to_rgb(0, 0, 0));
-  buttonbar->settext(4, LV_SYMBOL_SETTINGS);
+  buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
+  buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
   need_refresh = true;
 }
 
@@ -178,14 +177,14 @@ void tab_coyote::loop(bool active) {
     need_refresh = false;
 
     int power = md->get().chan_a().get_power_pc();
-    buttonbar->setvalue(0, power); 
-    buttonbar->settextfmt(0, "A\n%" LV_PRId32 "%%", power);
-    buttonbar->setrgb(0, lv_color_hsv_to_rgb(0, 100, power));
+    buttonbar->set_value(tab_object_buttonbar::rotary1, power); 
+    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%" LV_PRId32 "%%", power);
+    buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, power));
 
     power = md->get().chan_b().get_power_pc();
-    buttonbar->setvalue(1, power); 
-    buttonbar->settextfmt(1, "B\n%" LV_PRId32 "%%", power);
-    buttonbar->setrgb(1, lv_color_hsv_to_rgb(0, 100, power));
+    buttonbar->set_value(tab_object_buttonbar::rotary2, power); 
+    buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%" LV_PRId32 "%%", power);
+    buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, power));
 
     if (ison) {
       mode_a = md->get().chan_a().get_mode();
@@ -205,18 +204,18 @@ void tab_coyote::loop(bool active) {
                           md->getModeName(ison?mode_b:M_NONE));
     }
     if (main_mode == MODE_MANUAL) {
-      buttonbar->settext(2,"On\nOff");
-      buttonbar->setvalue(2, ison ? 100: 0);
+      buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
+      buttonbar->set_value(tab_object_buttonbar::switch1, ison ? 100: 0);
     } else {
-      buttonbar->settext(2,"Stop");
-      buttonbar->setvalue(2,  0);
+      buttonbar->set_text(tab_object_buttonbar::switch1,"Stop");
+      buttonbar->set_value(tab_object_buttonbar::switch1,  0);
     }
   
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       if (rand_timer->has_focus() || timer->has_focus())
-        buttonbar->setvalue(4,  100);
+        buttonbar->set_value(tab_object_buttonbar::rotary4,  100);
       else
-        buttonbar->setvalue(4,  0);
+        buttonbar->set_value(tab_object_buttonbar::rotary4,  0);
     }
   }
 }

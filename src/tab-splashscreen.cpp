@@ -55,11 +55,11 @@ void tab_splashscreen::loop(boolean activetab) {
 
 void tab_splashscreen::switch_change(int sw, boolean value) {
   ESP_LOGI("splashscreen", "new callback button %d %s", sw, value ? "push" : "release");
-  if (sw == 4 && value) {
+  if (sw == tab_object_buttonbar::switch1 && value) {
     dump_connected_devices();
     updateicons();
   }
-  if (sw == 1 && value) {
+  if (sw == tab_object_buttonbar::rotary1 && value) {
     for (const auto& st: tabs) {
       if (!strncmp(st->gettabname(),"wifi",4)) {
         tab_mqtt *t = static_cast<tab_mqtt *>(st);
