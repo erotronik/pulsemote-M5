@@ -29,13 +29,13 @@ void tab_loop::focus_change(boolean focus) {
 }
 
 void tab_loop::encoder_change(int sw, int change) {
-  if (sw == tab_object_buttonbar::rotary1 && chart) {
+  if (sw == tab_object_buttonbar::rotary2 && chart) {
     setpoint_min += change;
     setpoint_min = min(setpoint_min, setpoint_max-1);
     lv_chart_set_all_value(chart, line_min, setpoint_min);
     lv_chart_refresh(chart);
   }
-  if (sw == tab_object_buttonbar::rotary2 && chart) {
+  if (sw == tab_object_buttonbar::rotary1 && chart) {
     setpoint_max += change;
     setpoint_max = max(setpoint_max, setpoint_min+1);
     lv_chart_set_all_value(chart, line_max, setpoint_max);

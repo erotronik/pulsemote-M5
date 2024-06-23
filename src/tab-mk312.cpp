@@ -20,12 +20,12 @@ tab_mk312::~tab_mk312() {}
 
 void tab_mk312::encoder_change(int sw, int change) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
-  if (sw == tab_object_buttonbar::rotary1 && lockpanel) {
+  if (sw == tab_object_buttonbar::rotary2 && lockpanel) {
     level_b = min(99, max(0, level_b + change));
     md->etbox_setbyte(ETMEM_knobb, (level_b * 256+99) / 100);   // Round up to match the display
     need_knob_refresh = true;
   }
-  if (sw == tab_object_buttonbar::rotary2 && lockpanel) {
+  if (sw == tab_object_buttonbar::rotary1 && lockpanel) {
     level_a = min(99, max(0, level_a + change));
     md->etbox_setbyte(ETMEM_knoba, (level_a * 256+99) / 100);  
     need_knob_refresh = true;
@@ -211,6 +211,7 @@ void tab_mk312::loop(boolean activetab) {
       buttonbar->set_value(tab_object_buttonbar::rotary2,0);
       buttonbar->set_text(tab_object_buttonbar::rotary1, LV_SYMBOL_CHARGE);
       buttonbar->set_text(tab_object_buttonbar::rotary2, LV_SYMBOL_CHARGE);
+      buttonbar->set_text(tab_object_buttonbar::rotary3, "");
     }
   }
 }
