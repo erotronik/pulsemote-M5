@@ -16,8 +16,8 @@ tab_mqtt::tab_mqtt() {
 
 void tab_mqtt::mqttsend(const char *topic, const char *message) {
   mqttsenditem item;
-  item.topic = topic;
-  item.message = message;
+  strncpy(item.topic, topic, max_topic_size-1);
+  strncpy(item.message, message, max_message_size-1);
   xQueueSend(mqttsenthandle, &item, 0);
 }
 
@@ -49,10 +49,6 @@ void tab_mqtt::wifiTask(void* pvParameters) {
 
   while (true) {
 
-    // does anything want us to send a message?
-    if (self->client->connected() && xQueueReceive(self->mqttsenthandle, &mqtttosend, 0))
-      self->client->publish(mqtttosend.topic,mqtttosend.message);
-
     if (!self->client->connected()) {
        while (!self->client->connected()) {
         ESP_LOGI("wifi","Attempting MQTT connection...");
@@ -69,6 +65,13 @@ void tab_mqtt::wifiTask(void* pvParameters) {
         }
       }
     }
+    // does anything want us to send a message?
+    if (self->client->connected()) {
+      while (xQueueReceive(self->mqttsenthandle, &mqtttosend, 0)) {
+        ESP_LOGD("mqttsending","sending topic=%s message=%s", mqtttosend.topic, mqtttosend.message);
+        self->client->publish(mqtttosend.topic,mqtttosend.message);
+      }
+    }
     self->client->loop();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
@@ -83,7 +86,7 @@ void tab_mqtt::setup(void) {
   mt->last_change = mt->old_last_change = D_NONE;
 
 #ifdef CONFIG_WIFI_SSID
-  xTaskCreatePinnedToCore(wifiTask, "wifi", 1024 * 10, this, 1, nullptr, 1);
+  xTaskCreatePinnedToCore(wifiTask, "wifi", 1024 * 10, this, 1, nullptr, 0);
 #endif
 }
 
@@ -110,21 +113,26 @@ void tab_mqtt::connectToWiFi(void) {
 }
 
 void tab_mqtt::gotsyncdata(Tab *t, sync_data status) {
+  char topic[max_topic_size];
   ESP_LOGD("mqtt", "got sync data %d from %s", status, t->gettabname());
   if (!client || !client->connected()) return;
-  String topic = "pulsemote/" + String(t->gettabname());
-  topic.replace("-","");
-  topic.toLowerCase();
-  char outputChar[topic.length() + 1];
-  topic.toCharArray(outputChar, topic.length() + 1);
+  snprintf(topic, max_topic_size-1, "pulsemote/%s", t->gettabname());
+
+  // Replace '-' with ''
+  int j = 0;
+  for (int i = 0; topic[i] != '\0'; i++) {
+    if (topic[i] != '-')
+      topic[j++] = tolower(topic[i]);
+  }
+  topic[j] = '\0';
   if (status == SYNC_ON) 
-    mqttsend(outputChar,"on");
+    mqttsend(topic,"on");
   if (status == SYNC_OFF) 
-    mqttsend(outputChar,"off");
+    mqttsend(topic,"off");
   if (status == SYNC_START) 
-    mqttsend(outputChar,"hello");
+    mqttsend(topic,"hello");
   if (status == SYNC_BYE) 
-    mqttsend(outputChar,"bye");  
+    mqttsend(topic,"bye");  
   ESP_LOGD("mqtt","sent message");
 }
 
@@ -147,20 +155,18 @@ void tab_mqtt::popup_add_device_list_event_handler(lv_event_t * e) {
     if(t->selected_btn == btn) {
       // Unhighlight the button if it's already selected
       lv_obj_clear_state(t->selected_btn, LV_STATE_CHECKED);
-                  lv_obj_remove_style(t->selected_btn, &t->style_selected, 0);
+      lv_obj_remove_style(t->selected_btn, &t->style_selected, 0);
 
        t->selected_btn = NULL;
     } else {
       // Unhighlight the previous button if there was one
       if(t->selected_btn != NULL) {
         lv_obj_clear_state(t->selected_btn, LV_STATE_CHECKED);
-                        lv_obj_remove_style(t->selected_btn, &t->style_selected, 0);
-
+        lv_obj_remove_style(t->selected_btn, &t->style_selected, 0);
       }
       // Highlight the current button
       lv_obj_add_state(btn, LV_STATE_CHECKED);
-                  lv_obj_add_style(btn, &t->style_selected, 0);
-
+      lv_obj_add_style(btn, &t->style_selected, 0);
       t->selected_btn = btn;
     }
   }

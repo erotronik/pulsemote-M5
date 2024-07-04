@@ -25,6 +25,9 @@ class tab_mqtt : public Tab {
     void gotsyncdata(Tab *t, sync_data status) override;
     void popup_add_device(lv_obj_t *base);
 
+    static const int max_topic_size = 100;
+    static const int max_message_size = 256;
+
   private:
     static void popup_add_device_ok_event_cb(lv_event_t * e);
     static void popup_add_device_list_event_handler(lv_event_t * e);
@@ -41,9 +44,10 @@ class tab_mqtt : public Tab {
     PubSubClient *client = NULL;
     QueueHandle_t events;
 
+
     typedef struct {
-      const char *topic;
-      const char *message;
+      char topic[max_topic_size];
+      char message[max_message_size];
     } mqttsenditem;
 
     QueueHandle_t mqttsenthandle;
