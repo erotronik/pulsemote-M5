@@ -175,9 +175,8 @@ void tab_mqtt::popup_add_device_list_event_handler(lv_event_t * e) {
 void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
   tab_mqtt *t = static_cast<tab_mqtt *>(lv_event_get_user_data(e));
   if(t->selected_btn != NULL) {
-      //const char * txt = lv_list_get_btn_text(selected_btn);
-      //printf("Selected option: %s\n", txt);
-      // Perform the desired action with the selected option here
+    //const char * txt = lv_list_get_button_text(list, t->selected_btn);
+    //ESP_LOGD("popup","selected %s",txt);
   }
   lv_obj_del(t->popup_add_device_modal); // Close the message box
   t->popup_add_device_open = false;
@@ -197,30 +196,22 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     lv_style_set_bg_opa(&style_selected, LV_OPA_50);
 
     popup_add_device_modal = lv_obj_create(base);
+    lv_obj_set_style_pad_all(popup_add_device_modal,0, LV_PART_MAIN);
     lv_obj_set_size(popup_add_device_modal, LV_PCT(100), LV_PCT(100));
-    lv_obj_set_style_bg_opa(popup_add_device_modal, LV_OPA_50, 0);
-    lv_obj_set_style_bg_color(popup_add_device_modal, lv_color_black(), 0);
     lv_obj_align(popup_add_device_modal, LV_ALIGN_CENTER, 0, 0);
 
-    // Create a container for the message box content
-    lv_obj_t * container = lv_obj_create(popup_add_device_modal);
-    lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(container, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
-    lv_obj_set_size(container, 320, 150); // todo better dynamic
-    lv_obj_align(container, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_flex_flow(popup_add_device_modal, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(popup_add_device_modal, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
 
-    // Create a label for the message box title
-    lv_obj_t * title = lv_label_create(container);
+    lv_obj_t * title = lv_label_create(popup_add_device_modal);
     lv_label_set_text(title, "Add a device");
-    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 0, 10);
 
     // Create a list
-    lv_obj_t * list = lv_list_create(container);
-    lv_obj_set_size(list, 320, 100); // todo better dynamic
-    lv_obj_align(list, LV_ALIGN_CENTER, 0, 10);
+    lv_obj_t * list = lv_list_create(popup_add_device_modal);
+    lv_obj_set_size(list, 290, 100); // todo better dynamic
 
     // Add items to the list
-    for(int i = 1; i <= 3; i++) {
+    for(int i = 1; i <= 4; i++) {
         char buf[32];
         snprintf(buf, sizeof(buf), "Test %d", i);
         lv_obj_t * list_btn = lv_list_add_btn(list, NULL, buf);
@@ -228,7 +219,7 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     }
 
     // Create a container for the buttons
-    lv_obj_t * btn_container = lv_obj_create(container);
+    lv_obj_t * btn_container = lv_obj_create(popup_add_device_modal);
     lv_obj_set_width(btn_container, lv_pct(100));
     lv_obj_set_height(btn_container, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(btn_container, LV_FLEX_FLOW_ROW);
@@ -242,7 +233,7 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     lv_obj_add_event_cb(ok_btn, popup_add_device_ok_event_cb, LV_EVENT_CLICKED, this);
 
     lv_obj_t * ok_label = lv_label_create(ok_btn);
-    lv_label_set_text(ok_label, "OK");
+    lv_label_set_text(ok_label, "Ok");
     lv_obj_center(ok_label);
 
     // Create Close (X) button
@@ -252,7 +243,7 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     lv_obj_add_event_cb(close_btn, popup_add_device_close_event_cb, LV_EVENT_CLICKED, this);
 
     lv_obj_t * close_label = lv_label_create(close_btn);
-    lv_label_set_text(close_label, "CANCEL");
+    lv_label_set_text(close_label, "Cancel");
     lv_obj_center(close_label);
 
 }
