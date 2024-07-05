@@ -223,9 +223,7 @@ void tab_coyote::loop(bool active) {
 void tab_coyote::coyote_mode_change_cb(lv_event_t *event) {
   tab_coyote *ctab = static_cast<tab_coyote *>(lv_event_get_user_data(event));
   ctab->main_mode = static_cast<tab_coyote::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("coyote", "cb %s on %d: new mode %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
-           ctab->main_mode);
+  ESP_LOGI("coyote", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), ctab->main_mode);
   ctab->need_refresh = true;
   ctab->rand_timer->show((ctab->main_mode == tab_coyote::MODE_RANDOM));
   ctab->timer->show((ctab->main_mode == tab_coyote::MODE_TIMER));
@@ -264,9 +262,7 @@ void tab_coyote::coyote_tab_create() {
   lv_obj_add_event_cb(modeselect->getdropdownobject(), coyote_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
   
   buttonbar = new tab_object_buttonbar(page);
-
   tab_create_status(page);
-
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);
@@ -282,9 +278,9 @@ boolean tab_coyote::hardware_changed(void) {
   } else if (last_change == D_CONNECTED) {
     coyote_tab_create();
     printf_log("Connected Coyote battery %d%%\n",cd->get().get_batterylevel());
+    send_sync_data(SYNC_START);
     cd->get().chan_a().put_setmode(M_BREATH);
     cd->get().chan_b().put_setmode(M_BREATH);
-    send_sync_data(SYNC_START);
     send_sync_data(SYNC_ON);
   } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());
