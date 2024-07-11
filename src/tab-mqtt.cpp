@@ -208,7 +208,8 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
 
     // Create a list
     lv_obj_t * list = lv_list_create(popup_add_device_modal);
-    lv_obj_set_size(list, 290, 100); // todo better dynamic
+    lv_obj_set_height(list, 100); // todo better dynamic
+    lv_obj_set_width(list, lv_pct(100));
 
     // Add items to the list
     for(int i = 1; i <= 4; i++) {
@@ -224,7 +225,7 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     lv_obj_set_height(btn_container, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(btn_container, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(btn_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_top(btn_container, 10, 0);
+    lv_obj_set_style_pad_top(btn_container, 5, 0);
 
     // Create OK button
     lv_obj_t * ok_btn = lv_btn_create(btn_container);
