@@ -97,7 +97,7 @@ void tab_mk312::switch_change(int sw, boolean value) {
     }
   }
   if (lockpanel == true && sw == tab_object_buttonbar::rotary3 && value && ison == 1) {
-    md->etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
+    md->next_mode();
   }
 }
 
@@ -170,9 +170,9 @@ void tab_mk312::loop(boolean activetab) {
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d", ison?md->etmodes[md->get_mode()]:"Off", seconds);
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d", ison?md->etmodes[md->get_last_mode()]:"Off", seconds);
     } else {
-      lv_label_set_text(lv_obj_get_child(tab_status, 0), ison?md->etmodes[md->get_mode()]:"Off");
+      lv_label_set_text(lv_obj_get_child(tab_status, 0), ison?md->etmodes[md->get_last_mode()]:"Off");
     }
     need_refresh = false;
     need_knob_refresh = true;

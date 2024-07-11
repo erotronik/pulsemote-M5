@@ -103,36 +103,50 @@ int device_mk312::etbox_rxcb(char* p, int x) {
 }
 
 void device_mk312::set_mode(int p) {
+  ESP_LOGD("set_mode","set mode %d",p);
   BOX.setbyte(ETMEM_mode, p - 1);
+  vTaskDelay(pdMS_TO_TICKS(180));
   BOX.setbyte(ETMEM_pushbutton, ETBUTTON_setmode);
   vTaskDelay(pdMS_TO_TICKS(180));
   BOX.setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
   vTaskDelay(pdMS_TO_TICKS(180));
+  lastvalidmode = p;
+}
+
+void device_mk312::next_mode() {
+  etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
+  get_mode();
+}
+
+int device_mk312::get_last_mode() {
+  if (lastvalidmode == 0) {
+    return get_mode();
+  }
+  return (lastvalidmode > 0x76? (lastvalidmode - 0x76):0);
 }
 
 int device_mk312::get_mode() {
   int mode = BOX.getbyte(ETMEM_mode);
-  return (mode > 0x76 ? mode - 0x76 : 0);
+  ESP_LOGD("get_mode","get mode %d",mode);
+  if (mode != -1) lastvalidmode = mode;
+  return (lastvalidmode > 0x76? (lastvalidmode - 0x76):0);
 }
 
 void device_mk312::etbox_on(byte mode) {
-  if (BOX.isconnected()) {
-    if (mode == 0) mode = BOX.getbyte(ETMEM_mode);
-    set_mode(mode);
-  }
+  if (mode == 0) mode = get_mode();
+  set_mode(mode+0x76);
+  lastvalidmode = mode+0x76;
 }
+
 void device_mk312::etbox_off(void) {
-  if (BOX.isconnected()) {
-    BOX.setbyte(ETMEM_pushbutton, 0x18);
-    BOX.setbyte(0x4180, 0x64);  // blank the program display part
-    BOX.setbyte(ETMEM_pushbutton, 0x15);
-    BOX.getbyte(ETMEM_pushbutton);
-  }
+  BOX.setbyte(ETMEM_pushbutton, 0x18);
+  BOX.setbyte(0x4180, 0x64);  // blank the program display part
+  BOX.setbyte(ETMEM_pushbutton, 0x15);
+  BOX.getbyte(ETMEM_pushbutton);
 }
+
 void device_mk312::etbox_setbyte(word address, byte data) {
-  if (BOX.isconnected()) {
-    BOX.setbyte(address, data);
-  }
+  if (BOX.isconnected()) BOX.setbyte(address, data);
 }
 
 byte device_mk312::etbox_getbyte(word address) {

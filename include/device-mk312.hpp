@@ -28,9 +28,10 @@ class device_mk312 : public Device {
   void set_mode(int p);
   void etbox_on(byte mode);
   void etbox_off(void);
-  int get_mode(void);
+  int get_last_mode(void);
   void etbox_setbyte(word a, byte d);
   byte etbox_getbyte(word a);
+  void next_mode(void);
 
   Device* clone() const override {
     return new device_mk312();
@@ -48,10 +49,12 @@ class device_mk312 : public Device {
   NimBLERemoteService* mk312Service;
   NimBLERemoteCharacteristic* uuid_rxtx_Characteristic;
   Venerate BOX = Venerate(0);
+  int lastvalidmode =0;
 
   void etbox_flushcb(void);
   void etbox_txcb(byte c);
   int etbox_rxcb(char* p, int x);
+  int get_mode(void);
 
   static const int mkbuffer_maxlen = 100;
   static const int mktx_maxlen = 20;  // For sending via bluetooth max is 20 bytes
