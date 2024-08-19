@@ -32,6 +32,7 @@ class device_mk312 : public Device {
   void etbox_setbyte(word a, byte d);
   byte etbox_getbyte(word a);
   void next_mode(void);
+  int get_mode(void);
 
   Device* clone() const override {
     return new device_mk312();
@@ -54,7 +55,6 @@ class device_mk312 : public Device {
   void etbox_flushcb(void);
   void etbox_txcb(byte c);
   int etbox_rxcb(char* p, int x);
-  int get_mode(void);
 
   static const int mkbuffer_maxlen = 100;
   static const int mktx_maxlen = 20;  // For sending via bluetooth max is 20 bytes

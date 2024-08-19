@@ -35,10 +35,11 @@ void tab_mk312::encoder_change(int sw, int change) {
     timer->rotary_change(change);
     modeselect->rotary_change(change);
   }
-  if (sw == tab_object_buttonbar::rotary3 && lockpanel) {
+  if (lockpanel == true && sw == tab_object_buttonbar::rotary3 && ison == 1) {
     for (int i=0; i< change; i++) {
       md->etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
     }
+    md->get_mode();
     need_refresh = true;
   }
 }
@@ -50,7 +51,7 @@ void tab_mk312::switch_change(int sw, boolean value) {
   if (sw == tab_object_buttonbar::rotary4 && value) {
     if (modeselect->has_focus()) {
       if (!modeselect->highlight_next_field()) {  // false then we left focus                          
-	if (main_mode == MODE_RANDOM)
+	      if (main_mode == MODE_RANDOM)
           rand_timer->highlight_next_field();
         else if (main_mode == MODE_TIMER)
           timer->highlight_next_field();
@@ -203,7 +204,10 @@ void tab_mk312::loop(boolean activetab) {
       buttonbar->set_value(tab_object_buttonbar::rotary2,level_b);
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%" LV_PRId32 "%%", level_b);
       buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b));
-      buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
+      if (ison)
+        buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
+      else 
+        buttonbar->set_text(tab_object_buttonbar::rotary3, "");
     } else {
       buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 0, 0));
       buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 0, 0));
