@@ -115,10 +115,11 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
   if(t->selected_btn != NULL) {
     char * txt = lv_label_get_text(lv_obj_get_child(t->selected_btn,0));
     ESP_LOGD("popup","selected %s",txt);
-    char topic[100];
-    snprintf(topic,sizeof(topic)-1, "zigbee2mqtt/%s/set", txt);
-    ESP_LOGD("popup","creating %s",topic);
+
     if (!strncmp(txt,"socket",6)) {
+      char topic[100];
+      snprintf(topic,sizeof(topic)-1, "zigbee2mqtt/%s/set", txt);
+      ESP_LOGD("popup","creating %s",topic);
       boolean exists = false;
       for (const auto& allt : tabs) {
         if (!strcmp(allt->gettabname(),txt))
@@ -163,16 +164,14 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     // Create a list
     lv_obj_t * list = lv_list_create(popup_add_device_modal);
     lv_obj_set_height(list, 100); // todo better dynamic
-    lv_obj_set_width(list, lv_pct(100));
+    lv_obj_set_width(list, LV_PCT(100));
 
-    // Add items to the list
-    char buf[32];
-    snprintf(buf, sizeof(buf), "socket1");
-    lv_obj_t * list_btn = lv_list_add_button(list, NULL, buf);
-    lv_obj_add_event_cb(list_btn, popup_add_device_list_event_handler, LV_EVENT_CLICKED, this);
-    //snprintf(buf, sizeof(buf), "socket4");
-    //list_btn = lv_list_add_button(list, NULL, buf);
-    //lv_obj_add_event_cb(list_btn, popup_add_device_list_event_handler, LV_EVENT_CLICKED, this);
+#ifdef CONFIG_WIFI_SSID
+    for (const std::string &name : mqtt_device_list) {
+      lv_obj_t *list_btn = lv_list_add_button(list, NULL, name.c_str());
+      lv_obj_add_event_cb(list_btn, popup_add_device_list_event_handler, LV_EVENT_CLICKED, this);
+    }
+#endif
 
     // Create a container for the buttons
     lv_obj_t * btn_container = lv_obj_create(popup_add_device_modal);

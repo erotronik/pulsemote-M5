@@ -3,4 +3,10 @@
 //#define CONFIG_MQTT_SERVER "192.168.0.1"
 //#define CONFIG_MQTT_USERNAME "yourmqtt"
 //#define CONFIG_MQTT_PASSWORD "yourmqtt"
-//#define CONFIG_MQTT_TEST "zigbee2mqtt/socket1/set"
+
+//namespace {
+//    const std::vector<std::string> mqtt_device_list = {
+//        "socket1",
+//        "socket2"
+//    };
+//}
