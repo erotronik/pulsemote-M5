@@ -133,7 +133,7 @@ void device_change_handler(type_of_change t, Device *d) {
     Tab *ta = nullptr;
     if (type == DeviceType::device_mk312) {  // bootstrap
       ta = new tab_mk312();
-    } else if (type == DeviceType::device_coyote2) {
+    } else if (type == DeviceType::device_coyote) {
       ta = new tab_coyote();
     } else if (type == DeviceType::device_thrustalot) {
       ta = new tab_thrustalot();

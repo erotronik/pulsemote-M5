@@ -3,17 +3,34 @@
 #include <coyote.hpp>
 #include <device.hpp>
 
-class device_coyote2 : public Device {
+boolean temporary_has_a_coyote(void);
+
+class device_coyote : public Device {
  public:
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) {
-    return coyote.is_coyote(advertisedDevice);
+    if (!coyote.is_coyote(advertisedDevice))
+      return false;
+    //if (temporary_has_a_coyote()) {
+    //  return false;
+    //}
+    return true;
   }
 
-  DeviceType getType() const override { return DeviceType::device_coyote2; }
+  DeviceType getType() const override { return DeviceType::device_coyote; }
 
-  const char* getShortName() const override { return "Coyote"; }
+  Coyote& get() { return coyote; }
 
-  Coyote& get() {  return coyote; }
+  int getmodel() { return coyote.getmodel(); }
+
+  const char* getShortName() const override { 
+    int x = const_cast<device_coyote*>(this)->getmodel(); // careful
+    
+    if (x == 2) {
+      return "Coyote2"; 
+    } else {
+      return "Coyote3";
+    }
+  }
 
   coyote_mode modes[3] = {M_BREATH, M_WAVES, M_NONE};
 
@@ -28,7 +45,7 @@ class device_coyote2 : public Device {
   };
 
   void set_callback(device_callback c) override {
-    coyote.set_callback(std::bind(&device_coyote2::change_handler, this, std::placeholders::_1));
+    coyote.set_callback(std::bind(&device_coyote::change_handler, this, std::placeholders::_1));
   };
 
   bool connect_to_device(NimBLEAdvertisedDevice* device) override {
@@ -46,7 +63,7 @@ class device_coyote2 : public Device {
   };
 
   Device* clone() const override {
-    return new device_coyote2();
+    return new device_coyote();
   }
 
   private:

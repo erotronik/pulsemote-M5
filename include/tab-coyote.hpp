@@ -2,7 +2,7 @@
 
 #include "lvgl-utils.h"
 #include "tab.hpp"
-#include "device-coyote2.hpp"
+#include "device-coyote.hpp"
 
 class tab_coyote: public Tab {
     public:

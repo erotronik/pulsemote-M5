@@ -1,5 +1,5 @@
 #include <memory>
-#include "device-coyote2.hpp"
+#include "device-coyote.hpp"
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "tab-coyote.hpp"
@@ -20,7 +20,7 @@ tab_coyote::tab_coyote() {
 tab_coyote::~tab_coyote() {}
 
 void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
-  device_coyote2 *md = static_cast<device_coyote2*>(device);
+  device_coyote *md = static_cast<device_coyote*>(device);
   if (!md) return;
   ESP_LOGD("coyote", "got sync data %d from %s", syncstatus, t->gettabname());
   if (syncstatus == SYNC_ALLOFF) {
@@ -66,7 +66,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
   }
 
   if (main_mode == MODE_MANUAL && sw == tab_object_buttonbar::switch1 && state) {
-    device_coyote2 *md = static_cast<device_coyote2*>(device);
+    device_coyote *md = static_cast<device_coyote*>(device);
     if (ison == 0) {
       ison = 1;
       md->get().chan_a().put_setmode(mode_a);
@@ -81,7 +81,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
   }
 
   if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && state) {  // Stop
-    device_coyote2 *md = static_cast<device_coyote2*>(device);   
+    device_coyote *md = static_cast<device_coyote*>(device);   
     main_mode = MODE_MANUAL;
     modeselect->reset();
     ison = false;
@@ -90,7 +90,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
   }
 
   if (sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) { // click to move to the next mode, then back to start
-    device_coyote2 *md = static_cast<device_coyote2*>(device);
+    device_coyote *md = static_cast<device_coyote*>(device);
     coyote_mode mode;
     if (sw == tab_object_buttonbar::rotary1) 
       mode = md->get().chan_a().get_mode();
@@ -116,7 +116,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
 }
 
 void tab_coyote::encoder_change(int sw, int change) {
-  device_coyote2 *md = static_cast<device_coyote2*>(device);
+  device_coyote *md = static_cast<device_coyote*>(device);
   need_refresh = true;
 
   if (sw == tab_object_buttonbar::rotary1) 
@@ -140,7 +140,7 @@ void tab_coyote::loop(bool active) {
   if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
 
     if (timermillis < millis()) {
-      device_coyote2 *md = static_cast<device_coyote2*>(device);
+      device_coyote *md = static_cast<device_coyote*>(device);
       need_refresh = true;
       if (ison == 0) {
         ison = 1;
@@ -173,7 +173,7 @@ void tab_coyote::loop(bool active) {
   }
 
   if (active && need_refresh) {
-    device_coyote2 *md = static_cast<device_coyote2*>(device);
+    device_coyote *md = static_cast<device_coyote*>(device);
     need_refresh = false;
 
     int power = md->get().chan_a().get_power_pc();
@@ -272,7 +272,7 @@ void tab_coyote::coyote_tab_create() {
 
 boolean tab_coyote::hardware_changed(void) {
   need_refresh = true;
-  device_coyote2* cd = static_cast<device_coyote2*>(device);
+  device_coyote* cd = static_cast<device_coyote*>(device);
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());
   } else if (last_change == D_CONNECTED) {
