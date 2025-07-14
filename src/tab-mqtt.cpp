@@ -1,82 +1,31 @@
-#include <WiFi.h>
 #include "tab.hpp"
 #include "device.hpp"
 #include "lvgl-utils.h"
+#include "comms-wifi.hpp"
 #include "config.h"
 #include "tab-mqtt.hpp"
+#include "tab-mqtt-socket.hpp"
+
 #include <freertos/queue.h>
 #include <freertos/task.h>
 
-#include <PubSubClient.h>
-
 tab_mqtt::tab_mqtt() {
-  events = xQueueCreate(10,sizeof(sync_data));
-  mqttsenthandle = xQueueCreate(10,sizeof(mqttsenditem));
-}
-
-void tab_mqtt::mqttsend(const char *topic, const char *message) {
-  mqttsenditem item;
-  strncpy(item.topic, topic, max_topic_size-1);
-  strncpy(item.message, message, max_message_size-1);
-  xQueueSend(mqttsenthandle, &item, 0);
+  //events = xQueueCreate(10,sizeof(sync_data));
 }
 
 void tab_mqtt::loop(boolean activetab) {
-  sync_data syncstatus;
-  if (xQueueReceive(events, &syncstatus, 0))
-    send_sync_data(syncstatus);
+  //sync_data syncstatus;
+  //if (xQueueReceive(events, &syncstatus, 0))
+  //  send_sync_data(syncstatus);
+  wifi_loop();
 }
 
 const char *tab_mqtt::geticons(void) {
-  return (client->connected()?LV_SYMBOL_WIFI:"");
+  return (is_wifi_connected()?LV_SYMBOL_WIFI:"");
 }
 
 const char* tab_mqtt::gettabname(void){ 
   return "wifi";
-}
-
-void tab_mqtt::wifiTask(void* pvParameters) {
-  ESP_LOGD("wifitask","starting up");
-  mqttsenditem mqtttosend;
-    
-  tab_mqtt* self = static_cast<tab_mqtt *>(pvParameters);
-  self->connectToWiFi();
-
-#ifdef CONFIG_MQTT_SERVER
-  self->client = new PubSubClient(self->espClient);
-  self->client->setServer(CONFIG_MQTT_SERVER,1883);
-  self->client->setCallback(std::bind(&tab_mqtt::callback, self, std::placeholders::_1,std::placeholders::_2,std::placeholders::_3 ));
-
-  while (true) {
-
-    if (!self->client->connected()) {
-       while (!self->client->connected()) {
-        ESP_LOGI("wifi","Attempting MQTT connection...");
-        if (self->client->connect("pulsemote",CONFIG_MQTT_USERNAME, CONFIG_MQTT_PASSWORD)) {
-          ESP_LOGI("wifi","wifi connected");
-          self->client->publish("pulsemote/main","startup");
-          self->client->subscribe("pulsemote/#");
-#ifdef CONFIG_MQTT_TEST
-          self->client->subscribe(CONFIG_MQTT_TEST);
-#endif
-        } else {
-          ESP_LOGE("wifi","wifi failed, rc=%s retrying",self->client->state());
-          vTaskDelay(5000/portTICK_PERIOD_MS);
-        }
-      }
-    }
-    // does anything want us to send a message?
-    if (self->client->connected()) {
-      while (xQueueReceive(self->mqttsenthandle, &mqtttosend, 0)) {
-        ESP_LOGD("mqttsending","sending topic=%s message=%s", mqtttosend.topic, mqtttosend.message);
-        self->client->publish(mqtttosend.topic,mqtttosend.message);
-      }
-    }
-    self->client->loop();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-#endif
-  vTaskDelete(NULL);
 }
 
 void tab_mqtt::setup(void) {
@@ -84,12 +33,10 @@ void tab_mqtt::setup(void) {
   mt->type = DeviceType::device_mqtt;
   mt->device = nullptr;
   mt->last_change = mt->old_last_change = D_NONE;
-
-#ifdef CONFIG_WIFI_SSID
-  xTaskCreatePinnedToCore(wifiTask, "wifi", 1024 * 10, this, 1, nullptr, 0);
-#endif
+  wifi_setup();  
 }
 
+#if 0
 void tab_mqtt::callback(char* topic, byte* payload, unsigned int length) {
   sync_data syncstatus = SYNC_START;
   std::string paystring (reinterpret_cast<const char*>(payload), length); 
@@ -100,22 +47,13 @@ void tab_mqtt::callback(char* topic, byte* payload, unsigned int length) {
     xQueueSend(this->events, &syncstatus, 0);
   }
 }
-
-void tab_mqtt::connectToWiFi(void) {
-#ifdef CONFIG_WIFI_SSID
-  ESP_LOGI("wifi","connecting to wifi");
-  WiFi.begin(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) {
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-  }
-  ESP_LOGI("wifi","connected to wifi");
 #endif
-}
+
+static const int max_topic_size = 100;
 
 void tab_mqtt::gotsyncdata(Tab *t, sync_data status) {
   char topic[max_topic_size];
   ESP_LOGD("mqtt", "got sync data %d from %s", status, t->gettabname());
-  if (!client || !client->connected()) return;
   snprintf(topic, max_topic_size-1, "pulsemote/%s", t->gettabname());
 
   // Replace '-' with ''
@@ -175,8 +113,24 @@ void tab_mqtt::popup_add_device_list_event_handler(lv_event_t * e) {
 void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
   tab_mqtt *t = static_cast<tab_mqtt *>(lv_event_get_user_data(e));
   if(t->selected_btn != NULL) {
-    //const char * txt = lv_list_get_button_text(list, t->selected_btn);
-    //ESP_LOGD("popup","selected %s",txt);
+    char * txt = lv_label_get_text(lv_obj_get_child(t->selected_btn,0));
+    ESP_LOGD("popup","selected %s",txt);
+    char topic[100];
+    snprintf(topic,sizeof(topic)-1, "zigbee2mqtt/%s/set", txt);
+    ESP_LOGD("popup","creating %s",topic);
+    if (!strncmp(txt,"socket",6)) {
+      boolean exists = false;
+      for (const auto& allt : tabs) {
+        if (!strcmp(allt->gettabname(),txt))
+          exists = true;
+      }
+      if (!exists) {
+        tab_mqtt_socket *mv = new tab_mqtt_socket(txt, topic);
+        mv->setup();
+        mv->focus_change(true);
+        tabs.emplace_back(mv);
+      }
+    }
   }
   lv_obj_del(t->popup_add_device_modal); // Close the message box
   t->popup_add_device_open = false;
@@ -212,12 +166,13 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     lv_obj_set_width(list, lv_pct(100));
 
     // Add items to the list
-    for(int i = 1; i <= 4; i++) {
-        char buf[32];
-        snprintf(buf, sizeof(buf), "Test %d", i);
-        lv_obj_t * list_btn = lv_list_add_btn(list, NULL, buf);
-        lv_obj_add_event_cb(list_btn, popup_add_device_list_event_handler, LV_EVENT_CLICKED, this);
-    }
+    char buf[32];
+    snprintf(buf, sizeof(buf), "socket1");
+    lv_obj_t * list_btn = lv_list_add_button(list, NULL, buf);
+    lv_obj_add_event_cb(list_btn, popup_add_device_list_event_handler, LV_EVENT_CLICKED, this);
+    //snprintf(buf, sizeof(buf), "socket4");
+    //list_btn = lv_list_add_button(list, NULL, buf);
+    //lv_obj_add_event_cb(list_btn, popup_add_device_list_event_handler, LV_EVENT_CLICKED, this);
 
     // Create a container for the buttons
     lv_obj_t * btn_container = lv_obj_create(popup_add_device_modal);

@@ -102,11 +102,9 @@ void setup_tabs(void) {
   sp->setup();
   tabs.emplace_back(sp);
 
-  #ifdef CONFIG_WIFI_SSID
   Tab *mq = new tab_mqtt();
   mq->setup();
   tabs.emplace_back(mq);
-  #endif
 }
 
 // This is called when our scanner detects a new device; figure out
@@ -154,10 +152,20 @@ void device_change_handler(type_of_change t, Device *d) {
   }
 }
 
+boolean temporary_has_a_coyote(void) {
+  boolean found = false;
+  for (const auto& t: tabs) {
+    if (!strncmp(t->gettabname(),"Coyote",6))
+      found = true;
+  }
+  return found;
+}
+
 void TaskMain(void *pvParameters);
 
 void setup() {
   M5.begin();
+  
   printf_log("begin done\n");
 
   lv_init();

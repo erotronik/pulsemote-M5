@@ -5,6 +5,7 @@
 #include "tab-splashscreen.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
+#include "comms-wifi.hpp"
 
 tab_splashscreen::tab_splashscreen() {
   page = nullptr;
@@ -28,7 +29,7 @@ void tab_splashscreen::dump_connected_devices(void) {
 }
 
 void tab_splashscreen::updateicons() {
-  int level = min(4,M5.Power.getBatteryLevel() / 20);
+  int level = max(0,min(4,M5.Power.getBatteryLevel() / 20));
   char iconb[128] ="";
   for (const auto& t : tabs) {
     strncat(iconb,t->geticons(),sizeof(iconb)-1);
@@ -39,9 +40,10 @@ void tab_splashscreen::updateicons() {
 
 void tab_splashscreen::loop(boolean activetab) {
   if (activetab) {
+    const byte map[]={3,2,0,1};
     for (int i = 0; i < 4; i++) {
-      buttonhue[i]= ((millis()%20000*360)/20000+90*i)%360;  // cycle colours every 20s
-      m5io_showanalogrgb(i + 1, lv_color_hsv_to_rgb(buttonhue[i], 100, 50));  // rotary LED
+      buttonhue[map[i]]= ((millis()%20000*360)/20000+20*i)%360;  // cycle colours every 20s
+      m5io_showanalogrgb(map[i] + 1, lv_color_hsv_to_rgb(buttonhue[map[i]], 100, 50));  // rotary LED
     }
     m5io_showanalogrgb(5, lv_color_hsv_to_rgb(0, 0, 5));  // cherry LED (very bright)
   }
@@ -59,7 +61,7 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
     dump_connected_devices();
     updateicons();
   }
-  if (sw == tab_object_buttonbar::rotary1 && value) {
+  if (sw == tab_object_buttonbar::rotary1 && value && is_wifi_connected()) {
     for (const auto& st: tabs) {
       if (!strncmp(st->gettabname(),"wifi",4)) {
         tab_mqtt *t = static_cast<tab_mqtt *>(st);

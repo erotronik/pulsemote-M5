@@ -10,14 +10,13 @@
 
 class tab_mqtt;
 
-void ok_event_cb(lv_event_t * e);
-void close_event_cb(lv_event_t * e);
-void list_event_handler(lv_event_t * e);
+//void ok_event_cb(lv_event_t * e);
+//void close_event_cb(lv_event_t * e);
+//void list_event_handler(lv_event_t * e);
 
 class tab_mqtt : public Tab {
   public:
     tab_mqtt();
-    void mqttsend(const char *topic, const char *message);
     void loop(boolean activetab) override;
     const char *geticons(void) override;
     const char* gettabname(void) override;
@@ -29,26 +28,13 @@ class tab_mqtt : public Tab {
     static void popup_add_device_ok_event_cb(lv_event_t * e);
     static void popup_add_device_list_event_handler(lv_event_t * e);
     static void popup_add_device_close_event_cb(lv_event_t * e);
+
     bool popup_add_device_open = false;
     lv_obj_t * selected_btn;
     lv_style_t style_selected;
     lv_obj_t * popup_add_device_modal;
 
-    static void wifiTask(void* pvParameters);
-    void connectToWiFi(void);
-    void callback(char* topic, byte* payload, unsigned int length);
-    WiFiClient espClient;
-    PubSubClient *client = NULL;
-    QueueHandle_t events;
-
-    static const int max_topic_size = 100;
-    static const int max_message_size = 256;
-
-    typedef struct {
-      char topic[max_topic_size];
-      char message[max_message_size];
-    } mqttsenditem;
-
-    QueueHandle_t mqttsenthandle;
+    //void callback(char* topic, byte* payload, unsigned int length);
+    //QueueHandle_t events;
 };
 
