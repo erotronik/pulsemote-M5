@@ -102,9 +102,11 @@ void setup_tabs(void) {
   sp->setup();
   tabs.emplace_back(sp);
 
+#ifdef CONFIG_WIFI_SSID
   Tab *mq = new tab_mqtt();
   mq->setup();
   tabs.emplace_back(mq);
+#endif
 }
 
 // This is called when our scanner detects a new device; figure out

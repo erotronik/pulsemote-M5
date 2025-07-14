@@ -186,6 +186,7 @@ void wifi_task(void* pvParameters) {
       ESP_LOGD("espat","timeout will retry");
       vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
+#ifdef CONFIG_WIFI_SSID
     if (cstate == 0) {
       espat_sendAT("AT+RST");
       cstate++;
@@ -207,6 +208,7 @@ void wifi_task(void* pvParameters) {
       espat_sendAT("AT+MQTTCONN=0,\"" CONFIG_MQTT_SERVER "\",1883,0");
       cstate++;
     }
+#endif
     if (cstate == 10) {
       espat_sendAT("ATE0");
       cstate++;
