@@ -28,6 +28,15 @@ void tab_splashscreen::dump_connected_devices(void) {
   }
 }
 
+void update_wifi_button_visibility(lv_obj_t *btn)
+{
+    if (is_wifi_connected() && lv_obj_has_flag(btn, LV_OBJ_FLAG_HIDDEN)) {
+        lv_obj_clear_flag(btn, LV_OBJ_FLAG_HIDDEN);
+    } else if (!is_wifi_connected() && !lv_obj_has_flag(btn, LV_OBJ_FLAG_HIDDEN)) {
+        lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
 void tab_splashscreen::updateicons() {
   int level = max(0,min(4,M5.Power.getBatteryLevel() / 20));
   char iconb[128] ="";
@@ -35,6 +44,7 @@ void tab_splashscreen::updateicons() {
     strncat(iconb,t->geticons(),sizeof(iconb)-1);
   }
   boolean is_bluetooth_scanning = true; // todo
+  update_wifi_button_visibility(addwifibutton);
   lv_label_set_text_fmt(labelicons, "%s %s %s %s",iconb, is_bluetooth_scanning?LV_SYMBOL_BLUETOOTH:"",batteryicons[level], M5.Power.isCharging()?batteryicons[5]:"");
 }
 
@@ -55,19 +65,25 @@ void tab_splashscreen::loop(boolean activetab) {
 
 #include "tab-mqtt.hpp"
 
+void tab_splashscreen::popup_add_wifi_device(lv_event_t *e) {
+  Tab *tt = static_cast<Tab *>(lv_event_get_user_data(e));
+
+  lv_event_code_t code = lv_event_get_code(e);
+  if(code == LV_EVENT_CLICKED) {
+   for (const auto& st: tabs) {
+      if (!strncmp(st->gettabname(),"wifi",4)) {
+        tab_mqtt *t = static_cast<tab_mqtt *>(st);
+        t->popup_add_device(tt->page);
+      }
+    }
+  }
+}
+
 void tab_splashscreen::switch_change(int sw, boolean value) {
   ESP_LOGI("splashscreen", "new callback button %d %s", sw, value ? "push" : "release");
   if (sw == tab_object_buttonbar::switch1 && value) {
     dump_connected_devices();
     updateicons();
-  }
-  if (sw == tab_object_buttonbar::rotary1 && value && is_wifi_connected()) {
-    for (const auto& st: tabs) {
-      if (!strncmp(st->gettabname(),"wifi",4)) {
-        tab_mqtt *t = static_cast<tab_mqtt *>(st);
-        t->popup_add_device(page);
-      }
-    }
   }
 }
 
@@ -94,4 +110,12 @@ void tab_splashscreen::setup(void) {
   lv_obj_set_style_text_align(labelicons, LV_TEXT_ALIGN_RIGHT, 0);
   lv_obj_align(labelicons, LV_ALIGN_TOP_RIGHT, -8, 0);
   lv_obj_set_style_text_font(labelicons, &lv_font_montserrat_24, LV_PART_MAIN);
+
+  addwifibutton = lv_btn_create(page);
+  lv_obj_add_flag(addwifibutton, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_align(addwifibutton, LV_ALIGN_TOP_LEFT, 8, 0);
+  lv_obj_t *label = lv_label_create(addwifibutton);
+  lv_label_set_text(label, "Add device");
+  lv_obj_center(label);
+  lv_obj_add_event_cb(addwifibutton, popup_add_wifi_device, LV_EVENT_CLICKED, this);
 }
