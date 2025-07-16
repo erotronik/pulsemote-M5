@@ -203,7 +203,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
   BOX.begin(std::bind(&device_mk312::etbox_txcb, this, std::placeholders::_1),
             std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&device_mk312::etbox_flushcb, this));
-  BOX.setdebug(Serial, 1);
+  BOX.setdebug(Serial, 2);
   BOX.newhello();
   if (!BOX.isconnected()) {
     ESP_LOGE(getShortName(), "couldnt do hello handshake to box");
