@@ -85,21 +85,15 @@ void device_mk312::etbox_txcb(byte c) {
   if (mktx_n == mktx_maxlen) etbox_flushcb();
 }
 
-// circular buffer with a timeout! wow ok.
-
 int device_mk312::etbox_rxcb(char* p, int x) {
-  unsigned long timeout = millis() + 200;
-  byte by = 0;
-  while (by < x && millis() < timeout) {
-    if (mkwptr != mkrptr) {
-      if (mkrptr == mkbuffer_maxlen) mkrptr = 0;
-      p[by++] = mkbuffer[mkrptr++];
-      timeout = millis() + 5;
-    } else {
-      vTaskDelay(pdMS_TO_TICKS(5));
-    }
+  NotifyPacket received;
+
+  if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
+    int copyLen = (received.length < x) ? received.length : x;
+    memcpy(p, received.data, copyLen);
+    return copyLen;
   }
-  return by;
+  return 0;
 }
 
 void device_mk312::set_mode(int p) {
@@ -157,13 +151,21 @@ byte device_mk312::etbox_getbyte(word address) {
 void device_mk312::ble_mk_callback(
     BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData,
     size_t length, bool isNotify) {
-  for (byte i = 0; i < length; i++) {
-    if (mkwptr == mkbuffer_maxlen-1) mkwptr = 0;
-    mkbuffer[mkwptr++] = (byte)(*(pData + i));
+  NotifyPacket packet;
+  packet.length = length > NOTIFY_MAX_DATA ? NOTIFY_MAX_DATA : length;
+  memcpy(packet.data, pData, packet.length);
+
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  xQueueSendFromISR(notifyQueue, &packet, &xHigherPriorityTaskWoken);
+
+  if (xHigherPriorityTaskWoken) {
+    portYIELD_FROM_ISR();
   }
 }
 
 bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
+  notifyQueue = xQueueCreate(NOTIFY_QUEUE_LEN, sizeof(NotifyPacket));
+
   ESP_LOGI(getShortName(), "Connecting");
 
   if (!bleClient) {

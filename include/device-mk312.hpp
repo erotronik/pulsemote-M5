@@ -56,12 +56,18 @@ class device_mk312 : public Device {
   void etbox_txcb(byte c);
   int etbox_rxcb(char* p, int x);
 
-  static const int mkbuffer_maxlen = 100;
   static const int mktx_maxlen = 20;  // For sending via bluetooth max is 20 bytes
-
-  byte mkbuffer[mkbuffer_maxlen];
-  byte mkwptr = 0;
-  byte mkrptr = 0;
   byte mktx[mktx_maxlen];
   byte mktx_n = 0;
+
+  static const int NOTIFY_QUEUE_LEN =5; 
+  static const int NOTIFY_MAX_DATA = 64;
+
+  QueueHandle_t notifyQueue;
+
+  struct NotifyPacket {
+    size_t length;
+    uint8_t data[NOTIFY_MAX_DATA];
+  };
+
 };
