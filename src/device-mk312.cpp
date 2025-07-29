@@ -76,6 +76,7 @@ device_mk312::~device_mk312() {
 }
 
 void device_mk312::etbox_flushcb(void) {
+  ESP_LOGD("mk312","bt write %d bytes core%d",mktx_n, xPortGetCoreID());
   device_mk312::uuid_rxtx_Characteristic->writeValue(mktx, mktx_n);
   mktx_n = 0;
 }
@@ -151,6 +152,7 @@ byte device_mk312::etbox_getbyte(word address) {
 void device_mk312::ble_mk_callback(
     BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData,
     size_t length, bool isNotify) {
+  ESP_LOGD("mk312","ble callback from core%d",xPortGetCoreID());
   NotifyPacket packet;
   packet.length = length > NOTIFY_MAX_DATA ? NOTIFY_MAX_DATA : length;
   memcpy(packet.data, pData, packet.length);
@@ -166,7 +168,7 @@ void device_mk312::ble_mk_callback(
 bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
   notifyQueue = xQueueCreate(NOTIFY_QUEUE_LEN, sizeof(NotifyPacket));
 
-  ESP_LOGI(getShortName(), "Connecting");
+  ESP_LOGI(getShortName(), "Connecting core%d", xPortGetCoreID());
 
   if (!bleClient) {
     bleClient = NimBLEDevice::createClient();

@@ -104,7 +104,7 @@ void scan_loop() {
   boolean repeatscan = false;  // if we found something and connected to it, keep scanning for more
 
   do {
-    ESP_LOGI("comms-bt", "Scanning for %ds", scanTime);
+    ESP_LOGI("comms-bt", "Scanning for %ds on core%d", scanTime, xPortGetCoreID());
     pBLEScan->start(scanTime, false);  // up to one minute
 
     if (found_device && found_bledevice) {
