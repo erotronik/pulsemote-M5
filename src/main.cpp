@@ -194,8 +194,8 @@ void setup() {
   printf_log("Version %s\n",__DATE__);
   printf_log("Scanning for devices...\n");
 
-  xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 0);
-  xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 20, nullptr, 2, nullptr, 1);
+  xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 1);
+  xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 20, nullptr, 2, nullptr, 0); // ble networking is on core0
 }
 
 // Handle any tabs that have changed status, this includes

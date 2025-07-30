@@ -236,5 +236,5 @@ void wifi_task(void* pvParameters) {
 void wifi_setup() {
     mqttsenthandle = xQueueCreate(10,sizeof(mqttsenditem));
     mqttsubhandle = xQueueCreate(10,sizeof(mqttsenditem));
-    xTaskCreatePinnedToCore(wifi_task, "wifi", 1024 * 12, NULL, 1, nullptr, 0);
+    xTaskCreatePinnedToCore(wifi_task, "wifi", 1024 * 12, NULL, 1, nullptr, 0); // run wifi also on core0
 }
