@@ -21,8 +21,6 @@ class tab_lovense : public Tab {
     MODE_SYNC
   };
   const char *lovense_main_modes_c = "Manual\nTimer\nRandom\nSync";
-  const char *lovense_presets = "Continuous\nMode0\nRampDown\nFastPulses\nMode3\nMode4\nMode5\nMode6\nMode7\nMode8\nMode9\nMode10";
-  const int lovense_max_presets = 12;
 
   int getcyclecount(void) override { return thrustcount; };
 

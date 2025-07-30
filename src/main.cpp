@@ -75,12 +75,12 @@ void handlerotaryencoders() {
 // old tab we've gone away, could be added later if needed)
 
 void tabview_event_cb(lv_event_t *event) {
-  ESP_LOGD("main", "tabview cb %s on %d: current tab %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), lv_tabview_get_tab_act(tv));
-  lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
-  for (const auto& t : tabs) {
-    if (activepage == t->page)
-      t->focus_change(true);  // true means is the new active tab
-  }
+    ESP_LOGD("main", "tabview cb %s on %d: current tab %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), lv_tabview_get_tab_act(tv));
+    lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
+    for (const auto& t : tabs) {
+      if (activepage == t->page)
+        t->focus_change(true);  // true means is the new active tab
+    }
 }
 
 // set up the tab view and create the first default tab, the
@@ -132,7 +132,7 @@ void device_change_handler(type_of_change t, Device *d) {
     } else if (type == DeviceType::device_thrustalot) {
       ta = new tab_thrustalot();
     } else if (type == DeviceType::device_lovense) {
-      ta = new tab_lovense();      
+      ta = new tab_lovense();
     } else if (type == DeviceType::device_bubblebottle) {
       ta = new tab_bubblebottle();
     } else if (type == DeviceType::device_dgbutton) {
