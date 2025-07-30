@@ -4,21 +4,20 @@
 #include "device-coyote.hpp"
 #include "device-mk312.hpp"
 #include "device-thrustalot.hpp"
+#include "device-lovense.hpp"
 #include "device-bubblebottle.hpp"
 #include "device-loop.hpp"
 #include "device-dgbutton.hpp"
 #include "device.hpp"
+#include "comms-bt.hpp"
 
 // An instance of each device is used for scanning
-std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_thrustalot(), new device_bubblebottle(), new device_coyote(), new device_dgbutton() };
+std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_thrustalot(), new device_bubblebottle(), new device_coyote(), new device_dgbutton(), new device_lovense() };
 
 NimBLEScan *pBLEScan;
-boolean scanthread_is_scanning;
-
-int scanTime = 30;  // Duration is in seconds in NimBLE
-
 NimBLEAdvertisedDevice *found_bledevice;
 Device *found_device;
+boolean scanthread_is_scanning = false;
 
 class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) override {
@@ -49,7 +48,7 @@ bool ble_get_service(NimBLERemoteService*& service, NimBLEClient* bleClient, Nim
   return true;
 }
 
-bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr) {
+bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback) {
   ESP_LOGD("get_char", "Getting characteristic %s", uuid.toString().c_str());
   c = service->getCharacteristic(uuid);
   if (c == nullptr) {
@@ -67,11 +66,11 @@ bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteri
   }
 }
 
-bool ble_get_characteristic_response(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr) {
-  ESP_LOGD("dgb", "Getting characteristic %s", uuid.toString().c_str());
+bool ble_get_characteristic_response(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback) {
+  ESP_LOGD("get_char_resp", "Getting characteristic %s", uuid.toString().c_str());
   c = service->getCharacteristic(uuid);
   if (c == nullptr) {
-    ESP_LOGE("dgb", "Failed to find characteristic UUID: %s", uuid.toString().c_str());
+    ESP_LOGE("get_char_resp", "Failed to find characteristic UUID: %s", uuid.toString().c_str());
     return false;
   }
 
@@ -80,23 +79,22 @@ bool ble_get_characteristic_response(NimBLERemoteService* service, NimBLERemoteC
 
   // we want notifications
   if (c->canNotify() && c->subscribe(true, notifyCallback, true)) {
-    ESP_LOGI("dgb","subscribed to notifications");
     return true;
   }
   else {
-    ESP_LOGE("dgb", "Failed to register for notifications for characteristic UUID: %s", uuid.toString().c_str());
+    ESP_LOGE("get_char_resp", "Failed to register for notifications for characteristic UUID: %s", uuid.toString().c_str());
     return false;
   }
 }
 
 void scan_comms_init(void) {
-  NimBLEDevice::init("x");
+  NimBLEDevice::init("m5");
   NimBLEDevice::setPower(ESP_PWR_LVL_P6, ESP_BLE_PWR_TYPE_ADV);  // send advertisements with 6 dbm
-  pBLEScan = NimBLEDevice::getScan();         // create new scan
+  pBLEScan = NimBLEDevice::getScan(); // create new scan
   pBLEScan->setAdvertisedDeviceCallbacks(new PulsemoteAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(true);  // active scan uses more power, but get results faster
-  pBLEScan->setInterval(250);
-  pBLEScan->setWindow(125);  // less or equal setInterval value
+  pBLEScan->setActiveScan(true); // active scan uses more power, but get results faster
+  pBLEScan->setInterval(512);
+  pBLEScan->setWindow(32); // less or equal setInterval value
   ESP_LOGI("comms-bt", "Started ble scanning task");
 }
 

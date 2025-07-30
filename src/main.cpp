@@ -12,6 +12,7 @@
 #include "tab-coyote.hpp"
 #include "tab-mk312.hpp"
 #include "tab-thrustalot.hpp"
+#include "tab-lovense.hpp"
 #include "tab-splashscreen.hpp"
 #include "tab-bubblebottle.hpp"
 #include "tab-dgbutton.hpp"
@@ -30,20 +31,16 @@ byte lastencodervalue[numencoders] = {128, 128, 128, 128};
 byte encodervalue[numencoders] = {128, 128, 128, 128};
 
 void RotaryEncoderChanged(bool clockwise, int id) {
-  if (clockwise) {
-    encodervalue[id]++;
-  } else {
-    encodervalue[id]--;
-  }
+  encodervalue[id] += clockwise ? 1 : -1;
 }
 
-// called from main, look to see if we've got any button pushes
+// called from main loop, look to see if we've got any button pushes
 // from the interrupt queue and dispatch them to the callback of
 // the device with current open tab
 
 void handlebuttonpushes() {
   event_t received_event;
-  byte count = 4;  // a few callbacks allowed per loop
+  byte count = 4;  // a few callbacks allowed per loop, arbitary
   while (count > 0 && xQueueReceive(event_queue, &received_event, 0)) {
     // find what device tab is active as physical buttons must only work on active tab
     lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
@@ -55,7 +52,7 @@ void handlebuttonpushes() {
   }
 }
 
-// called from main, look to see if we've got any rotary encoder
+// called from main loop, look to see if we've got any rotary encoder
 // changes and dispatch them to the callback of the device with current open tab
 
 void handlerotaryencoders() {
@@ -78,9 +75,7 @@ void handlerotaryencoders() {
 // old tab we've gone away, could be added later if needed)
 
 void tabview_event_cb(lv_event_t *event) {
-  ESP_LOGD("main", "tabview cb %s on %d: current tab %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
-           lv_tabview_get_tab_act(tv));
+  ESP_LOGD("main", "tabview cb %s on %d: current tab %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), lv_tabview_get_tab_act(tv));
   lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
   for (const auto& t : tabs) {
     if (activepage == t->page)
@@ -115,8 +110,7 @@ void setup_tabs(void) {
 // it's a callback so don't do any actual GUI stuff here, just set up structures
 
 void device_change_handler(type_of_change t, Device *d) {
-  ESP_LOGD("main", "change handler task called from %s on %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
+  ESP_LOGD("main", "change handler task called from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
   bool newdevice = true;
   for (const auto& tt : tabs) {
@@ -137,6 +131,8 @@ void device_change_handler(type_of_change t, Device *d) {
       ta = new tab_coyote();
     } else if (type == DeviceType::device_thrustalot) {
       ta = new tab_thrustalot();
+    } else if (type == DeviceType::device_lovense) {
+      ta = new tab_lovense();      
     } else if (type == DeviceType::device_bubblebottle) {
       ta = new tab_bubblebottle();
     } else if (type == DeviceType::device_dgbutton) {
@@ -154,6 +150,10 @@ void device_change_handler(type_of_change t, Device *d) {
   }
 }
 
+// We might only want to connect to one coyote, need to figure out a better way
+// to do this - if you are in a club then as soon as anyone nearby turns on a
+// unit we'll connect to it as there is no pairing or authorisation
+
 boolean temporary_has_a_coyote(void) {
   boolean found = false;
   for (const auto& t: tabs) {
@@ -161,41 +161,6 @@ boolean temporary_has_a_coyote(void) {
       found = true;
   }
   return found;
-}
-
-void TaskMain(void *pvParameters);
-
-void setup() {
-  M5.begin();
-  
-  printf_log("begin done\n");
-
-  lv_init();
-  printf_log("lv_init done\n");
-
-  lv_tick_set_cb(lvgl_tick_function);
-
-  display = lv_display_create(SCREENW, SCREENH);
-  lv_display_set_flush_cb(display, lvgl_display_flush);
-  static lv_color_t buf1[SCREENW * 15];
-  lv_display_set_buffers(display, buf1, nullptr, sizeof(buf1),
-                         LV_DISPLAY_RENDER_MODE_PARTIAL);
-  indev = lv_indev_create();
-  lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
-  lv_indev_set_read_cb(indev, lvgl_touchpad_read);
-  printf_log("display setup done\n");
-
-  setup_tabs();
-  printf_log("tab setup done\n");
-
-  m5io_init();
-  printf_log("io setup done\n");
-
-  printf_log("Version %s\n",__DATE__);
-  printf_log("Scanning for devices...\n");
-
-  xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 1);
-  xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 20, nullptr, 2, nullptr, 0); // ble networking is on core0
 }
 
 // Handle any tabs that have changed status, this includes
@@ -212,7 +177,7 @@ void handlehardwarecallbacks() {
       ESP_LOGD("main", "%s changed state: %d %d", t->device->getShortName(), (int)t->last_change, (int)t->old_last_change);
       if (!t->hardware_changed()) {
         // false means the device has gone away, get rid of the tab
-        ESP_LOGD("main","removing tab");
+        ESP_LOGI("main","removing tab %s", t->device->getShortName());
         lv_hide_tab(t->page);
         st = tabs.erase(st);
       }
@@ -230,6 +195,8 @@ void handletabloops(void) {
   }
 }
 
+// Main UI loop
+
 void main_loop() {
   M5.update();
   lv_task_handler();
@@ -240,10 +207,38 @@ void main_loop() {
   vTaskDelay(1);
 }
 
-void loop() {}; // We use FreeRTOS tasks instead
+// Main loop for UI (FreeRTOS)
 
 void TaskMain(void *pvParameters) {
   vTaskDelay(200);
   ESP_LOGD("main", "Main task started: %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
   while (true) main_loop();
+}
+
+void loop() {}; // We use FreeRTOS tasks instead
+
+// Usual setup start
+
+void setup() {
+  M5.begin();
+  lv_init();
+  lv_tick_set_cb(lvgl_tick_function);
+  display = lv_display_create(SCREENW, SCREENH);
+  lv_display_set_flush_cb(display, lvgl_display_flush);
+  static lv_color_t buf1[SCREENW * 15];
+  lv_display_set_buffers(display, buf1, nullptr, sizeof(buf1), LV_DISPLAY_RENDER_MODE_PARTIAL);
+  indev = lv_indev_create();
+  lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+  lv_indev_set_read_cb(indev, lvgl_touchpad_read);
+  ESP_LOGD("setup","display setup done");
+  setup_tabs();
+  ESP_LOGD("setup","tab setup done");
+  m5io_init();
+  ESP_LOGD("setup","io setup done");
+
+  printf_log("Version %s\n",__DATE__);
+  printf_log("Scanning for devices...\n");
+
+  xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 1);
+  xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 20, nullptr, 2, nullptr, 0); // ble networking is on core0
 }

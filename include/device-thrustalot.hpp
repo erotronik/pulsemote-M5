@@ -1,8 +1,6 @@
 #pragma once
 
 #include <NimBLEDevice.h>
-#include <Venerate.h>
-
 #include <device.hpp>
 
 class device_thrustalot_NimBLEClientCallback;
