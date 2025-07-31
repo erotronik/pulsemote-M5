@@ -30,14 +30,18 @@ class tab_lovense : public Tab {
 
  private:
   lv_obj_t *tab_status;
+  lv_obj_t *tab_battery;
   int thrustcount = 0;
   void tab_create(void);
   void tab_create_status(lv_obj_t *tv2);
+  void tab_create_battery(lv_obj_t *tv2);
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;
   int knob_speed, knob_tempo;
   int timermillis = 0;
   unsigned long tempotimer = 0;
+  time_t battery_time = 0;
+  int battery_pc = 0;
 
 };

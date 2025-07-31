@@ -11,9 +11,8 @@ class device_lovense : public Device {
   device_lovense();
   ~device_lovense();
 
-  const char* modes[22] = {"Continuous",  "Mode0", "Mode1",  "Mode2",  "Mode3",
-                             "Mode4", "Mode5", "Mode6", "Mode7", "Mode8",
-                             "Mode9",  "Mode10"};
+  const char* patterns[12] = {"Constant", "RampDown",  "FastBuzz",  "RampUp"};
+  const int patterns_n = 4;
 
   DeviceType getType() const override { return DeviceType::device_lovense; }
   const char* getShortName() const override { return "Lovense"; }
@@ -28,11 +27,11 @@ class device_lovense : public Device {
   Device* clone() const override {
     return new device_lovense();
   }
+  int ble_lovense_getbattery(void);
 
  private:
 
   void ble_lovense_send(String newValue);
-  int ble_lovense_getbattery(void);
 
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;

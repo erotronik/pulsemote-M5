@@ -16,7 +16,9 @@ tab_lovense::tab_lovense() {
   page = nullptr;
   old_last_change = last_change = D_NONE;
   device = nullptr;
-  knob_speed = 10;
+  knob_speed = 10; // 50%
+  main_pattern = 0; // continuous
+  battery_time = millis()-50000;
 }
 tab_lovense::~tab_lovense() {}
 
@@ -28,10 +30,18 @@ void tab_lovense::encoder_change(int sw, int change) {
     rand_timer->rotary_change(change);
     timer->rotary_change(change);
   }
-  if (sw == tab_object_buttonbar::rotary1) {
+  if (sw == tab_object_buttonbar::rotary1 && main_pattern == 0) {
     knob_speed = min(20,max(1,knob_speed+change));
     if (ison) md->setmodespeed(main_pattern,knob_speed);
   }
+  if (sw == tab_object_buttonbar::rotary3) {
+    main_pattern+=change;
+    if (main_pattern<0) main_pattern=md->patterns_n-1;
+    if (main_pattern>=md->patterns_n) main_pattern=0;
+    if (ison) md->setmodespeed(main_pattern,knob_speed);
+    need_refresh = true;
+  }
+
   need_knob_refresh = true;
 }
 
@@ -76,6 +86,11 @@ void tab_lovense::switch_change(int sw, boolean value) {
     main_mode = MODE_MANUAL;
     modeselect->reset();
   }
+  if (sw == tab_object_buttonbar::rotary3 && value) {
+    main_pattern++;
+    if (main_pattern>=md->patterns_n) main_pattern=0;
+    if (ison) md->setmodespeed(main_pattern,knob_speed);
+  }
 }
 
 // another device can push data to us when they connect, disconnect, turn on, turn off
@@ -98,7 +113,8 @@ void tab_lovense::gotsyncdata(Tab *t, sync_data syncstatus) {
       ison = true;
       md->setmodespeed(main_pattern,knob_speed);
     } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
-      ison = 0;
+      ison = false;
+      md->setmodespeed(main_pattern,0);
     }
     need_refresh = true;
   }
@@ -106,6 +122,13 @@ void tab_lovense::gotsyncdata(Tab *t, sync_data syncstatus) {
 
 void tab_lovense::loop(boolean activetab) {
   device_lovense *md = static_cast<device_lovense *>(device);
+
+  if ( millis() - battery_time > 60000) { // just every minute
+    battery_pc = md->ble_lovense_getbattery();
+    ESP_LOGI("lovense","Battery %d%%",battery_pc);
+    battery_time = millis();
+    need_refresh = true;
+  }
 
   if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
     if (timermillis < millis()) {
@@ -145,11 +168,14 @@ void tab_lovense::loop(boolean activetab) {
     device_lovense *md = static_cast<device_lovense *>(device);
     lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
 
+    if (battery_pc>0)
+      lv_label_set_text_fmt(lv_obj_get_child(tab_battery, 0), "battery %d%%", battery_pc);
+
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s: %s\n%d", ison?"On":"Off","", seconds);
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%s: %d", md->patterns[main_pattern], ison?"On":"Off", seconds);
     } else {
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s: %s", ison?"On":"Off","");
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%s", md->patterns[main_pattern], ison?"On":"Off");
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -159,9 +185,15 @@ void tab_lovense::loop(boolean activetab) {
 
     need_knob_refresh = false;
  
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed*5);
-    buttonbar->set_value(tab_object_buttonbar::rotary1,knob_speed*5);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, knob_speed*5));
+    if (main_pattern == 0) {
+      buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed*5);
+      buttonbar->set_value(tab_object_buttonbar::rotary1,knob_speed*5-3);
+      buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(0, 100, knob_speed*5): lv_color_hsv_to_rgb(0, 0, 0));
+    } else {
+      buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"");
+      buttonbar->set_value(tab_object_buttonbar::rotary1,0);
+      buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison? lv_color_hsv_to_rgb(0, 100, 100): lv_color_hsv_to_rgb(0, 0, 0));
+    }
     if (main_mode == MODE_MANUAL) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
       buttonbar->set_value(tab_object_buttonbar::switch1,ison? 100:0);
@@ -169,6 +201,7 @@ void tab_lovense::loop(boolean activetab) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"Stop");
       buttonbar->set_value(tab_object_buttonbar::switch1,0);
     }
+    buttonbar->set_text(tab_object_buttonbar::rotary3,"mode");
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       if (rand_timer->has_focus() || timer->has_focus())
@@ -216,6 +249,21 @@ void tab_lovense::tab_create_status(lv_obj_t *tv2) {
   lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 }
 
+void tab_lovense::tab_create_battery(lv_obj_t *tv2) {
+  tab_battery = lv_obj_create(tv2);
+  lv_obj_set_size(tab_battery, 150, 24);
+  lv_obj_align(tab_battery, LV_ALIGN_TOP_LEFT, 4, 64+12);
+  lv_obj_t *labelx = lv_label_create(tab_battery);
+  lv_label_set_text(labelx, "");
+  lv_obj_set_style_text_font(labelx, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_set_style_pad_top(tab_battery, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(tab_battery, 3, LV_PART_MAIN);
+  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_set_scrollbar_mode(tab_battery, LV_SCROLLBAR_MODE_OFF);
+}
+
+
 void tab_lovense::tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
 
@@ -229,6 +277,7 @@ void tab_lovense::tab_create() {
 
   buttonbar = new tab_object_buttonbar(page);
   tab_create_status(page);
+  tab_create_battery(page);
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);

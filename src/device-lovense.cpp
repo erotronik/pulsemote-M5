@@ -73,12 +73,13 @@ device_lovense::~device_lovense() {
 // ble_lovense_send("Vibrate:0;"); to 20
 // 1 ramp down
 // 2 fast onoff to 10 probably
+// https://docs.buttplug.io/docs/stpihkal/protocols/lovense/
 
 void device_lovense::setmodespeed(int mode, int speed) {
   if (mode ==0 || speed ==0) {
     ble_lovense_send("Vibrate:" +String(speed)+ ";");
   } else {
-    ble_lovense_send("Pattern:" + String(mode-1) +";");
+    ble_lovense_send("Preset:" + String(mode) +";");
   }
 }
 
@@ -102,6 +103,8 @@ void device_lovense::ble_lovense_send(String newValue) {
 }
 
 int device_lovense::ble_lovense_getbattery() {
+  if (!is_connected) 
+    return 0;
   int batterylevel = 0;
   xQueueReset(notifyQueue);
   static const String newValue = "Battery;";
@@ -178,9 +181,9 @@ bool device_lovense::connect_to_device(NimBLEAdvertisedDevice* device) {
   ESP_LOGI(getShortName(), "Found services and characteristics");
   is_connected = true;
 
-  printf_log("lovense battery %d\n", ble_lovense_getbattery());
+  //printf_log("lovense battery %d\n", ble_lovense_getbattery());
 
-  ble_lovense_send("Vibrate:0;");
+  //ble_lovense_send("Vibrate:0;");
   // 1 ramp down
   // 2 fast onoff to 10 probably
 
