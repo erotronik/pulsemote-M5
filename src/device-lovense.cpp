@@ -15,9 +15,9 @@ NimBLEUUID lovense_UUID_RX("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID lovense_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
 
 bool device_lovense::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
-  if (advertisedDevice->isAdvertisingService(lovense_SERVICE_BLEUUID))
-  if (strnstr(advertisedDevice->getName().c_str(),"LVS-Z",5))
-    return true;
+  if (advertisedDevice->isAdvertisingService(lovense_SERVICE_BLEUUID)) // it's a pretty generic UART though so check the name too
+    if (strnstr(advertisedDevice->getName().c_str(),"LVS-Z",5))
+      return true;
   return false;
 }
 
@@ -64,12 +64,24 @@ device_lovense::device_lovense() {}
 
 device_lovense::~device_lovense() {}
 
+// mode 0 is continuous, mode 1 is randomly pick something, mode 2,3,4 are presets 1,2,3
+
 void device_lovense::setmodespeed(int mode, int speed) {
+  if (mode ==1 && speed !=0) {
+    int i = random(0,5+patterns_n-2);
+    if (i<5) {
+      mode = 0;
+      speed = (i+1)*4;
+    } else {
+      mode = i-3;
+    }
+    ESP_LOGI("lovense","random mode=%d speed=%d",mode,speed);
+  }
   if (mode ==0 || speed ==0) {
     ble_lovense_send("Vibrate:" +String(speed)+ ";");
-  } else {
-    ble_lovense_send("Preset:" + String(mode) +";");
-  }
+  } else  {
+    ble_lovense_send("Preset:" + String(mode-1) +";");
+  } 
 }
 
 void device_lovense::ble_lovense_send(String newValue) {

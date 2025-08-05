@@ -11,8 +11,8 @@ class device_lovense : public Device {
   device_lovense();
   ~device_lovense();
 
-  const char* patterns[12] = {"Constant", "RampDown",  "FastBuzz",  "RampUp"};
-  const int patterns_n = 4;
+  const char* patterns[12] = {"Constant", "Luck", "RampDown",  "FastBuzz",  "RampUp"};
+  const int patterns_n = 5;
 
   DeviceType getType() const override { return DeviceType::device_lovense; }
   const char* getShortName() const override { return "Lovense"; }
