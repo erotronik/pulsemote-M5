@@ -40,7 +40,7 @@ class device_lovense : public Device {
   void connected_callback();
   void disconnected_callback(int reason);
   void notify(type_of_change);
-  NimBLERemoteService* thrustService;
+  NimBLERemoteService* lovenseService;
   NimBLERemoteCharacteristic* uuid_rx_Characteristic;
   NimBLERemoteCharacteristic* uuid_tx_Characteristic;
 
