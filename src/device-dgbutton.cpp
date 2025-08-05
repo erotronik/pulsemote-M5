@@ -141,8 +141,8 @@ bool device_dgbutton::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
 
-  res &= ble_get_characteristic_response(dgbuttonService, rx_Characteristic, dgbutton_UUID_RX,
-      std::bind(&device_dgbutton::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+  res &= ble_get_characteristic(dgbuttonService, rx_Characteristic, dgbutton_UUID_RX,
+      std::bind(&device_dgbutton::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), true);
 
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");

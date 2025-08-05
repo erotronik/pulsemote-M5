@@ -48,7 +48,7 @@ bool ble_get_service(NimBLERemoteService*& service, NimBLEClient* bleClient, Nim
   return true;
 }
 
-bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback) {
+bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback, bool response) {
   ESP_LOGD("get_char", "Getting characteristic %s", uuid.toString().c_str());
   c = service->getCharacteristic(uuid);
   if (c == nullptr) {
@@ -58,31 +58,10 @@ bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteri
   if (!notifyCallback)
     return true;
   // we want notifications
-  if (c->canNotify() && c->subscribe(true, notifyCallback))
+  if (c->canNotify() && c->subscribe(true, notifyCallback, response))
     return true;
   else {
     ESP_LOGE("get_char", "Failed to register for notifications for characteristic UUID: %s", uuid.toString().c_str());
-    return false;
-  }
-}
-
-bool ble_get_characteristic_response(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback) {
-  ESP_LOGD("get_char_resp", "Getting characteristic %s", uuid.toString().c_str());
-  c = service->getCharacteristic(uuid);
-  if (c == nullptr) {
-    ESP_LOGE("get_char_resp", "Failed to find characteristic UUID: %s", uuid.toString().c_str());
-    return false;
-  }
-
-  if (!notifyCallback)
-    return true;
-
-  // we want notifications
-  if (c->canNotify() && c->subscribe(true, notifyCallback, true)) {
-    return true;
-  }
-  else {
-    ESP_LOGE("get_char_resp", "Failed to register for notifications for characteristic UUID: %s", uuid.toString().c_str());
     return false;
   }
 }
@@ -121,6 +100,7 @@ void scan_loop() {
       vTaskDelay(pdMS_TO_TICKS(100));
     }
     pBLEScan->clearResults();  // delete results fromBLEScan buffer to release memory
+    vTaskDelay(pdMS_TO_TICKS(10));
   } while (repeatscan);
 }
 

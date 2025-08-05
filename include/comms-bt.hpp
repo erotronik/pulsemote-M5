@@ -5,7 +5,7 @@
 void TaskCommsBT(void *pvParameters);
 void comms_init(short myid);
 bool ble_get_service(NimBLERemoteService*& service, NimBLEClient* bleClient, NimBLEUUID uuid);
-bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr);
+bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr, bool response = false);
 bool ble_get_characteristic_response(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback = nullptr);
 
 const int scanTime = 30;  // Duration is in seconds in NimBLE
