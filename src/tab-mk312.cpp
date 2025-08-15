@@ -69,7 +69,7 @@ void tab_mk312::switch_change(int sw, boolean value) {
   if (main_mode == MODE_MANUAL && sw == tab_object_buttonbar::switch1 && value) {
     if (ison == 0) {
       ison = 1;
-      md->etbox_on(0);
+      md->etbox_on(wanted_mode);
       send_sync_data(SYNC_ON);
     } else {
       ison = 0;
@@ -125,7 +125,7 @@ void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
     bool isinverted = sync->isinverted();
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
-      md->etbox_on(0);
+      md->etbox_on(wanted_mode);
     } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
       ison = false;
       md->etbox_off();
@@ -143,7 +143,7 @@ void tab_mk312::loop(boolean activetab) {
       need_refresh = true;
       if (ison == 0) {
         ison = 1;
-        md->etbox_on(0);
+        md->etbox_on(wanted_mode);
         send_sync_data(SYNC_ON);
         if (main_mode == MODE_RANDOM)
           timermillis = millis() + rand_timer->gettimeon() * 1000;
@@ -311,7 +311,7 @@ boolean tab_mk312::hardware_changed(void) {
     tab_create();
     send_sync_data(SYNC_START);
     send_sync_data(SYNC_ON);
-    md->etbox_on(0);
+    md->etbox_on(wanted_mode);
     printf_log("Connected %s\n", device->getShortName());
   } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());
