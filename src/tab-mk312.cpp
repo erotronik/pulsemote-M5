@@ -36,7 +36,7 @@ void tab_mk312::encoder_change(int sw, int change) {
     timer->rotary_change(change);
     modeselect->rotary_change(change);
   }
-  if (lockpanel == true && sw == tab_object_buttonbar::rotary3) {
+  if (sw == tab_object_buttonbar::rotary3) {
     if (!patternselect->visible()) {
       patternselect->show(wanted_mode);
     }
@@ -98,7 +98,7 @@ void tab_mk312::switch_change(int sw, boolean value) {
       md->etbox_setbyte(ETMEM_panellock, 0);
     }
   }
-  if (lockpanel == true && sw == tab_object_buttonbar::rotary3 && value) {
+  if (sw == tab_object_buttonbar::rotary3 && value) {
     if (!patternselect->visible()) {
       patternselect->show(wanted_mode);
     } else {
@@ -209,6 +209,7 @@ void tab_mk312::loop(boolean activetab) {
         buttonbar->set_value(tab_object_buttonbar::rotary4,0);
     }
 
+    buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
     if (lockpanel) {
       buttonbar->set_value(tab_object_buttonbar::rotary1,level_a);
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%" LV_PRId32 "%%", level_a);
@@ -216,7 +217,6 @@ void tab_mk312::loop(boolean activetab) {
       buttonbar->set_value(tab_object_buttonbar::rotary2,level_b);
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%" LV_PRId32 "%%", level_b);
       buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b));
-      buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
     } else {
       buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 0, 0));
       buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 0, 0));
@@ -224,7 +224,6 @@ void tab_mk312::loop(boolean activetab) {
       buttonbar->set_value(tab_object_buttonbar::rotary2,0);
       buttonbar->set_text(tab_object_buttonbar::rotary1, LV_SYMBOL_CHARGE);
       buttonbar->set_text(tab_object_buttonbar::rotary2, LV_SYMBOL_CHARGE);
-      buttonbar->set_text(tab_object_buttonbar::rotary3, "");
     }
   }
 }
