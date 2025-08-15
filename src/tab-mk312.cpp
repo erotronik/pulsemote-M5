@@ -171,8 +171,7 @@ void tab_mk312::loop(boolean activetab) {
 
   if (ison && md->connected() && wanted_mode != md->get_last_mode()) {
     ESP_LOGD("et312","need to set mode to %d currently %d", wanted_mode, md->get_last_mode());
-    //wanted_mode = md->get_last_mode();
-    md->set_mode(wanted_mode+0x76); // should fix this
+    md->set_mode(wanted_mode);
   }
 
   if (activetab && need_refresh) {
@@ -258,7 +257,7 @@ void tab_mk312::focus_change(boolean focus) {
 
 void tab_mk312::tab_create_status(lv_obj_t *tv2) {
   tab_status = lv_obj_create(tv2);
-  lv_obj_set_size(tab_status, 108, 64);
+  lv_obj_set_size(tab_status, 160-8-8, 64);
   lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
   lv_obj_set_style_bg_color(tab_status, lv_color_hex(0xFF0000), LV_PART_MAIN);
   lv_obj_t *labelx = lv_label_create(tab_status);

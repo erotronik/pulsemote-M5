@@ -20,7 +20,7 @@ class device_mk312 : public Device {
 
   const char* etmodes[22] = {"Waves",  "Stroke", "Climb",  "Combo",  "Intense",
                              "Rhythm", "Audio1", "Audio2", "Audio3", "Split",
-                             "Rand1",  "Rand2",  "Toggle", "Orgasm", "Tormnt",
+                             "Random1",  "Random2",  "Toggle", "Orgasm", "Torment",
                              "Phase1", "Phase2", "Phase3", "User1",  "User2",
                              "User3",  "User4"};
   const int etmodes_n = 22;

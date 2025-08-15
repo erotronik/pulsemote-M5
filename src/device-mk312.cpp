@@ -103,6 +103,7 @@ bool device_mk312::connected() {
 }
 
 void device_mk312::set_mode(int p) {
+  p = p + 0x76;
   ESP_LOGD("set_mode","set mode %d",p);
   BOX.setbyte(ETMEM_mode, p - 1);
   vTaskDelay(pdMS_TO_TICKS(180));
@@ -134,7 +135,7 @@ int device_mk312::get_mode() {
 
 void device_mk312::etbox_on(byte mode) {
   if (mode == 0) mode = get_mode();
-  set_mode(mode+0x76);
+  set_mode(mode);
   lastvalidmode = mode+0x76;
 }
 
