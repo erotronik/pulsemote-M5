@@ -120,9 +120,6 @@ void device_mk312::next_mode() {
 }
 
 int device_mk312::get_last_mode() {
-  //if (lastvalidmode == 0) {
-  //  return get_mode();
-  //}
   return (lastvalidmode > 0x76? (lastvalidmode - 0x76):0);
 }
 
@@ -133,8 +130,8 @@ int device_mk312::get_mode() {
   return (lastvalidmode > 0x76? (lastvalidmode - 0x76):0);
 }
 
-void device_mk312::etbox_on(byte mode) {
-  if (mode == 0) mode = get_mode();
+void device_mk312::etbox_on(int mode) {
+  if (mode == -1) mode = get_mode();
   set_mode(mode);
   lastvalidmode = mode+0x76;
 }

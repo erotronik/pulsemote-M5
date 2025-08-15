@@ -169,7 +169,7 @@ void tab_mk312::loop(boolean activetab) {
     }
   }
 
-  if (ison && md->connected() && wanted_mode != md->get_last_mode()) {
+  if (ison && md->connected() && wanted_mode != -1 && wanted_mode != md->get_last_mode()) {
     ESP_LOGD("et312","need to set mode to %d currently %d", wanted_mode, md->get_last_mode());
     md->set_mode(wanted_mode);
   }
@@ -182,9 +182,9 @@ void tab_mk312::loop(boolean activetab) {
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d", md->etmodes[ison?md->get_last_mode():wanted_mode], seconds);
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d", md->etmodes[(ison||wanted_mode==-1)?md->get_last_mode():wanted_mode], seconds);
     } else {
-      lv_label_set_text(lv_obj_get_child(tab_status, 0), md->etmodes[ison?md->get_last_mode():wanted_mode]);
+      lv_label_set_text(lv_obj_get_child(tab_status, 0), md->etmodes[(ison||wanted_mode==-1)?md->get_last_mode():wanted_mode]);
     }
     need_refresh = false;
     need_knob_refresh = true;

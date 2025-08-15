@@ -27,7 +27,7 @@ class device_mk312 : public Device {
 
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
   void set_mode(int p);
-  void etbox_on(byte mode);
+  void etbox_on(int mode);
   void etbox_off(void);
   int get_last_mode(void);
   void etbox_setbyte(word a, byte d);
