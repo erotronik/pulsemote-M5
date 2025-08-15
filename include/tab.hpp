@@ -7,6 +7,7 @@
 #include "tab-object-timer.hpp"
 #include "tab-object-sync.hpp"
 #include "tab-object-modes.hpp"
+#include "tab-object-patterns.hpp"
 
 #define COLOUR_RED 0x882211
 #define COLOUR_GREEN 0x118822
@@ -78,6 +79,7 @@ class Tab {
   tab_object_sync *sync;
   tab_object_timer *rand_timer;
   tab_object_timer *timer;
+  tab_object_patterns *patternselect;
 
   private:
     // See getcyclecount()

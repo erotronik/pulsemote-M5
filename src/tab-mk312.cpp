@@ -11,6 +11,7 @@ tab_mk312::tab_mk312() {
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
   modeselect = new tab_object_modes();
+  patternselect = new tab_object_patterns();
   page = nullptr;
   old_last_change = last_change = D_NONE;
   device = nullptr;
@@ -35,11 +36,11 @@ void tab_mk312::encoder_change(int sw, int change) {
     timer->rotary_change(change);
     modeselect->rotary_change(change);
   }
-  if (lockpanel == true && sw == tab_object_buttonbar::rotary3 && ison == 1) {
-    for (int i=0; i< change; i++) {
-      md->etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
+  if (lockpanel == true && sw == tab_object_buttonbar::rotary3) {
+    if (!patternselect->visible()) {
+      patternselect->show(wanted_mode);
     }
-    md->get_mode();
+    patternselect->rotary_change(change);
     need_refresh = true;
   }
 }
@@ -97,8 +98,13 @@ void tab_mk312::switch_change(int sw, boolean value) {
       md->etbox_setbyte(ETMEM_panellock, 0);
     }
   }
-  if (lockpanel == true && sw == tab_object_buttonbar::rotary3 && value && ison == 1) {
-    md->next_mode();
+  if (lockpanel == true && sw == tab_object_buttonbar::rotary3 && value) {
+    if (!patternselect->visible()) {
+      patternselect->show(wanted_mode);
+    } else {
+      wanted_mode = patternselect->hide();
+    }
+    need_refresh = true;
   }
 }
 
@@ -163,17 +169,23 @@ void tab_mk312::loop(boolean activetab) {
     }
   }
 
+  if (ison && md->connected() && wanted_mode != md->get_last_mode()) {
+    ESP_LOGD("et312","need to set mode to %d currently %d", wanted_mode, md->get_last_mode());
+    //wanted_mode = md->get_last_mode();
+    md->set_mode(wanted_mode+0x76); // should fix this
+  }
+
   if (activetab && need_refresh) {
     ESP_LOGD("mk312", "refresh active tab from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
-    device_mk312 *md = static_cast<device_mk312 *>(device);
+    //device_mk312 *md = static_cast<device_mk312 *>(device);
     lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d", ison?md->etmodes[md->get_last_mode()]:"Off", seconds);
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d", md->etmodes[ison?md->get_last_mode():wanted_mode], seconds);
     } else {
-      lv_label_set_text(lv_obj_get_child(tab_status, 0), ison?md->etmodes[md->get_last_mode()]:"Off");
+      lv_label_set_text(lv_obj_get_child(tab_status, 0), md->etmodes[ison?md->get_last_mode():wanted_mode]);
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -204,10 +216,7 @@ void tab_mk312::loop(boolean activetab) {
       buttonbar->set_value(tab_object_buttonbar::rotary2,level_b);
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%" LV_PRId32 "%%", level_b);
       buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b));
-      if (ison)
-        buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
-      else 
-        buttonbar->set_text(tab_object_buttonbar::rotary3, "");
+      buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
     } else {
       buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 0, 0));
       buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 0, 0));
@@ -230,6 +239,15 @@ void mk312_mode_change_cb(lv_event_t *event) {
   mk312_tab->rand_timer->show((mk312_tab->main_mode == tab_mk312::MODE_RANDOM));
   mk312_tab->timer->show((mk312_tab->main_mode == tab_mk312::MODE_TIMER));
   mk312_tab->sync->show((mk312_tab->main_mode == tab_mk312::MODE_SYNC));
+}
+
+void mk312_pattern_change_cb(lv_event_t *event) {
+  tab_mk312 *mk312_tab = static_cast<tab_mk312 *>(lv_event_get_user_data(event));
+  int i = static_cast<tab_mk312::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
+  ESP_LOGI("mk312", "cb %s on %d: new pattern %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), i);
+  mk312_tab->wanted_mode = i;
+  mk312_tab->need_refresh = true;
+  mk312_tab->patternselect->hide();
 }
 
 void tab_mk312::focus_change(boolean focus) {
@@ -275,6 +293,11 @@ void tab_mk312::tab_create() {
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);
+
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+  patternselect->selectpattern(page, md->etmodes , md->etmodes_n);
+  lv_obj_add_event_cb(patternselect->getdropdownobject(), mk312_pattern_change_cb, LV_EVENT_VALUE_CHANGED, this);
+
 
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }

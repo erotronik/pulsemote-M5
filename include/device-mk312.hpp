@@ -23,6 +23,7 @@ class device_mk312 : public Device {
                              "Rand1",  "Rand2",  "Toggle", "Orgasm", "Tormnt",
                              "Phase1", "Phase2", "Phase3", "User1",  "User2",
                              "User3",  "User4"};
+  const int etmodes_n = 22;
 
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
   void set_mode(int p);
@@ -37,6 +38,8 @@ class device_mk312 : public Device {
   Device* clone() const override {
     return new device_mk312();
   }
+  bool connected(void);
+
 
  private:
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic,

@@ -97,6 +97,11 @@ int device_mk312::etbox_rxcb(char* p, int x) {
   return 0;
 }
 
+bool device_mk312::connected() {
+  if (!is_connected) return false;
+  return BOX.isconnected();
+}
+
 void device_mk312::set_mode(int p) {
   ESP_LOGD("set_mode","set mode %d",p);
   BOX.setbyte(ETMEM_mode, p - 1);
@@ -114,9 +119,9 @@ void device_mk312::next_mode() {
 }
 
 int device_mk312::get_last_mode() {
-  if (lastvalidmode == 0) {
-    return get_mode();
-  }
+  //if (lastvalidmode == 0) {
+  //  return get_mode();
+  //}
   return (lastvalidmode > 0x76? (lastvalidmode - 0x76):0);
 }
 
