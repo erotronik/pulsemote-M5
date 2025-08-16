@@ -17,7 +17,13 @@ void tab_dgbutton::loop(boolean activetab) {
   device_dgbutton *md = static_cast<device_dgbutton *>(device);
   device_dgbutton::dgbutton_event state;
   if (xQueueReceive(md->events,&state, 0)) {
-    if (state == device_dgbutton::dgbutton_event::HELD) {
+    if (state == device_dgbutton::dgbutton_event::PUSH) {
+      send_sync_data(SYNC_BUTTONPRESS);
+    }
+    if (state == device_dgbutton::dgbutton_event::RELEASE) {
+      send_sync_data(SYNC_BUTTONRELEASE);
+    }
+    if (0 && state == device_dgbutton::dgbutton_event::HELD) {
       printf_log("DG Button Pushed\n");
       send_sync_data(SYNC_ALLOFF);
       M5.Speaker.begin();
