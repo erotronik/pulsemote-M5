@@ -96,15 +96,6 @@ void handlemcpinterrupt() {
   mcp.clearInterrupts();
 }
 
-void rotaryReaderTask(void* pArgs) {
-  (void)pArgs;
-  while (true) {
-    if (xSemaphoreTake(rotaryISRSemaphore, portMAX_DELAY) == pdPASS) {
-      handlemcpinterrupt();
-    }
-  }
-}
-
 // Interrupt from MCP means a button or rotary encoder changed
 
 void IRAM_ATTR intactive() {
@@ -112,6 +103,22 @@ void IRAM_ATTR intactive() {
   xSemaphoreGiveFromISR(rotaryISRSemaphore, &xHigherPriorityTaskWoken);
   if (xHigherPriorityTaskWoken) {
     portYIELD_FROM_ISR();
+  }
+}
+
+void rotaryReaderTask(void* pArgs) {
+  (void)pArgs;
+
+  attachInterrupt(digitalPinToInterrupt(INTA), intactive, FALLING);
+  attachInterrupt(digitalPinToInterrupt(INTB), intactive, FALLING);
+
+  mcp.readGPIOA(); // no interrupts unless you do a mcp.readGPIOA();
+  mcp.readGPIOB();
+
+  while (true) {
+    if (xSemaphoreTake(rotaryISRSemaphore, portMAX_DELAY) == pdPASS) {
+      handlemcpinterrupt();
+    }
   }
 }
 
@@ -153,10 +160,6 @@ void m5io_init(void) {
   for (byte i = 0; i < numencoders; i++)
     rotaryEncoders[i].init();  // currently a NOP
 
-  xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 0); // gui core
-  attachInterrupt(digitalPinToInterrupt(INTA), intactive, FALLING);
-  attachInterrupt(digitalPinToInterrupt(INTB), intactive, FALLING);
+  xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 1); // gui core
 
-  mcp.readGPIOA(); // no interrupts unless you do a mcp.readGPIOA();
-  mcp.readGPIOB();
 }

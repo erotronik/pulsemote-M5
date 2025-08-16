@@ -21,7 +21,7 @@ extern std::list<Tab *> tabs;
 class Tab {
  public:
   enum sync_data {
-    SYNC_START =0, SYNC_ON, SYNC_OFF, SYNC_BYE, SYNC_ALLOFF,
+    SYNC_START =0, SYNC_ON, SYNC_OFF, SYNC_BYE, SYNC_ALLOFF, SYNC_BUTTONPRESS, SYNC_BUTTONRELEASE
   };
 
   // Called when a physical push switch is pushed or released
