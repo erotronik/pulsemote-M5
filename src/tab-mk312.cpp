@@ -107,23 +107,23 @@ void tab_mk312::switch_change(int sw, boolean value) {
 
 // another device can push data to us when they connect, disconnect, turn on, turn off
 
-static const int button_change = 5;
-
 void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
   if (!md) return;
   ESP_LOGD("mk312", "got sync data %d from %s", syncstatus, t->gettabname());
   if (syncstatus == SYNC_BUTTONPRESS && lockpanel) {
-    level_a = min(99, max(0, level_a + button_change));
+    last_level_button_press_a = level_a;
+    last_level_button_press_b = level_b;
+    level_a = min(99, max(0, level_a + (int)random(5,10)));
     md->etbox_setlevela(level_a);
-    level_b = min(99, max(0, level_b + button_change));
+    level_b = min(99, max(0, level_b + (int)random(5,10)));
     md->etbox_setlevelb(level_b);
     need_knob_refresh = true;
   }
   if (syncstatus == SYNC_BUTTONRELEASE && lockpanel) {
-    level_a = min(99, max(0, level_a - button_change));
+    level_a = last_level_button_press_a;
     md->etbox_setlevela(level_a);
-    level_b = min(99, max(0, level_b - button_change));
+    level_b = last_level_button_press_b;
     md->etbox_setlevelb(level_b);
     need_knob_refresh = true;
   }

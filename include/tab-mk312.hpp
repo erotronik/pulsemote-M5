@@ -28,6 +28,9 @@ class tab_mk312 : public Tab {
 
   main_modes main_mode;
   bool need_refresh = false;
+
+
+
   
  private:
   lv_obj_t *tab_status;
@@ -37,5 +40,7 @@ class tab_mk312 : public Tab {
   bool ison;
   bool lockpanel = false;
   int level_a, level_b;
+  int last_level_button_press_a = 0;
+  int last_level_button_press_b = 0;
   int timermillis = 0;
 };
