@@ -185,6 +185,7 @@ void tab_mk312::loop(boolean activetab) {
     need_knob_refresh = true;
   }
   if (activetab && need_knob_refresh) {
+
     need_knob_refresh = false;
     if (main_mode == MODE_MANUAL) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");

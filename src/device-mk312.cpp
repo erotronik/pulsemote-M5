@@ -116,17 +116,16 @@ void device_mk312::set_mode(int p) {
   if (p == etmodes_potluck) 
     q = potluck[random(0,potluck_n)];
   ESP_LOGD("set_mode","set mode %d",q);
-  etbox_setbyte(ETMEM_mode, q - 1);
-  vTaskDelay(pdMS_TO_TICKS(180));
-  etbox_setbyte(ETMEM_pushbutton, ETBUTTON_setmode);
-  vTaskDelay(pdMS_TO_TICKS(180));
-  etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
+  etbox_setbyte(ETMEM_modesplit, q );
+  etbox_setbyte(ETMEM_runcommand, ETCOMMAND_SELECTNEWMODE);
+  etbox_setbyte(ETMEM_runcommand2, ETCOMMAND_EXITMENU); // redraw
+
   vTaskDelay(pdMS_TO_TICKS(180));
   lastvalidmode = p + ETMODE_waves;
 }
 
 void device_mk312::next_mode() {
-  etbox_setbyte(ETMEM_pushbutton, ETBUTTON_lockmode);
+  etbox_setbyte(ETMEM_runcommand, ETCOMMAND_SWITCHTONEXTMODE);
   get_mode();
 }
 
@@ -148,18 +147,17 @@ void device_mk312::etbox_on(int mode) {
 }
 
 void device_mk312::etbox_off(void) {
-  etbox_setbyte(ETMEM_pushbutton, ETBUTTON_24);
-  etbox_setbyte(ETMEM_progdisplay, 0x64);  // blank the program display part
-  etbox_setbyte(ETMEM_pushbutton, ETBUTTON_21);
-  etbox_getbyte(ETMEM_pushbutton);
+  etbox_setbyte(ETMEM_runcommand, ETCOMMAND_INITMODULE);
+  etbox_setbyte(ETMEM_runcommanddata, 0x64);  // 8 spaces over the mode
+  etbox_setbyte(ETMEM_runcommand2, ETCOMMAND_LCDWRITESTRING);
 }
 
 void device_mk312::etbox_setlevela(byte data) {
-  etbox_setbyte(ETMEM_knoba, (data * 256+99) / 100);   // Round up to match the display
+  etbox_setbyte(ETMEM_knoba, (data * 256+99) / 100); // Round up to match the display
 }
 
 void device_mk312::etbox_setlevelb(byte data) {
-  etbox_setbyte(ETMEM_knobb, (data * 256+99) / 100);   // Round up to match the display
+  etbox_setbyte(ETMEM_knobb, (data * 256+99) / 100); // Round up to match the display
 }
 
 void device_mk312::etbox_setpanellock(bool x) {

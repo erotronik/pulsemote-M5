@@ -38,11 +38,11 @@ class device_mk312 : public Device {
   byte etbox_getbyte(word a);
   void next_mode(void);
   int get_mode(void);
+  bool connected(void);
 
   Device* clone() const override {
     return new device_mk312();
   }
-  bool connected(void);
 
  private:
 
