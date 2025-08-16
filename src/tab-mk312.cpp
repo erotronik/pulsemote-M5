@@ -4,8 +4,8 @@
 #include "lvgl-utils.h"
 
 tab_mk312::tab_mk312() {
-  ison = true;
-  lockpanel = false;
+  ison = true; // default power on mode is on
+  lockpanel = false; // lockpanel means we lock out the front A/B level knobs and control the levels from software
   main_mode = MODE_MANUAL;
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
@@ -23,12 +23,12 @@ void tab_mk312::encoder_change(int sw, int change) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
   if (sw == tab_object_buttonbar::rotary2 && lockpanel) {
     level_b = min(99, max(0, level_b + change));
-    md->etbox_setbyte(ETMEM_knobb, (level_b * 256+99) / 100);   // Round up to match the display
+    md->etbox_setlevelb(level_b);
     need_knob_refresh = true;
   }
   if (sw == tab_object_buttonbar::rotary1 && lockpanel) {
     level_a = min(99, max(0, level_a + change));
-    md->etbox_setbyte(ETMEM_knoba, (level_a * 256+99) / 100);  
+    md->etbox_setlevela(level_a);
     need_knob_refresh = true;
   }
   if (sw == tab_object_buttonbar::rotary4) {
@@ -86,16 +86,13 @@ void tab_mk312::switch_change(int sw, boolean value) {
     md->etbox_off();
   }
   if ((sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) && value) {
-    if (lockpanel == false) {
-      lockpanel = true;
+    lockpanel = !lockpanel;
+    md->etbox_setpanellock(lockpanel);
+    if (lockpanel) {
       level_a = 0;
       level_b = 0;
-      md->etbox_setbyte(ETMEM_panellock, 1);
-      md->etbox_setbyte(ETMEM_knoba, level_a); // no need to scale it's 0
-      md->etbox_setbyte(ETMEM_knobb, level_b);
-    } else {
-      lockpanel = false;
-      md->etbox_setbyte(ETMEM_panellock, 0);
+      md->etbox_setlevelb(level_b);
+      md->etbox_setlevela(level_a);
     }
   }
   if (sw == tab_object_buttonbar::rotary3 && value) {
@@ -177,9 +174,7 @@ void tab_mk312::loop(boolean activetab) {
   if (activetab && need_refresh) {
     ESP_LOGD("mk312", "refresh active tab from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
-    //device_mk312 *md = static_cast<device_mk312 *>(device);
     lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
-
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
       lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%d", md->etmodes[(ison||wanted_mode==-1)?md->get_last_mode():wanted_mode], seconds);
@@ -190,8 +185,6 @@ void tab_mk312::loop(boolean activetab) {
     need_knob_refresh = true;
   }
   if (activetab && need_knob_refresh) {
-    device_mk312 *md = static_cast<device_mk312 *>(device);
-
     need_knob_refresh = false;
     if (main_mode == MODE_MANUAL) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
@@ -230,9 +223,7 @@ void tab_mk312::loop(boolean activetab) {
 void mk312_mode_change_cb(lv_event_t *event) {
   tab_mk312 *mk312_tab = static_cast<tab_mk312 *>(lv_event_get_user_data(event));
   mk312_tab->main_mode = static_cast<tab_mk312::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("mk312", "cb %s on %d: new mode %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
-           mk312_tab->main_mode);
+  ESP_LOGI("mk312", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), mk312_tab->main_mode);
   mk312_tab->need_refresh = true;
   mk312_tab->rand_timer->show((mk312_tab->main_mode == tab_mk312::MODE_RANDOM));
   mk312_tab->timer->show((mk312_tab->main_mode == tab_mk312::MODE_TIMER));

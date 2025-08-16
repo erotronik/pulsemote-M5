@@ -18,12 +18,13 @@ class device_mk312 : public Device {
   bool connect_to_device(NimBLEAdvertisedDevice* device_mk312_device) override;
   void set_callback(device_callback c) override;
 
-  const char* etmodes[22] = {"Waves",  "Stroke", "Climb",  "Combo",  "Intense",
+  static const int etmodes_n = 23;
+  static const int etmodes_potluck = 22;
+  const char* etmodes[etmodes_n] = {"Waves",  "Stroke", "Climb",  "Combo",  "Intense",
                              "Rhythm", "Audio1", "Audio2", "Audio3", "Split",
                              "Random1",  "Random2",  "Toggle", "Orgasm", "Torment",
                              "Phase1", "Phase2", "Phase3", "User1",  "User2",
-                             "User3",  "User4"};
-  const int etmodes_n = 22;
+                             "User3",  "User4", "Luck"};
 
   bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
   void set_mode(int p);
@@ -31,6 +32,9 @@ class device_mk312 : public Device {
   void etbox_off(void);
   int get_last_mode(void);
   void etbox_setbyte(word a, byte d);
+  void etbox_setlevela(byte d);
+  void etbox_setlevelb(byte d);
+  void etbox_setpanellock(bool x);
   byte etbox_getbyte(word a);
   void next_mode(void);
   int get_mode(void);
@@ -40,8 +44,19 @@ class device_mk312 : public Device {
   }
   bool connected(void);
 
-
  private:
+
+  static const int potluck_n = 12;
+  const uint8_t potluck[potluck_n] = {
+    ETMODE_waves,
+    ETMODE_stroke,
+    ETMODE_climb, ETMODE_climb,
+    ETMODE_rhythm,
+    ETMODE_toggle,
+    ETMODE_orgasm, ETMODE_orgasm,
+    ETMODE_phase2, ETMODE_phase2, ETMODE_phase2, ETMODE_phase2
+  };
+
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic,
                        uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;

@@ -15,6 +15,7 @@
 #define ETMEM_knoba 0x4064
 #define ETMEM_knobb 0x4065
 #define ETMEM_knobma 0x4061
+#define ETMEM_progdisplay 0x4180
 
 // push panel buttons: 
 
@@ -29,6 +30,8 @@
 // 15 makes display say 'adjust?'
 #define ETBUTTON_lockmode 16
 #define ETBUTTON_splitmode 17
+#define ETBUTTON_21 0x15
+#define ETBUTTON_24 0x18
 
 #define ETMEM_modesplit 0x4078
 
