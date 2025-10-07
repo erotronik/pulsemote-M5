@@ -16,7 +16,7 @@ tab_ossm::tab_ossm() {
   page = nullptr;
   old_last_change = last_change = D_NONE;
   device = nullptr;
-  knob_speed = 10; // 50%
+  knob_speed = 0; // 50%
   main_pattern = 0; // continuous
 }
 tab_ossm::~tab_ossm() {}
@@ -30,7 +30,7 @@ void tab_ossm::encoder_change(int sw, int change) {
     timer->rotary_change(change);
   }
   if (sw == tab_object_buttonbar::rotary1 && main_pattern == 0) {
-    knob_speed = min(100,max(1,knob_speed+change));
+    knob_speed = min(100,max(0,knob_speed+change));
     if (ison) md->set_speed(knob_speed);
   }
   if (sw == tab_object_buttonbar::rotary3) {

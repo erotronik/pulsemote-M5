@@ -10,8 +10,8 @@
 // OSSM BLE implementation as of Oct 2025
 
 NimBLEUUID ossm_SERVICE_BLEUUID("522b443a-4f53-534d-0001-420badbabe69");
-//NimBLEUUID ossm_TX("522b443a-4f53-534d-0002-420badbabe69");
-NimBLEUUID ossm_RX("522b443a-4f53-534d-1000-420badbabe69");
+NimBLEUUID ossm_TX("522b443a-4f53-534d-1000-420badbabe69");
+NimBLEUUID ossm_RX("522b443a-4f53-534d-2000-420badbabe69");
 NimBLEUUID ossm_SPEEDKNOB("522b443a-4f53-534d-1010-420badbabe69"); // not 0010
 
 bool device_ossm::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
@@ -35,7 +35,7 @@ void device_ossm::ble_ossm_send(String newValue) {
     return;
   //xQueueReset(notifyQueue);
   ESP_LOGI("ossm","Sending %s" ,newValue);
-  device_ossm::ossm_rx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+  device_ossm::ossm_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
   //NotifyPacket received;
 
   //if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
@@ -122,6 +122,13 @@ bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
     bleClient->disconnect();
     return false;
   }
+  res &= ble_get_characteristic(ossmService, ossm_tx_Characteristic, ossm_TX, nullptr);
+
+  if (res == false) {
+    ESP_LOGE(getShortName(), "Missing tx characteristic");
+    bleClient->disconnect();
+    return false;
+  }
 
   res &= ble_get_characteristic(ossmService, ossm_speedknob_Characteristic, ossm_SPEEDKNOB, nullptr);
 
@@ -132,6 +139,11 @@ bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
   }
 
   ESP_LOGI(getShortName(), "Found services and characteristics");
+
+  String newValue = "false";
+  ossm_speedknob_Characteristic->writeValue(newValue.c_str(), newValue.length());
+  ble_ossm_send("go:strokeEngine");
+
   is_connected = true;
 
   notify(D_CONNECTED);
