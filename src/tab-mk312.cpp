@@ -114,9 +114,9 @@ void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
   if (syncstatus == SYNC_BUTTONPRESS && lockpanel) {
     last_level_button_press_a = level_a;
     last_level_button_press_b = level_b;
-    level_a = min(99, max(0, level_a + (int)random(5,10)));
+    level_a = min(99, max(0, level_a + (int)random(5,11)));
     md->etbox_setlevela(level_a);
-    level_b = min(99, max(0, level_b + (int)random(5,10)));
+    level_b = min(99, max(0, level_b + (int)random(5,11)));
     md->etbox_setlevelb(level_b);
     need_knob_refresh = true;
   }

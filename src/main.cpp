@@ -14,6 +14,7 @@
 #include "tab-thrustalot.hpp"
 #include "tab-lovense.hpp"
 #include "tab-splashscreen.hpp"
+#include "tab-ossm.hpp"
 #include "tab-bubblebottle.hpp"
 #include "tab-dgbutton.hpp"
 #include "tab-loop.hpp"
@@ -133,6 +134,8 @@ void device_change_handler(type_of_change t, Device *d) {
       ta = new tab_thrustalot();
     } else if (type == DeviceType::device_lovense) {
       ta = new tab_lovense();
+    } else if (type == DeviceType::device_ossm) {
+      ta = new tab_ossm();      
     } else if (type == DeviceType::device_bubblebottle) {
       ta = new tab_bubblebottle();
     } else if (type == DeviceType::device_dgbutton) {
