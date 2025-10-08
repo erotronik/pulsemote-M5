@@ -29,12 +29,24 @@ class tab_ossm : public Tab {
  private:
   lv_obj_t *tab_status;
   int thrustcount = 0;
+  bool firstdata = false;
   void tab_create(void);
   void tab_create_status(lv_obj_t *tv2);
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;
-  int knob_speed, knob_tempo;
+  int knob_speed, knob_stroke, knob_depth, knob_sensation;
   int timermillis = 0;
   unsigned long tempotimer = 0;
+
+  typedef struct {
+    lv_obj_t *base;   // green background
+    lv_obj_t *seg;    // red segment
+    int width;        // total width in px (100 here)
+    int height;       // total height in px (5 here)
+  } segbar_t;
+
+  segbar_t mybar;
+  void segbar_create(lv_obj_t *parent, segbar_t *bar, int x, int y);
+  void segbar_set(segbar_t *bar, int x, int y);
 };

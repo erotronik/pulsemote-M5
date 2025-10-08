@@ -1,5 +1,6 @@
 #include <NimBLEDevice.h>
 #include <esp_log.h>
+#include <ArduinoJson.h>
 
 #include "device-ossm.hpp"
 #include "comms-bt.hpp"
@@ -12,13 +13,11 @@
 NimBLEUUID ossm_SERVICE_BLEUUID("522b443a-4f53-534d-0001-420badbabe69");
 NimBLEUUID ossm_TX("522b443a-4f53-534d-1000-420badbabe69");
 NimBLEUUID ossm_RX("522b443a-4f53-534d-2000-420badbabe69");
-NimBLEUUID ossm_SPEEDKNOB("522b443a-4f53-534d-1010-420badbabe69"); // not 0010
+NimBLEUUID ossm_SPEEDKNOB("522b443a-4f53-534d-1010-420badbabe69");
+NimBLEUUID ossm_PATTERNLIST("522b443a-4f53-534d-3000-420badbabe69");
 
 bool device_ossm::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
-  if (advertisedDevice->isAdvertisingService(ossm_SERVICE_BLEUUID))
-    //if (strnstr(advertisedDevice->getName().c_str(),"OSSM",4))
-      return true;
-  return false;
+  return (advertisedDevice->isAdvertisingService(ossm_SERVICE_BLEUUID));
 }
 
 void device_ossm::set_callback(device_callback c) { 
@@ -29,26 +28,31 @@ void device_ossm::notify(type_of_change change) {
   if (update_callback) update_callback(change, this);
 }
 
-
 void device_ossm::ble_ossm_send(String newValue) {
   if (!is_connected) 
     return;
-  //xQueueReset(notifyQueue);
   ESP_LOGI("ossm","Sending %s" ,newValue);
   device_ossm::ossm_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
-  //NotifyPacket received;
-
-  //if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
-  //  char buf[100];
-  // int len = received.length < 99? received.length: 99;
-  //  strncat(buf,(const char *)received.data,len);
-  //  buf[len]=0;
-  //  ESP_LOGI("lovense","command returned %s",buf);
-  //}
 }
 
 void device_ossm::set_speed(int speed) {
   ble_ossm_send("set:speed:" +String(speed));
+}
+
+void device_ossm::set_stroke(int s) {
+  ble_ossm_send("set:stroke:" +String(s));
+}
+
+void device_ossm::set_depth(int s) {
+  ble_ossm_send("set:depth:" +String(s));
+}
+
+void device_ossm::set_sensation(int s) {
+  ble_ossm_send("set:sensation:" +String(s));
+}
+
+void device_ossm::set_pattern(int s) {
+  ble_ossm_send("set:pattern:" +String(s));
 }
 
 void device_ossm::connected_callback() {
@@ -87,7 +91,51 @@ device_ossm::device_ossm() {}
 device_ossm::~device_ossm() {}
 
 void device_ossm::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-  ESP_LOGD("ossm", "Received (%u bytes): %.*s", (unsigned)length, (int)length, (char*)pData);
+  if (!isNotify || !pData || length == 0) return;
+  //ESP_LOGD("ossm", "Received (%u bytes)", (unsigned)length);
+  rxstatus.clear();
+  DeserializationError err = deserializeJson(rxstatus, pData, length);
+  if (err) {
+    ESP_LOGW("ossm", "JSON parse error: %s", err.c_str());
+    return;
+  }
+  //ESP_LOGI("ossm","speed=%d",rxstatus["speed"]|0);
+}
+
+bool device_ossm::got_data_yet() {
+  return (!rxstatus["speed"].isNull());
+}
+
+int device_ossm::get_speed() {
+  return (rxstatus["speed"]|0);
+}
+
+int device_ossm::get_depth() {
+  return (rxstatus["depth"]|0);
+}
+
+int device_ossm::get_stroke() {
+  return (rxstatus["stroke"]|0);
+}
+
+int device_ossm::get_sensation() {
+  return (rxstatus["sensation"]|0);
+}
+
+int device_ossm::get_pattern() {
+  return (rxstatus["pattern"]|0);
+}
+
+const char* device_ossm::pattern_name_for_idx(int idx) {
+  if (!patternlist.is<JsonArray>()) return "";
+
+  JsonArray arr = patternlist.as<JsonArray>();
+  for (JsonObject obj : arr) {
+    if ((int)(obj["idx"] | -1) == idx) {
+      return obj["name"] | "";
+    }
+  }
+  return ""; // not found
 }
 
 bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
@@ -107,8 +155,9 @@ bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
+
   res &= ble_get_service(ossmService, bleClient, ossm_SERVICE_BLEUUID);
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
@@ -116,29 +165,40 @@ bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
 
   res &= ble_get_characteristic(ossmService, ossm_rx_Characteristic, ossm_RX,
       std::bind(&device_ossm::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
-
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");
     bleClient->disconnect();
     return false;
   }
-  res &= ble_get_characteristic(ossmService, ossm_tx_Characteristic, ossm_TX, nullptr);
 
-  if (res == false) {
+  res &= ble_get_characteristic(ossmService, ossm_tx_Characteristic, ossm_TX, nullptr);
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing tx characteristic");
     bleClient->disconnect();
     return false;
   }
 
   res &= ble_get_characteristic(ossmService, ossm_speedknob_Characteristic, ossm_SPEEDKNOB, nullptr);
-
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing speedknob characteristic");
     bleClient->disconnect();
     return false;
   }
 
+  res &= ble_get_characteristic(ossmService, ossm_patternlist_Characteristic, ossm_PATTERNLIST, nullptr);
+  if (!res) {
+    ESP_LOGE(getShortName(), "Missing patternlist characteristic");
+    bleClient->disconnect();
+    return false;
+  }
+
   ESP_LOGI(getShortName(), "Found services and characteristics");
+
+  std::string payload = ossm_patternlist_Characteristic->readValue();
+  DeserializationError err = deserializeJson(patternlist, payload);
+  if (err) {
+    ESP_LOGE(getShortName(), "Missing patternlist json");
+  }
 
   String newValue = "false";
   ossm_speedknob_Characteristic->writeValue(newValue.c_str(), newValue.length());
