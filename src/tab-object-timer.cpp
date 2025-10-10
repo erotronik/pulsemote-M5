@@ -103,11 +103,7 @@ int tab_object_timer::gettimeoff(void) {
 void tab_object_timer::view(lv_obj_t *tv2) {
   lv_obj_t *timerc = lv_obj_create(tv2);
   lv_obj_align(timerc, LV_ALIGN_TOP_RIGHT, 0, dropdown_height+6);
-  lv_obj_set_style_pad_top(timerc, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(timerc, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_left(timerc, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_right(timerc, 3, LV_PART_MAIN);
-
+  lv_obj_set_style_pad_all(timerc, 3, LV_PART_MAIN);
   lv_obj_set_size(timerc, dropdown_width, 76);
 
   active_btn = NULL;

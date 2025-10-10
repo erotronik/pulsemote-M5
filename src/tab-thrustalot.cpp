@@ -251,7 +251,6 @@ void tab_thrustalot::tab_create_status() {
 
 void tab_thrustalot::tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
-
   lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
 
   modeselect->createdropdown(page, thrustalot_main_modes_c);

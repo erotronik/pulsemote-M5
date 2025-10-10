@@ -281,6 +281,8 @@ void tab_mk312::tab_create_status(lv_obj_t *tv2) {
 }
 
 void tab_mk312::tab_create() {
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+
   page = lv_tabview_add_tab(tv, gettabname());
 
   lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
@@ -294,10 +296,8 @@ void tab_mk312::tab_create() {
   timer->view(page);
   sync->view(page);
 
-  device_mk312 *md = static_cast<device_mk312 *>(device);
   patternselect->selectpattern(page, md->etmodes , md->etmodes_n);
   lv_obj_add_event_cb(patternselect->getdropdownobject(), mk312_pattern_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
 
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }

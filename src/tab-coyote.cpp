@@ -249,7 +249,6 @@ void tab_coyote::tab_create_status(lv_obj_t *tv2) {
 
 void tab_coyote::coyote_tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
-
   lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
 
   modeselect->createdropdown(page, coyote_main_modes_c);

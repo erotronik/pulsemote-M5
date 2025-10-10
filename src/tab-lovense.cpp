@@ -254,8 +254,7 @@ void tab_lovense::tab_create_battery(lv_obj_t *tv2) {
   lv_label_set_text(labelx, "");
   lv_obj_set_style_text_font(labelx, &lv_font_montserrat_14, LV_PART_MAIN);
   lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_pad_top(tab_battery, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(tab_battery, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_ver(tab_battery, 3, LV_PART_MAIN);
   lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
   lv_obj_set_scrollbar_mode(tab_battery, LV_SCROLLBAR_MODE_OFF);
 }

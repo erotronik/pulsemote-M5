@@ -3,16 +3,8 @@
 
 void tab_object_sync::view(lv_obj_t *parent) {
   container = lv_obj_create(parent);
-  // Set the container to be transparent and have no effect
-  //lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
-  //lv_obj_set_style_border_opa(container, LV_OPA_TRANSP, 0);
-  //lv_obj_set_style_outline_opa(container, LV_OPA_TRANSP, 0);
-  //lv_obj_set_style_shadow_opa(container, LV_OPA_TRANSP, 0);
-  //lv_obj_set_style_pad_all(container, 0, 0);
-  lv_obj_set_style_pad_top(container, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(container, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_left(container, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_right(container, 3, LV_PART_MAIN);
+
+  lv_obj_set_style_pad_all(container, 3, LV_PART_MAIN);
   lv_obj_align(container, LV_ALIGN_TOP_RIGHT, 0, dropdown_height+6);
   lv_obj_set_width(container, dropdown_width);
   lv_obj_set_height(container, LV_SIZE_CONTENT);
@@ -29,7 +21,7 @@ void tab_object_sync::view(lv_obj_t *parent) {
 }
 
 void tab_object_sync::show(bool show) {
-  if (container && show) lv_obj_clear_flag(container, LV_OBJ_FLAG_HIDDEN);
+  if (container && show) lv_obj_remove_flag(container, LV_OBJ_FLAG_HIDDEN);
   if (container && !show) lv_obj_add_flag(container, LV_OBJ_FLAG_HIDDEN);
 }
 
