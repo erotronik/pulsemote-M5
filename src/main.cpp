@@ -225,6 +225,7 @@ void loop() {}; // We use FreeRTOS tasks instead
 void setup() {
   M5.begin();
   lv_init();
+  lv_init_pulsemote();
   lv_tick_set_cb(lvgl_tick_function);
   display = lv_display_create(SCREENW, SCREENH);
   lv_display_set_flush_cb(display, lvgl_display_flush);

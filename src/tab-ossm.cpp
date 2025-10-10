@@ -27,7 +27,7 @@ tab_ossm::~tab_ossm() {}
 void tab_ossm::encoder_change(int sw, int change) {
   device_ossm *md = static_cast<device_ossm *>(device);
 
-  if (sw == tab_object_buttonbar::rotary4) {
+  if (sw == tab_object_buttonbar::rotary4) { // this rotary control gets reused depending on context
     if (modeselect->has_focus() || rand_timer->has_focus() || timer->has_focus()) {
       modeselect->rotary_change(change);
       rand_timer->rotary_change(change);
@@ -49,15 +49,6 @@ void tab_ossm::encoder_change(int sw, int change) {
     knob_depth = min(100,max(0,knob_depth+change*4));
     md->set_depth(knob_depth);
   }
-
-  //if (sw == tab_object_buttonbar::rotary3) {
-  //  main_pattern+=change;
-  //  if (main_pattern<0) main_pattern=md->patterns_n-1;
-  //  if (main_pattern>=md->patterns_n) main_pattern=0;
-  //  //if (ison) md->setmodespeed(main_pattern,knob_speed);
-  //  need_refresh = true;
-  //}
-
   need_knob_refresh = true;
 }
 
@@ -67,9 +58,8 @@ void tab_ossm::switch_change(int sw, boolean value) {
 
   if (sw == tab_object_buttonbar::rotary1 && value) {
     main_pattern++;
-    if (!strcmp(md->pattern_name_for_idx(main_pattern),"")) {
+    if (!strcmp(md->pattern_name_for_idx(main_pattern),"")) 
       main_pattern = 0;
-    }
     md->set_pattern(main_pattern);
   }
   if (sw == tab_object_buttonbar::rotary2 && value) {
@@ -190,8 +180,7 @@ void tab_ossm::loop(boolean activetab) {
   }
 
   if (activetab && need_refresh) {
-    ESP_LOGD("ossm", "refresh active tab from %s on %d",
-             pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
+    ESP_LOGD("ossm", "refresh active tab from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
     device_ossm *md = static_cast<device_ossm *>(device);
     lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
@@ -216,11 +205,11 @@ void tab_ossm::loop(boolean activetab) {
 
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary2,"Stroke\n%d%%",knob_stroke);
     buttonbar->set_value(tab_object_buttonbar::rotary2,knob_stroke);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary2, ison?lv_color_hsv_to_rgb(60, 100, knob_stroke): lv_color_hsv_to_rgb(0, 0, 0));
+    buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(60, 100, knob_stroke));
 
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary3,"Depth\n%d%%",knob_depth);
     buttonbar->set_value(tab_object_buttonbar::rotary3,knob_depth);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary3, ison?lv_color_hsv_to_rgb(120, 100, knob_depth): lv_color_hsv_to_rgb(0, 0, 0));
+    buttonbar->set_rgb(tab_object_buttonbar::rotary3, lv_color_hsv_to_rgb(120, 100, knob_depth));
 
     segbar_set(&mybar, knob_depth-knob_stroke, knob_depth);
 
@@ -235,10 +224,11 @@ void tab_ossm::loop(boolean activetab) {
     if (main_pattern == 0 || ((main_mode == MODE_RANDOM || main_mode == MODE_TIMER) && (rand_timer->has_focus() || timer->has_focus()))) {
       buttonbar->set_value(tab_object_buttonbar::rotary4, 0);
       buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+      buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(0, 0, 0));
     } else {
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary4,"Sens\n%d%%",knob_sensation);
       buttonbar->set_value(tab_object_buttonbar::rotary4,knob_sensation);
-      buttonbar->set_rgb(tab_object_buttonbar::rotary4, ison?lv_color_hsv_to_rgb(0, 100, knob_sensation): lv_color_hsv_to_rgb(0, 0, 0));
+      buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(180, 100, knob_sensation));
     }
   }
 }
@@ -261,38 +251,32 @@ void tab_ossm::focus_change(boolean focus) {
 
 void tab_ossm::tab_create_status(lv_obj_t *tv2) {
   tab_status = lv_obj_create(tv2);
+
+  lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
   lv_obj_set_size(tab_status, 150, 64);
   lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
-  lv_obj_set_style_bg_color(tab_status, lv_color_hex(0xFF0000), LV_PART_MAIN);
+  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
+
   lv_obj_t *labelx = lv_label_create(tab_status);
   lv_label_set_text(labelx, "-");
-  lv_obj_set_style_text_font(labelx, &lv_font_montserrat_24, LV_PART_MAIN);
-  lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_pad_top(tab_status, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(tab_status, 3, LV_PART_MAIN);
   lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
+
   lv_obj_t *extra_label = lv_label_create(tab_status);
-  lv_obj_set_style_text_font(extra_label, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_label_set_text(extra_label, "");
-  lv_obj_set_style_text_align(extra_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 }
 
 void tab_ossm::tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
-
-  lv_obj_set_style_pad_left(page, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_top(page, 10, LV_PART_MAIN);
-  lv_obj_set_style_pad_right(page, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(page, 0, LV_PART_MAIN);
+ 
+  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
 
   modeselect->createdropdown(page, ossm_main_modes_c);
   lv_obj_add_event_cb(modeselect->getdropdownobject(), ossm_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
   buttonbar = new tab_object_buttonbar(page);
   tab_create_status(page);
-  segbar_create(page,&mybar,0,0);
+  segbar_create(page,&mybar,150,12);
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);
@@ -308,9 +292,9 @@ static inline void clamp_and_order(int *x, int *y, int minv, int maxv) {
   if (*y < *x) { int tmp = *x; *x = *y; *y = tmp; }
 }
 
-void tab_ossm::segbar_create(lv_obj_t *parent, segbar_t *bar, int x, int y) {
-  bar->width  = 150;
-  bar->height = 12;
+void tab_ossm::segbar_create(lv_obj_t *parent, segbar_t *bar, int w, int h) {
+  bar->width  = w;
+  bar->height = h;
 
   // green base
   bar->base = lv_obj_create(parent);
@@ -320,7 +304,7 @@ void tab_ossm::segbar_create(lv_obj_t *parent, segbar_t *bar, int x, int y) {
   lv_obj_set_style_bg_opa(bar->base, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_set_style_radius(bar->base, 0, LV_PART_MAIN);
   lv_obj_set_style_border_width(bar->base, 0, LV_PART_MAIN);
-  lv_obj_clear_flag(bar->base, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_remove_flag(bar->base, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_align(bar->base, LV_ALIGN_TOP_LEFT, 4, 72);
 
   // red segment (child)
@@ -330,25 +314,18 @@ void tab_ossm::segbar_create(lv_obj_t *parent, segbar_t *bar, int x, int y) {
   lv_obj_set_style_bg_opa(bar->seg, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_set_style_radius(bar->seg, 0, LV_PART_MAIN);
   lv_obj_set_style_border_width(bar->seg, 0, LV_PART_MAIN);
-  lv_obj_clear_flag(bar->seg, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_remove_flag(bar->seg, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_add_flag(bar->seg, LV_OBJ_FLAG_FLOATING);        // stay on top / ignore layouts
-
-  // initialize segment
-  int xs = x, ys = y;
-  clamp_and_order(&xs, &ys, 0, 100);
-  int w = ys - xs;                     // covers [x, y)
-  if (w < 0) w = 0;
-  lv_obj_set_pos(bar->seg, xs*bar->width/100, 0);
-  lv_obj_set_size(bar->seg, w*bar->width/100, bar->height);
+  segbar_set(bar, 0, 0);
 }
 
 void tab_ossm::segbar_set(segbar_t *bar, int x, int y) {
-  int xs = x, ys = y;
-  clamp_and_order(&xs, &ys, 0, 100);
-  int w = ys - xs;                     // covers [x, y)
+  int xs = x * bar->width /100, ys = y * bar->width/100;
+  clamp_and_order(&xs, &ys, 0, bar->width);
+  int w = ys - xs;
   if (w < 0) w = 0;
-  lv_obj_set_pos(bar->seg, xs*bar->width/100, 0);
-  lv_obj_set_size(bar->seg, w*bar->width/100, bar->height);
+  lv_obj_set_pos(bar->seg, xs, 0);
+  lv_obj_set_size(bar->seg, w, bar->height);
 }
 
 // return false if we removed ourselves from the connected devices list

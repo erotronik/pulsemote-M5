@@ -5,6 +5,22 @@
 #include "lvgl-utils.h"
 #include <tab.hpp>
 
+lv_style_t lvpulsemote_style_status;
+lv_style_t lvpulsemote_style_tab;
+
+void lv_init_pulsemote(void) {
+  lv_style_init(&lvpulsemote_style_status);
+  lv_style_set_bg_color(&lvpulsemote_style_status, lv_color_hex(0xFF0000));
+  lv_style_set_pad_ver(&lvpulsemote_style_status, 3);
+  lv_style_set_text_font(&lvpulsemote_style_status, &lv_font_montserrat_24);
+  lv_style_set_text_align(&lvpulsemote_style_status, LV_TEXT_ALIGN_CENTER);
+
+  lv_style_init(&lvpulsemote_style_tab);
+  lv_style_set_pad_all(&lvpulsemote_style_tab, 0);
+  lv_style_set_pad_top(&lvpulsemote_style_tab, 10);
+}
+
+
 // Log to serial, and if the splashscreen is there, also to the debug window of the splashscreen
 
 void printf_log(const char *format, ...) {

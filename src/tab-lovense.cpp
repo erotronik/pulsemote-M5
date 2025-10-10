@@ -231,22 +231,19 @@ void tab_lovense::focus_change(boolean focus) {
 
 void tab_lovense::tab_create_status(lv_obj_t *tv2) {
   tab_status = lv_obj_create(tv2);
+
+  lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
   lv_obj_set_size(tab_status, 150, 64);
   lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
-  lv_obj_set_style_bg_color(tab_status, lv_color_hex(0xFF0000), LV_PART_MAIN);
+  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
+
   lv_obj_t *labelx = lv_label_create(tab_status);
   lv_label_set_text(labelx, "-");
-  lv_obj_set_style_text_font(labelx, &lv_font_montserrat_24, LV_PART_MAIN);
-  lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_pad_top(tab_status, 3, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(tab_status, 3, LV_PART_MAIN);
   lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
+
   lv_obj_t *extra_label = lv_label_create(tab_status);
-  lv_obj_set_style_text_font(extra_label, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_label_set_text(extra_label, "");
-  lv_obj_set_style_text_align(extra_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 }
 
 void tab_lovense::tab_create_battery(lv_obj_t *tv2) {
@@ -266,11 +263,7 @@ void tab_lovense::tab_create_battery(lv_obj_t *tv2) {
 
 void tab_lovense::tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
-
-  lv_obj_set_style_pad_left(page, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_top(page, 10, LV_PART_MAIN);
-  lv_obj_set_style_pad_right(page, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_bottom(page, 0, LV_PART_MAIN);
+  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
 
   modeselect->createdropdown(page, lovense_main_modes_c);
   lv_obj_add_event_cb(modeselect->getdropdownobject(), lovense_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);

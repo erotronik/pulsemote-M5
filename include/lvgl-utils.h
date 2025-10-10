@@ -10,6 +10,9 @@ constexpr int32_t SCREENH = 240;
 constexpr int32_t dropdown_height = 40;
 constexpr int32_t dropdown_width = 160;
 
+extern lv_style_t lvpulsemote_style_status;
+extern lv_style_t lvpulsemote_style_tab;
+
 void m5io_showanalogrgb(byte sw, const lv_color_t rgb);
 
 int lv_get_tabview_idx_from_page(lv_obj_t *l, lv_obj_t *page);
@@ -18,3 +21,4 @@ uint32_t lvgl_tick_function(void);
 void lvgl_touchpad_read(lv_indev_t *drv, lv_indev_data_t *data);
 void lv_hide_tab(lv_obj_t *page);
 void printf_log(const char *format, ...);
+void lv_init_pulsemote(void);
