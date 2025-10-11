@@ -27,19 +27,16 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
     main_mode = MODE_MANUAL;
     modeselect->reset();
     ison = false;
-    md->get().chan_a().put_setmode(M_NONE);
-    md->get().chan_b().put_setmode(M_NONE); 
+    md->set_ab_mode(M_NONE,M_NONE);
   }
   if (main_mode == MODE_SYNC) {
     bool isinverted = sync->isinverted();
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
-      md->get().chan_a().put_setmode(mode_a);
-      md->get().chan_b().put_setmode(mode_b); 
+      md->set_ab_mode(mode_a,mode_b);
     } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
       ison = false;
-      md->get().chan_a().put_setmode(M_NONE);
-      md->get().chan_b().put_setmode(M_NONE); 
+      md->set_ab_mode(M_NONE,M_NONE);
     }
     need_refresh = true;
   }
@@ -69,13 +66,11 @@ void tab_coyote::switch_change(int sw, boolean state) {
     device_coyote *md = static_cast<device_coyote*>(device);
     if (ison == 0) {
       ison = 1;
-      md->get().chan_a().put_setmode(mode_a);
-      md->get().chan_b().put_setmode(mode_b); 
+      md->set_ab_mode(mode_a,mode_b);
       send_sync_data(SYNC_ON);
     } else {
       ison = 0;
-      md->get().chan_a().put_setmode(M_NONE);
-      md->get().chan_b().put_setmode(M_NONE);
+      md->set_ab_mode(M_NONE,M_NONE);
       send_sync_data(SYNC_OFF);
     }
   }
@@ -85,8 +80,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
     main_mode = MODE_MANUAL;
     modeselect->reset();
     ison = false;
-    md->get().chan_a().put_setmode(M_NONE);
-    md->get().chan_b().put_setmode(M_NONE); 
+    md->set_ab_mode(M_NONE,M_NONE);
   }
 
   if (sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) { // click to move to the next mode, then back to start
@@ -106,11 +100,11 @@ void tab_coyote::switch_change(int sw, boolean state) {
       i++;
     }
     if (sw == tab_object_buttonbar::rotary1)  {
-      md->get().chan_a().put_setmode(md->modes[i]);
       mode_a = md->modes[i];
+      md->set_ab_mode(mode_a,-1);
     } else {
       md->get().chan_b().put_setmode(md->modes[i]);
-      mode_b = md->modes[i];
+      md->set_ab_mode(-1,mode_b);
     }
   }
 }
@@ -144,22 +138,14 @@ void tab_coyote::loop(bool active) {
       need_refresh = true;
       if (ison == 0) {
         ison = 1;
-        md->get().chan_a().put_setmode(mode_a);
-        md->get().chan_b().put_setmode(mode_b);
+        md->set_ab_mode(mode_a,mode_b);
         send_sync_data(SYNC_ON);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeon() * 1000;
-        else
-          timermillis = millis() + timer->gettimeon() * 1000;
+        timermillis = millis() + (main_mode == MODE_RANDOM ? rand_timer->gettimeon() : timer->gettimeon()) * 1000;
       } else {
         ison = 0;
-        md->get().chan_a().put_setmode(M_NONE);
-        md->get().chan_b().put_setmode(M_NONE);   
+        md->set_ab_mode(M_NONE,M_NONE);
         send_sync_data(SYNC_OFF);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeoff() * 1000;
-        else
-          timermillis = millis() + timer->gettimeoff() * 1000;
+        timermillis = millis() + (main_mode == MODE_RANDOM ? rand_timer->gettimeoff() : timer->gettimeon()) * 1000;
       }
     }
     if (active) {
