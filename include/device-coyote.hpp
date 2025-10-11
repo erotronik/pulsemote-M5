@@ -23,8 +23,8 @@ class device_coyote : public Device {
   int getmodel() { return coyote.getmodel(); }
 
   void set_ab_mode(int a, int b) {
-    if (a>0) coyote.chan_a().put_setmode((coyote_mode)a);
-    if (b>0) coyote.chan_b().put_setmode((coyote_mode)b);
+    if (a>=0) coyote.chan_a().put_setmode((coyote_mode)a);
+    if (b>=0) coyote.chan_b().put_setmode((coyote_mode)b);
   }
 
   const char* getShortName() const override { 

@@ -258,8 +258,7 @@ boolean tab_coyote::hardware_changed(void) {
     coyote_tab_create();
     printf_log("Connected Coyote battery %d%%\n",cd->get().get_batterylevel());
     send_sync_data(SYNC_START);
-    cd->get().chan_a().put_setmode(M_BREATH);
-    cd->get().chan_b().put_setmode(M_BREATH);
+    cd->set_ab_mode(M_BREATH,M_BREATH);
     send_sync_data(SYNC_ON);
   } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());
