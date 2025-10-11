@@ -12,6 +12,7 @@ constexpr int32_t dropdown_width = 160;
 
 extern lv_style_t lvpulsemote_style_status;
 extern lv_style_t lvpulsemote_style_tab;
+extern lv_style_t lvpulsemote_style_checked;
 
 void m5io_showanalogrgb(byte sw, const lv_color_t rgb);
 

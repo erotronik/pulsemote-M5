@@ -7,6 +7,7 @@
 
 lv_style_t lvpulsemote_style_status;
 lv_style_t lvpulsemote_style_tab;
+lv_style_t lvpulsemote_style_checked;
 
 void lv_init_pulsemote(void) {
   lv_style_init(&lvpulsemote_style_status);
@@ -18,6 +19,10 @@ void lv_init_pulsemote(void) {
   lv_style_init(&lvpulsemote_style_tab);
   lv_style_set_pad_all(&lvpulsemote_style_tab, 0);
   lv_style_set_pad_top(&lvpulsemote_style_tab, 10);
+
+  lv_style_init(&lvpulsemote_style_checked);
+  lv_style_set_bg_color(&lvpulsemote_style_checked, lv_palette_main(LV_PALETTE_BLUE));
+  lv_style_set_bg_opa(&lvpulsemote_style_checked, LV_OPA_COVER);
 }
 
 

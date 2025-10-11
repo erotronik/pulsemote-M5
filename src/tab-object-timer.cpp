@@ -100,6 +100,23 @@ int tab_object_timer::gettimeoff(void) {
     return value[1];
 }
 
+static lv_obj_t *make_grid_btn(lv_obj_t *parent, lv_align_t align, int value, void *user_data,  void *t, lv_event_cb_t cb)
+{
+    lv_obj_t *btn = lv_button_create(parent);
+    lv_obj_set_style_bg_color(btn, lv_color_hex(0x000044), LV_PART_MAIN);
+    lv_obj_add_event_cb(btn, cb, LV_EVENT_ALL, t);
+    lv_obj_set_size(btn, 55, 30);
+    lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
+    lv_obj_set_user_data(btn, user_data);
+    lv_obj_add_style(btn, &lvpulsemote_style_checked, LV_STATE_CHECKED);
+    lv_obj_align(btn, align, 0, 0);
+
+    lv_obj_t *label = lv_label_create(btn);
+    lv_label_set_text_fmt(label, "%d", value);
+    lv_obj_center(label);
+    return btn;
+}
+
 void tab_object_timer::view(lv_obj_t *tv2) {
   lv_obj_t *timerc = lv_obj_create(tv2);
   lv_obj_align(timerc, LV_ALIGN_TOP_RIGHT, 0, dropdown_height+6);
@@ -109,69 +126,19 @@ void tab_object_timer::view(lv_obj_t *tv2) {
   active_btn = NULL;
   container = timerc;
 
-  value[0] = 5;
-  value[1] = 10;
-  value[2] = 20;
-  value[3] = 30;
-  if (!moderandom) {
-    value[0] = 5;
-    value[1] = 10;
+  if (moderandom) {
+    value[0] = 5; value[1] = 10; value[2] = 20; value[3] = 30;
+  } else {
+    value[0] = 5; value[1] = 10;
   }
   static uint32_t id1 = 1, id2 = 2, id3 = 3, id4 = 4;
-
-  static lv_style_t style_checked;
-  lv_style_init(&style_checked);
-  lv_style_set_bg_color(&style_checked, lv_palette_main(LV_PALETTE_BLUE));
-  lv_style_set_bg_opa(&style_checked, LV_OPA_COVER);
+  static uint32_t ids[4] = { 1, 2, 3, 4 };
 
   if (moderandom) {
-    lv_obj_t *t1a = lv_button_create(timerc);
-    lv_obj_align(t1a, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_size(t1a, 55, 30);
-    lv_obj_set_style_bg_color(t1a, lv_color_hex(0x000044), LV_PART_MAIN);
-    lv_obj_t *t1a1 = lv_label_create(t1a);
-    lv_label_set_text_fmt(t1a1, "%d", value[0]);
-    lv_obj_set_style_text_align(t1a1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_add_event_cb(t1a, event_handler, LV_EVENT_ALL, this);
-    lv_obj_add_flag(t1a, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_user_data(t1a, &id1);
-    lv_obj_add_style(t1a, &style_checked, LV_STATE_CHECKED);
-
-    lv_obj_t *t2a = lv_button_create(timerc);
-    lv_obj_align(t2a, LV_ALIGN_TOP_RIGHT, 0, 0);
-    lv_obj_set_size(t2a, 55, 30);
-    lv_obj_set_style_bg_color(t2a, lv_color_hex(0x000044), LV_PART_MAIN);
-    lv_obj_t *t2a1 = lv_label_create(t2a);
-    lv_label_set_text_fmt(t2a1, "%d", value[1]);
-    lv_obj_set_style_text_align(t2a1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_add_event_cb(t2a, event_handler, LV_EVENT_ALL, this);
-    lv_obj_add_flag(t2a, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_user_data(t2a, &id2);
-    lv_obj_add_style(t2a, &style_checked, LV_STATE_CHECKED);
-
-    lv_obj_t *t3a = lv_button_create(timerc);
-    lv_obj_align(t3a, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    lv_obj_set_size(t3a, 55, 30);
-    lv_obj_set_style_bg_color(t3a, lv_color_hex(0x000044), LV_PART_MAIN);
-    lv_obj_t *t3a1 = lv_label_create(t3a);
-    lv_label_set_text_fmt(t3a1, "%d", value[2]);
-    lv_obj_set_style_text_align(t3a1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_add_event_cb(t3a, event_handler, LV_EVENT_ALL, this);
-    lv_obj_add_flag(t3a, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_user_data(t3a, &id3);
-    lv_obj_add_style(t3a, &style_checked, LV_STATE_CHECKED);
-
-    lv_obj_t *t4a = lv_button_create(timerc);
-    lv_obj_align(t4a, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
-    lv_obj_set_size(t4a, 55, 30);
-    lv_obj_set_style_bg_color(t4a, lv_color_hex(0x000044), LV_PART_MAIN);
-    lv_obj_t *t4a1 = lv_label_create(t4a);
-    lv_label_set_text_fmt(t4a1, "%d", value[3]);
-    lv_obj_set_style_text_align(t4a1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_add_event_cb(t4a, event_handler, LV_EVENT_ALL, this);
-    lv_obj_add_flag(t4a, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_user_data(t4a, &id4);
-    lv_obj_add_style(t4a, &style_checked, LV_STATE_CHECKED);
+    (void)make_grid_btn(timerc, LV_ALIGN_TOP_LEFT, value[0], &ids[0], this, event_handler); 
+    (void)make_grid_btn(timerc, LV_ALIGN_TOP_RIGHT, value[1], &ids[1], this, event_handler);
+    (void)make_grid_btn(timerc, LV_ALIGN_BOTTOM_LEFT, value[2], &ids[2], this, event_handler);
+    (void)make_grid_btn(timerc, LV_ALIGN_BOTTOM_RIGHT, value[3], &ids[3], this, event_handler);
 
     lv_obj_t *t1 = lv_label_create(timerc);
     lv_obj_align(t1, LV_ALIGN_TOP_MID, 0, 6);
@@ -186,29 +153,8 @@ void tab_object_timer::view(lv_obj_t *tv2) {
   } else {
     // lv_obj_set_size(timerc, dropdown_width, 76);
 
-    lv_obj_t *t2a = lv_button_create(timerc);
-    lv_obj_align(t2a, LV_ALIGN_TOP_RIGHT, 0, 0);
-    lv_obj_set_size(t2a, 55, 30);
-    lv_obj_set_style_bg_color(t2a, lv_color_hex(0x000044), LV_PART_MAIN);
-    lv_obj_t *t2a1 = lv_label_create(t2a);
-    lv_label_set_text_fmt(t2a1, "%d", value[0]);
-    lv_obj_set_style_text_align(t2a1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_add_event_cb(t2a, event_handler, LV_EVENT_ALL, this);
-    lv_obj_add_flag(t2a, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_user_data(t2a, &id1);
-    lv_obj_add_style(t2a, &style_checked, LV_STATE_CHECKED);
-
-    lv_obj_t *t4a = lv_button_create(timerc);
-    lv_obj_align(t4a, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
-    lv_obj_set_size(t4a, 55, 30);
-    lv_obj_set_style_bg_color(t4a, lv_color_hex(0x000044), LV_PART_MAIN);
-    lv_obj_t *t4a1 = lv_label_create(t4a);
-    lv_label_set_text_fmt(t4a1, "%d", value[1]);
-    lv_obj_set_style_text_align(t4a1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_add_event_cb(t4a, event_handler, LV_EVENT_ALL, this);
-    lv_obj_add_flag(t4a, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_user_data(t4a, &id2);
-    lv_obj_add_style(t4a, &style_checked, LV_STATE_CHECKED);
+    (void)make_grid_btn(timerc, LV_ALIGN_TOP_RIGHT, value[0], &id1, this, event_handler);
+    (void)make_grid_btn(timerc, LV_ALIGN_BOTTOM_RIGHT, value[1], &id2, this, event_handler);
 
     lv_obj_t *t1 = lv_label_create(timerc);
     lv_obj_align(t1, LV_ALIGN_TOP_MID, 0, 6);
