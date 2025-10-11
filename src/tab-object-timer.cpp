@@ -131,7 +131,6 @@ void tab_object_timer::view(lv_obj_t *tv2) {
   } else {
     value[0] = 5; value[1] = 10;
   }
-  static uint32_t id1 = 1, id2 = 2, id3 = 3, id4 = 4;
   static uint32_t ids[4] = { 1, 2, 3, 4 };
 
   if (moderandom) {
@@ -153,8 +152,8 @@ void tab_object_timer::view(lv_obj_t *tv2) {
   } else {
     // lv_obj_set_size(timerc, dropdown_width, 76);
 
-    (void)make_grid_btn(timerc, LV_ALIGN_TOP_RIGHT, value[0], &id1, this, event_handler);
-    (void)make_grid_btn(timerc, LV_ALIGN_BOTTOM_RIGHT, value[1], &id2, this, event_handler);
+    (void)make_grid_btn(timerc, LV_ALIGN_TOP_RIGHT, value[0], &ids[0], this, event_handler);
+    (void)make_grid_btn(timerc, LV_ALIGN_BOTTOM_RIGHT, value[1], &ids[1], this, event_handler);
 
     lv_obj_t *t1 = lv_label_create(timerc);
     lv_obj_align(t1, LV_ALIGN_TOP_MID, 0, 6);
