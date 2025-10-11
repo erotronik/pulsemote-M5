@@ -103,7 +103,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
       mode_a = md->modes[i];
       md->set_ab_mode(mode_a,-1);
     } else {
-      md->get().chan_b().put_setmode(md->modes[i]);
+      mode_b = md->modes[i];
       md->set_ab_mode(-1,mode_b);
     }
   }
