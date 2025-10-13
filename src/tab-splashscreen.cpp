@@ -57,7 +57,7 @@ void tab_splashscreen::loop(boolean activetab) {
     }
     m5io_showanalogrgb(5, lv_color_hsv_to_rgb(0, 0, 5));  // cherry LED (very bright)
   }
-  if (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 20000) { // every 20 sec
+  if (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 2000) { // every 2 sec
     updateicons();
     batterycheckmillis = millis();
   }
@@ -95,7 +95,7 @@ void tab_splashscreen::setup(void) {
   page = lv_tabview_add_tab(tv, gettabname());
 
   lv_obj_set_style_pad_all(page, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_top(page, 4, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(page, 8, LV_PART_MAIN);
 
   // always first child
   lv_obj_t *lv_debug_window = lv_textarea_create(page);

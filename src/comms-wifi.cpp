@@ -178,13 +178,13 @@ void wifi_task(void* pvParameters) {
   // cores3 pc_tx (g17) pc_rx (g18); bus_pc_rx/tx
   espat_copro_port.begin(115200, SERIAL_8N1, 18, 17);
   //self->sendAT("AT+UART_DEF=115200,8,1,0,0"); if you want to run it slower
-  vTaskDelay(3000 / portTICK_PERIOD_MS);
+  vTaskDelay(500 / portTICK_PERIOD_MS);
 
   while (true) {
     if (cstate_timeout !=0 && millis() > cstate_timeout + 20000) {
       cstate = 0;
       ESP_LOGD("espat","timeout will retry");
-      vTaskDelay(5000 / portTICK_PERIOD_MS);
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 #ifdef CONFIG_WIFI_SSID
     if (cstate == 0) {
