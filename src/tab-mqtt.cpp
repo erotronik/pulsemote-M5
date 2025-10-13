@@ -4,7 +4,11 @@
 #include "comms-wifi.hpp"
 #include "config.h"
 #include "tab-mqtt.hpp"
+
+#ifdef CONFIG_MQTT_SERVER
 #include "tab-mqtt-socket.hpp"
+#include "tab-mqtt-stroker.hpp"
+#endif
 
 #include <freertos/queue.h>
 #include <freertos/task.h>
@@ -116,13 +120,14 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
     char * txt = lv_label_get_text(lv_obj_get_child(t->selected_btn,0));
     ESP_LOGD("popup","selected %s",txt);
 
+#ifdef CONFIG_MQTT_SERVER
     if (!strncmp(txt,"socket",6)) {
       char topic[100];
       snprintf(topic,sizeof(topic)-1, "zigbee2mqtt/%s/set", txt);
       ESP_LOGD("popup","creating %s",topic);
       boolean exists = false;
       for (const auto& allt : tabs) {
-        if (!strcmp(allt->gettabname(),txt))
+        if (!strcasecmp(allt->gettabname(),txt))
           exists = true;
       }
       if (!exists) {
@@ -132,6 +137,20 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
         tabs.emplace_back(mv);
       }
     }
+    if (!strncasecmp(txt,"stroker",7)) {
+      boolean exists = false;
+      for (const auto& allt : tabs) {
+        if (!strcasecmp(allt->gettabname(),txt))
+          exists = true;
+      }
+      if (!exists) {
+        tab_stroker *mv = new tab_stroker();
+        mv->setup();
+        mv->focus_change(true);
+        tabs.emplace_back(mv);
+      }
+    }
+#endif
   }
   lv_obj_del(t->popup_add_device_modal); // Close the message box
   t->popup_add_device_open = false;
