@@ -32,6 +32,10 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
   lv_obj_set_width(container, LV_PCT(100));
   lv_obj_set_height(container, LV_SIZE_CONTENT);
 
+  lv_obj_set_style_pad_top(container, 25, 0);     // <-- add headroom
+  //lv_obj_set_height(container, 60 + 18);          // <-- arc(60) + headroom
+
+
   for (int i = 0; i < 5; i++) {
     arc[i] = lv_arc_create(container);
     lv_obj_set_size(arc[i], 60, 60);
@@ -46,7 +50,41 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
     lv_label_set_text(xarclabel, "");
     lv_obj_set_style_text_align(xarclabel, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_center(xarclabel);
+
+    // --- Badge ABOVE the arc (compact, won't cover the circle) ---
+    press[i] = lv_obj_create(container);
+    lv_obj_add_flag(press[i], LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_style_all(press[i]);                           // start clean
+    lv_obj_set_size(press[i], LV_SIZE_CONTENT, LV_SIZE_CONTENT); // <- key: autosize to content
+    lv_obj_clear_flag(press[i], LV_OBJ_FLAG_SCROLLABLE);         // no internal scroll
+    lv_obj_set_style_radius(press[i], 8, 0);
+    lv_obj_set_style_bg_opa(press[i], LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(press[i], lv_palette_darken(LV_PALETTE_BLUE, 3), 0);
+    lv_obj_set_style_pad_hor(press[i], 6, 0);
+    lv_obj_set_width(press[i],60);
+    lv_obj_set_style_pad_ver(press[i], 2, 0);
+    lv_obj_set_style_border_width(press[i], 0, 0);
+
+    // Label inside the badge
+    lv_obj_t *badge_label = lv_label_create(press[i]);
+    lv_label_set_text(badge_label, "");
+    lv_label_set_long_mode(badge_label, LV_LABEL_LONG_CLIP);  // don't wrap "te te te ..."
+    lv_obj_set_style_text_color(badge_label, lv_color_white(), 0);
+    lv_obj_center(badge_label);
+
+    // Place the badge just above the arc
+    lv_obj_align_to(press[i], arc[i], LV_ALIGN_OUT_TOP_MID, 0, -6);
+
     //lv_obj_add_event_cb(arc[i], mk312_arc_event_handler, LV_EVENT_ALL, this);
+  }
+}
+
+void tab_object_buttonbar::set_click_text(int button, const char *text) {
+  if (text == "" ) {
+  lv_obj_add_flag(press[buttonmaptoposition[button]], LV_OBJ_FLAG_HIDDEN);
+  } else {
+    lv_obj_clear_flag(press[buttonmaptoposition[button]], LV_OBJ_FLAG_HIDDEN);
+    lv_label_set_text(lv_obj_get_child(press[buttonmaptoposition[button]], 0), text);
   }
 }
 
