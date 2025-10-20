@@ -33,8 +33,6 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
   lv_obj_set_height(container, LV_SIZE_CONTENT);
 
   lv_obj_set_style_pad_top(container, 25, 0);     // <-- add headroom
-  //lv_obj_set_height(container, 60 + 18);          // <-- arc(60) + headroom
-
 
   for (int i = 0; i < 5; i++) {
     arc[i] = lv_arc_create(container);

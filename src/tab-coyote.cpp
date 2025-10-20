@@ -172,6 +172,9 @@ void tab_coyote::loop(bool active) {
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%" LV_PRId32 "%%", power);
     buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, power));
 
+    buttonbar->set_click_text(tab_object_buttonbar::rotary1,ison?"Mode A":"");
+    buttonbar->set_click_text(tab_object_buttonbar::rotary2,ison?"Mode B":"");
+
     if (ison) {
       mode_a = md->get().chan_a().get_mode();
       mode_b = md->get().chan_b().get_mode();
@@ -241,6 +244,7 @@ void tab_coyote::coyote_tab_create() {
   lv_obj_add_event_cb(modeselect->getdropdownobject(), coyote_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
   
   buttonbar = new tab_object_buttonbar(page);
+
   tab_create_status(page);
   rand_timer->view(page);
   timer->view(page);
