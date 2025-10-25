@@ -177,12 +177,13 @@ void handlehardwarecallbacks() {
       t->needssetup = false;
     }
     if (t->old_last_change != t->last_change) {
-      ESP_LOGD("main", "%s changed state: %d %d", t->device->getShortName(), (int)t->last_change, (int)t->old_last_change);
+      ESP_LOGD("main", "%s changed state: %d %d", t->gettabname(), (int)t->last_change, (int)t->old_last_change);
       if (!t->hardware_changed()) {
         // false means the device has gone away, get rid of the tab
-        ESP_LOGI("main","removing tab %s", t->device->getShortName());
+        ESP_LOGI("main","removing tab %s", t->gettabname());
         lv_hide_tab(t->page);
         st = tabs.erase(st);
+        return;
       }
       t->old_last_change = t->last_change;
     }
