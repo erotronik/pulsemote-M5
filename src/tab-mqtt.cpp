@@ -182,22 +182,6 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
         tabs.emplace_back(mv);
       }
     }
-    if (!strncmp(txt,"leds ",4)) {
-      char topic[100];
-      snprintf(topic,sizeof(topic)-1, "wled/%s", txt+5);
-      ESP_LOGD("popup","creating %s",topic);
-      boolean exists = false;
-      for (const auto& allt : tabs) {
-        if (!strcasecmp(allt->gettabname(),txt+5))
-          exists = true;
-      }
-      if (!exists) {
-        tab_mqtt_leds *mv = new tab_mqtt_leds(txt+5, topic);
-        mv->setup();
-        mv->focus_change(true);
-        tabs.emplace_back(mv);
-      }
-    }
     if (!strncasecmp(txt,"stroker",7)) {
       boolean exists = false;
       for (const auto& allt : tabs) {
