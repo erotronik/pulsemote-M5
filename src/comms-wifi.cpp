@@ -2,6 +2,7 @@
 #include "device.hpp"
 #include "lvgl-utils.h"
 #include "config.h"
+#include "comms-wifi.hpp"
 #include "tab-mqtt.hpp"
 #include "tab-mqtt-socket.hpp"
 
@@ -19,14 +20,9 @@ static const int RESPONSE_ERROR = (1 << 1) ;
 int cstate = 0;
 unsigned long cstate_timeout;
 
-static const int max_topic_size = 100;
-static const int max_message_size = 256;
-typedef struct {
-      int command;
-      char topic[max_topic_size];
-      char message[max_message_size];
-} mqttsenditem;
-QueueHandle_t mqttsenthandle, mqttsubhandle;
+QueueHandle_t mqttsubhandle;
+QueueHandle_t mqttsenthandle;
+
 
 void mqttsend(const char *topic, const char *message) {
   mqttsenditem item;
@@ -48,12 +44,12 @@ bool is_wifi_connected() {
 }
 
 bool wifi_loop() {
-    mqttsenditem item;
+//    mqttsenditem item;
 
-    while (xQueueReceive(mqttsubhandle, &item, 0)) {
-        ESP_LOGD("wifi_loop","%s=%s",item.topic,item.message);
-    }
-    return false;
+//   while (xQueueReceive(mqttsubhandle, &item, 0)) {
+//       ESP_LOGD("wifi_loop","%s=%s",item.topic,item.message);
+ //   }
+ //   return false;
 }
 
 void espat_handleLine(const String& line) {
@@ -87,24 +83,52 @@ void espat_handleLine(const String& line) {
   } else if (line == "ERROR") {
     xEventGroupSetBits(responseFlags, RESPONSE_ERROR);
   } else {
-    if (line.startsWith("+MQTTSUBRECV")) {
-      int valueStart = 16;
-      int valueEnd = line.indexOf("\"", valueStart);
-      if (valueEnd > valueStart) {
-        String topic = line.substring(valueStart,valueEnd);
-      
-        int stateIndex = line.indexOf(",O");
-        if (stateIndex >= 0) {
-          valueStart = stateIndex + 1;
-          mqttsenditem item;
-          String message = line.substring(valueStart);
-          ESP_LOGD("mqtt rx","%s=%s",topic.c_str(),message.c_str());
-          strncpy(item.topic, topic.c_str(), max_topic_size-1);
-          strncpy(item.message, message.c_str(), max_message_size-1);
-          xQueueSend(mqttsubhandle, &item, 0);
+ if (line.startsWith("+MQTTSUBRECV")) {
+  // Example: +MQTTSUBRECV:0,"wled/red/status",7,offline
+  int q1 = line.indexOf('"');
+  if (q1 > 0) {
+    int q2 = line.indexOf('"', q1 + 1);
+    if (q2 > q1) {
+      String topic = line.substring(q1 + 1, q2);
+
+      // After closing quote: ,<len>,<data>
+      int comma_after_topic = line.indexOf(',', q2 + 1);
+      if (comma_after_topic > 0) {
+        int comma_after_len = line.indexOf(',', comma_after_topic + 1);
+        if (comma_after_len > comma_after_topic) {
+          // Parse length
+          String lenStr = line.substring(comma_after_topic + 1, comma_after_len);
+          lenStr.trim();
+          int payload_len = lenStr.toInt();
+
+          // Start of payload
+          int data_start = comma_after_len + 1;
+          if (data_start >= 0 && data_start < line.length()) {
+            // Take exactly payload_len bytes if available; otherwise take the rest
+            int available = line.length() - data_start;
+            int take = (payload_len > 0 && payload_len <= available) ? payload_len : available;
+            String message = line.substring(data_start, data_start + take);
+
+            // Trim trailing CR/LF if length wasn't strict
+            while (message.endsWith("\r") || message.endsWith("\n")) {
+              message.remove(message.length() - 1);
+            }
+
+            // Prepare and enqueue
+            mqttsenditem item;
+            // Ensure NUL-termination in fixed-size buffers
+            snprintf(item.topic,   max_topic_size,   "%s", topic.c_str());
+            snprintf(item.message, max_message_size, "%s", message.c_str());
+
+            ESP_LOGD("mqtt rx", "%s=%s", item.topic, item.message);
+            xQueueSend(mqttsubhandle, &item, 0);
+          }
         }
       }
-      //ESP_LOGD("[SUB] ","%s", line.c_str());
+    }
+  }
+
+
     } else {
       //ESP_LOGD("[ASYNC] ","%s", line.c_str());
     }
@@ -221,6 +245,7 @@ void wifi_task(void* pvParameters) {
     espat_processSerialInput();
     if (wifi_connected) {
       while (xQueueReceive(mqttsenthandle, &mqtttosend, 0)) {
+        ESP_LOGD("mqtt","handling item with topic %s", mqtttosend.topic);
         if (mqtttosend.command == 0) {
             espat_sendATCommand("AT+MQTTPUB=0,\""+String(mqtttosend.topic)+"\",\""+String(mqtttosend.message)+"\",1,0");
         } else if (mqtttosend.command == 1) {
@@ -236,5 +261,6 @@ void wifi_task(void* pvParameters) {
 void wifi_setup() {
     mqttsenthandle = xQueueCreate(10,sizeof(mqttsenditem));
     mqttsubhandle = xQueueCreate(10,sizeof(mqttsenditem));
+    wifi_connected = false;
     xTaskCreatePinnedToCore(wifi_task, "wifi", 1024 * 12, NULL, 1, nullptr, 0); // run wifi also on core0
 }
