@@ -8,6 +8,7 @@
 #ifdef CONFIG_MQTT_SERVER
 #include "tab-mqtt-socket.hpp"
 #include "tab-mqtt-stroker.hpp"
+#include "tab-mqtt-leds.hpp"
 #endif
 
 #include <freertos/queue.h>
@@ -21,6 +22,51 @@ void tab_mqtt::loop(boolean activetab) {
   //sync_data syncstatus;
   //if (xQueueReceive(events, &syncstatus, 0))
   //  send_sync_data(syncstatus);
+
+   mqttsenditem item;
+
+  if (xQueueReceive(mqttsubhandle, &item, 0)) {
+    ESP_LOGD("","%s=%s",item.topic,item.message);
+    if (!strncmp(item.topic,"wled/",4)) {
+      char *first = strchr(item.topic,'/');                 // after "wled"
+      if (first) {
+        char *second = strchr(first+1,'/');
+        if (second) {
+          char mid[35];
+          size_t len = second - (first + 1);
+          if (len >= sizeof(mid)) len = sizeof(mid) - 1;
+          strncpy(mid, first + 1, len);
+          mid[len] = '\0';
+
+          if (!strcmp(item.message,"online")) {
+            char topic[100];
+            snprintf(topic,sizeof(topic)-1, "wled/%s", mid);
+            ESP_LOGD("popup","creating %s",topic);
+            boolean exists = false;
+            for (const auto& allt : tabs) {
+              if (!strcasecmp(allt->gettabname(),mid))
+                exists = true;
+            }
+            if (!exists) {
+              tab_mqtt_leds *mv = new tab_mqtt_leds(mid, topic);
+              mv->setup();
+              mv->focus_change(true);
+              tabs.emplace_back(mv);
+            }
+          }
+          if (!strcmp(item.message,"offline")) {
+            for (const auto& allt : tabs) {
+              if (!strcasecmp(allt->gettabname(),mid)) {
+                ESP_LOGE("mqtt","found tab %s delete", allt->gettabname());
+                allt->last_change = D_DISCONNECTED;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   wifi_loop();
 }
 
@@ -38,6 +84,7 @@ void tab_mqtt::setup(void) {
   mt->device = nullptr;
   mt->last_change = mt->old_last_change = D_NONE;
   wifi_setup();  
+  mqttsubscribe("wled/+/status");
 }
 
 #if 0
@@ -52,8 +99,6 @@ void tab_mqtt::callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 #endif
-
-static const int max_topic_size = 100;
 
 void tab_mqtt::gotsyncdata(Tab *t, sync_data status) {
   char topic[max_topic_size];
@@ -132,6 +177,22 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
       }
       if (!exists) {
         tab_mqtt_socket *mv = new tab_mqtt_socket(txt, topic);
+        mv->setup();
+        mv->focus_change(true);
+        tabs.emplace_back(mv);
+      }
+    }
+    if (!strncmp(txt,"leds ",4)) {
+      char topic[100];
+      snprintf(topic,sizeof(topic)-1, "wled/%s", txt+5);
+      ESP_LOGD("popup","creating %s",topic);
+      boolean exists = false;
+      for (const auto& allt : tabs) {
+        if (!strcasecmp(allt->gettabname(),txt+5))
+          exists = true;
+      }
+      if (!exists) {
+        tab_mqtt_leds *mv = new tab_mqtt_leds(txt+5, topic);
         mv->setup();
         mv->focus_change(true);
         tabs.emplace_back(mv);
