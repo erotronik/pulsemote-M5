@@ -211,6 +211,9 @@ void tab_ossm::loop(boolean activetab) {
     buttonbar->set_value(tab_object_buttonbar::rotary3,knob_depth);
     buttonbar->set_rgb(tab_object_buttonbar::rotary3, lv_color_hsv_to_rgb(120, 100, knob_depth));
 
+    buttonbar->set_click_text(tab_object_buttonbar::rotary1,"patn");
+    buttonbar->set_click_text(tab_object_buttonbar::rotary2,main_pattern == 0? "" : "reset");
+
     segbar_set(&mybar, knob_depth-knob_stroke, knob_depth);
 
     if (main_mode == MODE_MANUAL) {
