@@ -220,6 +220,7 @@ void tab_mk312::loop(boolean activetab) {
 
     buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
     if (lockpanel) {
+      buttonbar->set_click_text(tab_object_buttonbar::rotary1,"");
       buttonbar->set_value(tab_object_buttonbar::rotary1,level_a);
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%" LV_PRId32 "%%", level_a);
       buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, level_a));
@@ -227,6 +228,7 @@ void tab_mk312::loop(boolean activetab) {
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%" LV_PRId32 "%%", level_b);
       buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b));
     } else {
+      buttonbar->set_click_text(tab_object_buttonbar::rotary1,"unlock");
       buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 0, 0));
       buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 0, 0));
       buttonbar->set_value(tab_object_buttonbar::rotary1,0);
