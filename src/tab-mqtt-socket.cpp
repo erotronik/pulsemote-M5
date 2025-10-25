@@ -26,18 +26,6 @@ void send_mqtt_data(const char *topic, const char *message) {
 }
 
 void tab_mqtt_socket::encoder_change(int sw, int change) {
-  if (sw == tab_object_buttonbar::rotary1) {
-    hue+=change*4;
-    // send "wled/red/col" "#rrggbb"
-    //lv_color_hsv_to_rgb(0, 100, power)
-    //
-    //char msg[8];
-    lv_color_t rgb = lv_color_hsv_to_rgb(hue, 100, 50);
-    //sprintf(msg,"#%02x%02x%02x",rgb.red,rgb.green,rgb.blue);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary1, rgb); 
-    huesend = millis()+500;
-    //send_mqtt_data("wled/red/col",msg);
-  }
   if (sw == tab_object_buttonbar::rotary4) {
     rand_timer->rotary_change(change);
     timer->rotary_change(change);
@@ -47,14 +35,6 @@ void tab_mqtt_socket::encoder_change(int sw, int change) {
 
 void tab_mqtt_socket::switch_change(int sw, boolean value) {
   need_refresh = true;
-
-  if (sw == tab_object_buttonbar::rotary1 && value) {
-    preset++;
-    if (preset > 5) preset = 0;
-    char msg[16];
-    sprintf(msg,"{\\\"ps\\\":%d}",preset); 
-    send_mqtt_data("wled/red/api",msg);
-  }
 
   if (sw == tab_object_buttonbar::rotary4 && value) {
     if (modeselect->has_focus()) {
@@ -119,15 +99,6 @@ void tab_mqtt_socket::gotsyncdata(Tab *t, sync_data syncstatus) {
 }
 
 void tab_mqtt_socket::loop(boolean activetab) {
-
-  if (huesend !=0 && millis() > huesend) {
-    huesend = 0;
-    char msg[8];
-    lv_color_t rgb = lv_color_hsv_to_rgb(hue, 100, 100);
-    sprintf(msg,"#%02x%02x%02x",rgb.red,rgb.green,rgb.blue);
-    send_mqtt_data("wled/red/col",msg);
-  }
-
   if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
     if (timermillis < millis()) {
       need_refresh = true;
@@ -177,8 +148,6 @@ void tab_mqtt_socket::loop(boolean activetab) {
   if (activetab && need_knob_refresh) {
     need_knob_refresh = false;
 
-    buttonbar->set_text(tab_object_buttonbar::rotary1,"LED");
-    buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(hue, 100, 50));
     if (main_mode == MODE_MANUAL) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
       buttonbar->set_value(tab_object_buttonbar::switch1,ison? 100:0);
@@ -193,14 +162,6 @@ void tab_mqtt_socket::loop(boolean activetab) {
       else
         buttonbar->set_value(tab_object_buttonbar::rotary4,0);
     }
-
-    //for (int i : {tab_object_buttonbar::rotary1, tab_object_buttonbar::rotary2, tab_object_buttonbar::rotary3, tab_object_buttonbar::rotary4, tab_object_buttonbar::switch1})
-    //  buttonbar->set_text(i,"");
-    //if (main_mode == MODE_MANUAL) {
-    //  buttonbar->set_text_fmt(tab_object_buttonbar::switch1,"On\nOff");
-    //  buttonbar->set_value(tab_object_buttonbar::switch1,ison? 100:0);
-    //} else
-    //  buttonbar->set_value(tab_object_buttonbar::switch1,0);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       if (rand_timer->has_focus() || timer->has_focus())
