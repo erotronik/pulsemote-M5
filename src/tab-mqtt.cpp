@@ -7,7 +7,6 @@
 
 #ifdef CONFIG_MQTT_SERVER
 #include "tab-mqtt-socket.hpp"
-#include "tab-mqtt-stroker.hpp"
 #include "tab-mqtt-leds.hpp"
 #endif
 
@@ -177,19 +176,6 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
       }
       if (!exists) {
         tab_mqtt_socket *mv = new tab_mqtt_socket(txt, topic);
-        mv->setup();
-        mv->focus_change(true);
-        tabs.emplace_back(mv);
-      }
-    }
-    if (!strncasecmp(txt,"stroker",7)) {
-      boolean exists = false;
-      for (const auto& allt : tabs) {
-        if (!strcasecmp(allt->gettabname(),txt))
-          exists = true;
-      }
-      if (!exists) {
-        tab_stroker *mv = new tab_stroker();
         mv->setup();
         mv->focus_change(true);
         tabs.emplace_back(mv);

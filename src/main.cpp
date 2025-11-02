@@ -12,6 +12,7 @@
 #include "tab-coyote.hpp"
 #include "tab-mk312.hpp"
 #include "tab-thrustalot.hpp"
+#include "tab-funosr.hpp"
 #include "tab-lovense.hpp"
 #include "tab-splashscreen.hpp"
 #include "tab-ossm.hpp"
@@ -132,6 +133,8 @@ void device_change_handler(type_of_change t, Device *d) {
       ta = new tab_coyote();
     } else if (type == DeviceType::device_thrustalot) {
       ta = new tab_thrustalot();
+    } else if (type == DeviceType::device_funosr) {
+      ta = new tab_funosr();
     } else if (type == DeviceType::device_lovense) {
       ta = new tab_lovense();
     } else if (type == DeviceType::device_ossm) {
