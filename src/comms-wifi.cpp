@@ -49,7 +49,7 @@ bool wifi_loop() {
 //   while (xQueueReceive(mqttsubhandle, &item, 0)) {
 //       ESP_LOGD("wifi_loop","%s=%s",item.topic,item.message);
  //   }
- //   return false;
+  return false;
 }
 
 void espat_handleLine(const String& line) {
