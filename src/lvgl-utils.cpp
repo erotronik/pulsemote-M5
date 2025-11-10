@@ -3,6 +3,7 @@
 #include <lvgl.h>
 #include <M5Unified.h>
 #include "lvgl-utils.h"
+#include "tab-splashscreen.hpp"
 #include <tab.hpp>
 
 lv_style_t lvpulsemote_style_status;
@@ -37,10 +38,9 @@ void printf_log(const char *format, ...) {
   Serial.print(buf);
   if (tabs.size() > 0) {
     Tab *t = tabs.front();
-    if (t->page) {
-      lv_obj_t *child = lv_obj_get_child(t->page, 0);
-      lv_textarea_add_text(child, buf);
-    }
+    tab_splashscreen *ts = static_cast<tab_splashscreen *>(t);
+    if (ts)
+      lv_textarea_add_text(ts->lv_debug_window, buf);
   }
 }
 

@@ -94,27 +94,44 @@ void tab_splashscreen::encoder_change(int sw, int change) {
 void tab_splashscreen::setup(void) {
   page = lv_tabview_add_tab(tv, gettabname());
 
-  lv_obj_set_style_pad_all(page, 0, LV_PART_MAIN);
-  lv_obj_set_style_pad_top(page, 8, LV_PART_MAIN);
+// 2 columns (left/right), 3 rows (header / flexible middle / footer)
+static int32_t cols[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST };
+static int32_t rows[] = { LV_GRID_CONTENT, LV_GRID_FR(1), LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST };
+lv_obj_set_grid_dsc_array(page, cols, rows);
 
-  // always first child
-  lv_obj_t *lv_debug_window = lv_textarea_create(page);
-  lv_textarea_add_text(lv_debug_window, "");
-  lv_textarea_set_cursor_click_pos(lv_debug_window, false);
-  lv_obj_set_size(lv_debug_window, lv_pct(100), lv_pct(60));
-  lv_obj_set_align(lv_debug_window, LV_ALIGN_BOTTOM_LEFT);
+lv_obj_set_style_pad_all(page, 0, 0);
+lv_obj_set_style_pad_column(page, 0, 0);
+lv_obj_set_style_pad_row(page, 4, 0);
+lv_obj_set_style_pad_top(page, 4, 0);
 
-  labelicons = lv_label_create(page);
-  lv_label_set_text(labelicons, "");
-  lv_obj_set_style_text_align(labelicons, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_obj_align(labelicons, LV_ALIGN_TOP_RIGHT, -8, 0);
-  lv_obj_set_style_text_font(labelicons, &lv_font_montserrat_24, LV_PART_MAIN);
+addwifibutton = lv_btn_create(page);
+lv_obj_add_flag(addwifibutton, LV_OBJ_FLAG_HIDDEN);
+lv_obj_t *label = lv_label_create(addwifibutton);
+lv_obj_set_style_pad_top(addwifibutton, 4, LV_PART_MAIN);
+lv_obj_set_style_pad_bottom(addwifibutton, 4, LV_PART_MAIN);
+lv_label_set_text(label, "Add device");
+lv_obj_set_style_text_font(label, &lv_font_montserrat_24, LV_PART_MAIN);
+lv_obj_center(label);
+lv_obj_set_grid_cell(addwifibutton, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_START, 0, 1);
+lv_obj_add_event_cb(addwifibutton, popup_add_wifi_device, LV_EVENT_CLICKED, this);
 
-  addwifibutton = lv_btn_create(page);
-  lv_obj_add_flag(addwifibutton, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_align(addwifibutton, LV_ALIGN_TOP_LEFT, 8, 0);
-  lv_obj_t *label = lv_label_create(addwifibutton);
-  lv_label_set_text(label, "Add device");
-  lv_obj_center(label);
-  lv_obj_add_event_cb(addwifibutton, popup_add_wifi_device, LV_EVENT_CLICKED, this);
+labelicons = lv_label_create(page);
+lv_label_set_text(labelicons, "");
+lv_obj_set_style_text_align(labelicons, LV_TEXT_ALIGN_RIGHT, 0);
+lv_obj_set_style_text_font(labelicons, &lv_font_montserrat_24, LV_PART_MAIN);
+lv_obj_set_grid_cell(labelicons, LV_GRID_ALIGN_END, 1, 1, LV_GRID_ALIGN_START, 0, 1);
+
+lv_debug_window = lv_textarea_create(page);
+lv_textarea_add_text(lv_debug_window, "");
+lv_textarea_set_cursor_click_pos(lv_debug_window, false);
+lv_obj_set_grid_cell(lv_debug_window, LV_GRID_ALIGN_STRETCH, 0, 2, LV_GRID_ALIGN_STRETCH, 1, 1);
+lv_obj_set_width(lv_debug_window, lv_pct(100));
+lv_obj_set_style_text_font(lv_debug_window, &lv_font_montserrat_12, LV_PART_MAIN);
+
+buttonbar = new tab_object_buttonbar(page);
+
+lv_obj_set_style_pad_all(buttonbar->container, 0, 0);
+lv_obj_set_style_margin_all(buttonbar->container, 0, 0);
+lv_obj_set_grid_cell(buttonbar->container, LV_GRID_ALIGN_STRETCH, 0, 2, LV_GRID_ALIGN_END, 2, 1);
+
 }

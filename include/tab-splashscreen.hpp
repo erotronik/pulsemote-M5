@@ -14,6 +14,8 @@ class tab_splashscreen: public Tab {
     void loop(boolean activetab) override;
     void setup(void) override;
     const char* gettabname(void) override { return "Pulsemote";};
+    lv_obj_t *lv_debug_window;
+
 
     private:
      unsigned long batterycheckmillis = 0;

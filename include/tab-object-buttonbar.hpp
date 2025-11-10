@@ -20,9 +20,9 @@ class tab_object_buttonbar {
     static const int rotary4 = 3;
     static const int switch1 = 4;
     static const int maxbuttons = 5;
+    lv_obj_t *container;
 
   private:
-    lv_obj_t *container;
     lv_obj_t *arc[maxbuttons];
     lv_obj_t *press[maxbuttons];
     const int buttonmaptoposition[5] = { 1, 0, 3, 4, 2 };
