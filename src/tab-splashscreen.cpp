@@ -81,34 +81,42 @@ void tab_splashscreen::encoder_change(int sw, int change) {
 void tab_splashscreen::setup(void) {
   page = lv_tabview_add_tab(tv, gettabname());
 
-// 2 columns (left/right), 3 rows (header / flexible middle / footer)
-static int32_t cols[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST };
-static int32_t rows[] = { LV_GRID_CONTENT, LV_GRID_FR(1), LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST };
-lv_obj_set_grid_dsc_array(page, cols, rows);
+  lv_obj_set_style_pad_all(page, 0, 0);
+  lv_obj_set_style_pad_top(page, 8, 0);
 
-lv_obj_set_style_pad_all(page, 0, 0);
-lv_obj_set_style_pad_column(page, 0, 0);
-lv_obj_set_style_pad_row(page, 4, 0);
-lv_obj_set_style_pad_top(page, 4, 0);
+  lv_obj_t *dbg_wrap = lv_obj_create(page);
+  lv_obj_set_width(dbg_wrap, LV_PCT(100));
+  lv_obj_set_flex_grow(dbg_wrap, 1);
+  lv_obj_set_style_pad_all(dbg_wrap, 0, 0);
+  lv_obj_set_style_bg_opa(dbg_wrap, LV_OPA_TRANSP, 0);
+  lv_obj_set_style_border_width(dbg_wrap, 0, 0);
 
-labelicons = lv_label_create(page);
-lv_label_set_text(labelicons, "");
-lv_obj_set_style_text_align(labelicons, LV_TEXT_ALIGN_RIGHT, 0);
-lv_obj_set_style_text_font(labelicons, &lv_font_montserrat_24, LV_PART_MAIN);
-lv_obj_set_grid_cell(labelicons, LV_GRID_ALIGN_END, 1, 1, LV_GRID_ALIGN_START, 0, 1);
+  lv_debug_window = lv_textarea_create(dbg_wrap);
+  lv_textarea_add_text(lv_debug_window, "");
+  lv_textarea_set_cursor_click_pos(lv_debug_window, false);
+  lv_obj_set_size(lv_debug_window, LV_PCT(100), LV_PCT(100));
+  lv_obj_set_style_text_font(lv_debug_window, &lv_font_montserrat_14, LV_PART_MAIN);
 
-lv_debug_window = lv_textarea_create(page);
-lv_textarea_add_text(lv_debug_window, "");
-lv_textarea_set_cursor_click_pos(lv_debug_window, false);
-lv_obj_set_grid_cell(lv_debug_window, LV_GRID_ALIGN_STRETCH, 0, 2, LV_GRID_ALIGN_STRETCH, 1, 1);
-lv_obj_set_width(lv_debug_window, lv_pct(100));
-lv_obj_set_style_text_font(lv_debug_window, &lv_font_montserrat_12, LV_PART_MAIN);
+  lv_obj_t *icons_bg = lv_obj_create(dbg_wrap);
+  lv_obj_remove_style_all(icons_bg);
+  lv_obj_set_size(icons_bg, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_style_bg_color(icons_bg, lv_palette_main(LV_PALETTE_BLUE), 0);
+  lv_obj_set_style_bg_opa(icons_bg, LV_OPA_20, 0); 
+  lv_obj_set_style_radius(icons_bg, 6, 0);
+  lv_obj_set_style_pad_all(icons_bg, 4, 0); 
+  lv_obj_align(icons_bg, LV_ALIGN_TOP_RIGHT, -2, 2);
+  lv_obj_clear_flag(icons_bg, LV_OBJ_FLAG_CLICKABLE);
 
-buttonbar = new tab_object_buttonbar(page);
-buttonbar->set_text(tab_object_buttonbar::switch1,"Add\nDevice");
+  labelicons = lv_label_create(icons_bg);
+  lv_label_set_text(labelicons, ""); 
+  lv_obj_set_style_text_font(labelicons, &lv_font_montserrat_24, 0);
+  lv_obj_set_style_text_color(labelicons, lv_palette_main(LV_PALETTE_BLUE), 0);
+  lv_obj_center(labelicons);
+  lv_obj_move_foreground(icons_bg);
 
-lv_obj_set_style_pad_all(buttonbar->container, 0, 0);
-lv_obj_set_style_margin_all(buttonbar->container, 0, 0);
-lv_obj_set_grid_cell(buttonbar->container, LV_GRID_ALIGN_STRETCH, 0, 2, LV_GRID_ALIGN_END, 2, 1);
-
+  buttonbar = new tab_object_buttonbar(page);
+  buttonbar->set_text(tab_object_buttonbar::switch1, "Add\nDevice");
+  lv_obj_set_style_pad_all(buttonbar->container, 0, 0);
+  lv_obj_set_style_margin_all(buttonbar->container, 0, 0);
+  lv_obj_set_width(buttonbar->container, LV_PCT(100));
 }
