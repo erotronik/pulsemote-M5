@@ -244,7 +244,7 @@ void setup() {
   m5io_init();
   ESP_LOGD("setup","io setup done");
 
-  printf_log("Version %s\n",__DATE__);
+  printf_log("Version %s\n\n",__DATE__);
   printf_log("Scanning for devices...\n");
 
   xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 1);
