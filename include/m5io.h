@@ -1,7 +1,5 @@
 #pragma once
 
-#include <freertos/queue.h>
-
 #include "PCA9685.h"
 #include "Rotary.h"
 #include "RotaryEncOverMCP.h"
@@ -135,16 +133,14 @@ void m5io_init(void) {
 
   if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL, PCA9685_MODE2_INVERT)) {
     printf_log("No PCA9685 found");
-    while (1) {
-    }
+    return;
   }
 
   delay(250);
 
   if (!mcp.begin_I2C(0x21)) {
     printf_log("No MCP23X17 found");
-    while (1) {
-    }
+    return;
   }
 
   mcp.setupInterrupts(false, true, HIGH);

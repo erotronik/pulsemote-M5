@@ -52,6 +52,10 @@ void tab_splashscreen::loop(boolean activetab) {
     updateicons();
     batterycheckmillis = millis();
   }
+  if (needs_refresh) {
+    // TBD
+    needs_refresh = false;
+  }
 }
 
 void tab_splashscreen::popup_add_wifi_device() {
@@ -108,7 +112,7 @@ void tab_splashscreen::setup(void) {
   lv_obj_set_style_radius(icons_bg, 6, 0);
   lv_obj_set_style_pad_all(icons_bg, 4, 0); 
   lv_obj_align(icons_bg, LV_ALIGN_TOP_RIGHT, -0, 2);
-  lv_obj_clear_flag(icons_bg, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_clear_flag(icons_bg, LV_OBJ_FLAG_CLICKABLE); // no flashing cursor
 
   labelicons = lv_label_create(icons_bg);
   lv_label_set_text(labelicons, ""); 

@@ -183,14 +183,9 @@ void tab_coyote::loop(bool active) {
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "A: %s\nB: %s\n%d",
-                              md->getModeName(ison?mode_a:M_NONE),
-                              md->getModeName(ison?mode_b:M_NONE),
-                              seconds);
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "A: %s\nB: %s\n%d", md->getModeName(ison?mode_a:M_NONE), md->getModeName(ison?mode_b:M_NONE), seconds);
     } else {                              
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0),
-                          "A: %s\nB: %s",md->getModeName(ison?mode_a:M_NONE),
-                          md->getModeName(ison?mode_b:M_NONE));
+      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "A: %s\nB: %s",md->getModeName(ison?mode_a:M_NONE), md->getModeName(ison?mode_b:M_NONE));
     }
     if (main_mode == MODE_MANUAL) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
@@ -255,12 +250,12 @@ void tab_coyote::coyote_tab_create() {
 
 boolean tab_coyote::hardware_changed(void) {
   need_refresh = true;
-  device_coyote* cd = static_cast<device_coyote*>(device);
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());
   } else if (last_change == D_CONNECTED) {
+    device_coyote* cd = static_cast<device_coyote*>(device);
     coyote_tab_create();
-    printf_log("Connected Coyote battery %d%%\n",cd->get().get_batterylevel());
+    printf_log("Connected %s battery %d%%\n",device->getShortName(),cd->get().get_batterylevel());
     send_sync_data(SYNC_START);
     cd->set_ab_mode(M_BREATH,M_BREATH);
     send_sync_data(SYNC_ON);

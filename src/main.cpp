@@ -1,12 +1,8 @@
-#include <M5Unified.h>
-#include <freertos/queue.h>
-#include <freertos/task.h>
-
-#include <memory>
-
+#ifdef M5_BOARD
+   #include <M5Unified.h>
+#endif
+#include <Arduino.h>
 #include "comms-bt.hpp"
-
-#include <esp_timer.h>
 
 #include "m5io.h"
 #include "tab-coyote.hpp"
@@ -114,59 +110,33 @@ void setup_tabs(void) {
 void device_change_handler(type_of_change t, Device *d) {
   ESP_LOGD("main", "change handler task called from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
-  bool newdevice = true;
   for (const auto& tt : tabs) {
     if (d && tt->device == d) { // found an existing tab that matches the device instance
       ESP_LOGD("main","matched an existing tab %s",tt->gettabname());
       tt->last_change = t;
-      newdevice = false;
-      break;
+      return;
     }
   }
-  if (newdevice && t != D_DISCONNECTED) {
-    ESP_LOGD("main", "a new device has appeared");
-    DeviceType type = d->getType();
-    Tab *ta = nullptr;
-    if (type == DeviceType::device_mk312) {  // bootstrap
-      ta = new tab_mk312();
-    } else if (type == DeviceType::device_coyote) {
-      ta = new tab_coyote();
-    } else if (type == DeviceType::device_thrustalot) {
-      ta = new tab_thrustalot();
-    } else if (type == DeviceType::device_funosr) {
-      ta = new tab_funosr();
-    } else if (type == DeviceType::device_lovense) {
-      ta = new tab_lovense();
-    } else if (type == DeviceType::device_ossm) {
-      ta = new tab_ossm();      
-    } else if (type == DeviceType::device_bubblebottle) {
-      ta = new tab_bubblebottle();
-    } else if (type == DeviceType::device_dgbutton) {
-      ta = new tab_dgbutton();      
-    } else if (type == DeviceType::device_loop) {
-      ta = new tab_loop();    
-    }
-    if (ta != nullptr) {
-      ta->type = type;
-      ta->device = d;
-      ta->last_change = t;
-      ta->needssetup = true;
-      tabs.emplace_back(ta);
-    }
-  }
-}
+  if (t == D_DISCONNECTED) return;
 
-// We might only want to connect to one coyote, need to figure out a better way
-// to do this - if you are in a club then as soon as anyone nearby turns on a
-// unit we'll connect to it as there is no pairing or authorisation
-
-boolean temporary_has_a_coyote(void) {
-  boolean found = false;
-  for (const auto& t: tabs) {
-    if (!strncmp(t->gettabname(),"Coyote",6))
-      found = true;
+  ESP_LOGD("main", "a new device has appeared");
+  Tab *ta = nullptr;
+  switch (d->getType()) {
+    case DeviceType::device_mk312:        ta = new tab_mk312(); break;
+    case DeviceType::device_coyote:       ta = new tab_coyote(); break;
+    case DeviceType::device_funosr:       ta = new tab_funosr(); break;
+    case DeviceType::device_lovense:      ta = new tab_lovense(); break;
+    case DeviceType::device_ossm:         ta = new tab_ossm(); break;
+    case DeviceType::device_bubblebottle: ta = new tab_bubblebottle(); break;
+    case DeviceType::device_dgbutton:     ta = new tab_dgbutton(); break;
+    case DeviceType::device_loop:         ta = new tab_loop(); break;
+    default:                              return;
   }
-  return found;
+  ta->type = d->getType();
+  ta->device = d;
+  ta->last_change = t;
+  ta->needssetup = true;
+  tabs.emplace_back(ta);
 }
 
 // Handle any tabs that have changed status, this includes
@@ -205,7 +175,9 @@ void handletabloops(void) {
 // Main UI loop
 
 void main_loop() {
+#ifdef M5_BOARD
   M5.update();
+#endif
   lv_task_handler();
   handlehardwarecallbacks();
   handlebuttonpushes();
@@ -227,7 +199,9 @@ void loop() {}; // We use FreeRTOS tasks instead
 // Usual setup start
 
 void setup() {
+#ifdef M5_BOARD
   M5.begin();
+#endif
   lv_init();
   lv_init_pulsemote();
   lv_tick_set_cb(lvgl_tick_function);

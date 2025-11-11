@@ -34,7 +34,6 @@ void tab_funosr::send_funosr() {
 
 void tab_funosr::send_stop() {
   goto_max();
-  //mqttsend(mqtt_topic,"stop");
 }
 
 void tab_funosr::goto_min() {
@@ -50,7 +49,7 @@ void tab_funosr::goto_max() {
 }
 
 void tab_funosr::encoder_change(int sw, int change) {
-  if (sw == tab_object_buttonbar::rotary4) { // this rotary control gets reused depending on context
+  if (sw == tab_object_buttonbar::rotary4) {
     if (modeselect->has_focus() || rand_timer->has_focus() || timer->has_focus()) {
       modeselect->rotary_change(change);
       rand_timer->rotary_change(change);
@@ -64,16 +63,14 @@ void tab_funosr::encoder_change(int sw, int change) {
   }
   if (sw == tab_object_buttonbar::rotary2) {
     knob_stroke = min(100,max(0,knob_stroke+change*4));
-    if (knob_depth < knob_stroke) {
+    if (knob_depth < knob_stroke)
       knob_depth = knob_stroke;
-    }
     if (ison) send_funosr();
   }
   if (sw == tab_object_buttonbar::rotary3 ) {
     knob_depth = min(100,max(0,knob_depth+change*4));
-    if (knob_depth < knob_stroke) {
+    if (knob_depth < knob_stroke)
       knob_stroke = knob_depth;
-    }
     if (ison) send_funosr();
   }
   need_knob_refresh = true;
@@ -88,7 +85,6 @@ void tab_funosr::switch_change(int sw, boolean value) {
     main_mode = MODE_MANUAL;
     modeselect->reset();
     send_sync_data(SYNC_OFF);
-
   }
   if (sw == tab_object_buttonbar::rotary3 && value) {
     goto_max();
