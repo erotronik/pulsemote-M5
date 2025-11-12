@@ -90,9 +90,13 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
   if (sw == tab_object_buttonbar::switch1 && value) {
     popup_add_wifi_device();
   }
-  if (sw == tab_object_buttonbar::rotary1 && value) {
-    needs_refresh = true;
+  for (size_t i = 0; i < found_count; ++i) {
+    if (sw == buttonbar->rotary_order[i]) {
+      auto* st  = found[i].tab;
+      lv_tabview_set_act(tv,lv_get_tabview_idx_from_page(tv,st->page),LV_ANIM_OFF);
+    }
   }
+  needs_refresh = true;
 }
 
 void tab_splashscreen::encoder_change(int sw, int change) {
