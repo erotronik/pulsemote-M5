@@ -15,11 +15,6 @@ class tab_coyote: public Tab {
         void focus_change(boolean focus) override;
         void gotsyncdata(Tab *t, sync_data status) override;
 
-        const defaultcontrol_t* getdefaultcontrols(size_t& count) const override {
-            count = 2;
-            return default_controls_;
-        }
-
         enum main_modes {
             MODE_MANUAL = 0,
             MODE_TIMER,
@@ -33,7 +28,6 @@ class tab_coyote: public Tab {
 
     private:
         static void coyote_mode_change_cb(lv_event_t *event);
-        defaultcontrol_t default_controls_[2];
 
         void coyote_tab_create(void);
         lv_obj_t *tab_status;

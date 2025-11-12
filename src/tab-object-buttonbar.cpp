@@ -90,6 +90,12 @@ void tab_object_buttonbar::set_text(int button, const char *text) {
   lv_label_set_text(lv_obj_get_child(arc[buttonmaptoposition[button]], 0), text);
 }
 
+char *tab_object_buttonbar::get_text(int button) {
+  if (!arc[buttonmaptoposition[button]]) return nullptr;
+  if (!onmain[buttonmaptoposition[button]]) return nullptr;
+  return lv_label_get_text(lv_obj_get_child(arc[buttonmaptoposition[button]], 0));
+}
+
 void tab_object_buttonbar::set_text_fmt(int button, const char *format, ...) {
   static char buf[256];
   va_list args;
@@ -103,6 +109,15 @@ void tab_object_buttonbar::set_value(int button, int value) {
   lv_arc_set_value(arc[buttonmaptoposition[button]], value);
 }
    
+int tab_object_buttonbar::get_value(int button) {
+  return lv_arc_get_value(arc[buttonmaptoposition[button]]);
+}
+   
+void tab_object_buttonbar::set_onmain(int button, bool flag) {
+  onmain[buttonmaptoposition[button]] = flag;
+}
+
+
 // leds and buttons are numbered differently
 void tab_object_buttonbar::set_rgb(int button, lv_color_t rgb) {
   m5io_showanalogrgb(buttonmaptorgb[button], rgb);

@@ -43,6 +43,22 @@ void tab_splashscreen::loop(boolean activetab) {
     buttonbar->set_text(tab_object_buttonbar::switch1, "Add\nDevice");
 
     found_count = 0;
+ 
+    // Peek into the button bars of all the tabs, and copy out the ones that are the 'default' controls
+    for (auto * st: tabs) {
+      auto * bbar = st->buttonbar;
+      if (bbar) {
+        for (int i=0; i< buttonbar->maxbuttons; i++) {
+          char *tx = bbar->get_text(i);
+          if (tx) {
+            ESP_LOGD("","%s=%s=%d\n",st->gettabname(), tx, bbar->get_value(i));
+          }
+        }
+      }
+    }
+
+#if 0
+
     for (auto * st: tabs) {
       size_t n = 0;
       const defaultcontrol_t* dc = st->getdefaultcontrols(n);
@@ -63,6 +79,7 @@ void tab_splashscreen::loop(boolean activetab) {
         buttonbar->set_value(buttonbar->rotary_order[i],0);
       }
     }
+#endif
     needs_refresh = false;
   }
 }
@@ -89,6 +106,7 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
 void tab_splashscreen::encoder_change(int sw, int change) {
   ESP_LOGI("splashscreen", "Encoder %d: %+d", sw, change);
   needs_refresh = true;
+#if 0
   for (size_t i = 0; i < found_count; ++i) {
     if (sw == buttonbar->rotary_order[i]) {
       auto* st  = found[i].tab;
@@ -97,6 +115,7 @@ void tab_splashscreen::encoder_change(int sw, int change) {
       st->loop(false);
     }
   }
+#endif
 }
 
 void tab_splashscreen::focus_change(boolean focus) {

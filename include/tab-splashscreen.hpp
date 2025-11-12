@@ -30,7 +30,6 @@ class tab_splashscreen: public Tab {
 
      struct FoundControl {
       Tab* tab; 
-      const defaultcontrol_t* ctrl; 
      };
      static const size_t kMaxFound = 4;
      FoundControl found[kMaxFound];

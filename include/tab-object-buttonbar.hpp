@@ -13,6 +13,10 @@ class tab_object_buttonbar {
     void set_value(int button, int value);
     void set_rgb(int button, lv_color_t rgb);
     void set_rgb_all(lv_color_t rgb);
+    void set_onmain(int button, bool flag);
+
+    char * get_text(int button);
+    int get_value(int button);
 
     static const int rotary2 = 0;
     static const int rotary1 = 1;
@@ -21,13 +25,14 @@ class tab_object_buttonbar {
     static const int switch1 = 4;
     static const int maxbuttons = 5;
 
-    const int rotary_order[5] = { rotary1, rotary2, rotary3, rotary4 };
+    const int rotary_order[maxbuttons] = { rotary1, rotary2, rotary3, rotary4 };
 
     lv_obj_t *container;
 
   private:
     lv_obj_t *arc[maxbuttons];
     lv_obj_t *press[maxbuttons];
-    const int buttonmaptoposition[5] = { 1, 0, 3, 4, 2 };
-    const int buttonmaptorgb[5] = { 1, 2, 3, 4, 5 };
+    const int buttonmaptoposition[maxbuttons] = { 1, 0, 3, 4, 2 };
+    const int buttonmaptorgb[maxbuttons] = { 1, 2, 3, 4, 5 };
+    bool onmain[maxbuttons] = { false, false, false, false, false };
 };

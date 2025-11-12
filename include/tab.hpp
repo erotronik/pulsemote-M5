@@ -48,19 +48,6 @@ class Tab {
   // A tab returns the number of on/off cycles that have happened, but tabs can override it to count other events
   virtual int getcyclecount(void) { return cyclecount; };
 
-  typedef struct {
-    int mapbutton;
-    char name[16];
-    int value;
-    bool ison;
-  } defaultcontrol_t;
-
-  // A tab can have a default control or two on the home page
-  virtual const defaultcontrol_t* getdefaultcontrols(size_t& count) const {
-    count = 0;
-    return nullptr;
-  }
-
   // A tab can return a LV_SYMBOL (or more than one) displayed on the splashscreen, for example a wifi symbol
   virtual const char *geticons(void) { return ""; };
 
@@ -85,7 +72,7 @@ class Tab {
   type_of_change old_last_change;
   type_of_change last_change;
   Device *device;
-  tab_object_buttonbar *buttonbar;
+  tab_object_buttonbar *buttonbar = nullptr;
   bool needssetup = false;
 
   tab_object_modes *modeselect;
