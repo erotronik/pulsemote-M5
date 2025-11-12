@@ -91,6 +91,7 @@ void tab_object_buttonbar::set_text(int button, const char *text) {
 }
 
 void tab_object_buttonbar::set_ison(int button, bool flag) {
+  lv_obj_set_style_arc_color(arc[button], flag?lv_palette_main(LV_PALETTE_LIGHT_BLUE):lv_palette_main(LV_PALETTE_GREY), LV_PART_INDICATOR);
   ison[buttonmaptoposition[button]] = flag;
 }
 
