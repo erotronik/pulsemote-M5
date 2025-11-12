@@ -90,6 +90,14 @@ void tab_object_buttonbar::set_text(int button, const char *text) {
   lv_label_set_text(lv_obj_get_child(arc[buttonmaptoposition[button]], 0), text);
 }
 
+void tab_object_buttonbar::set_ison(int button, bool flag) {
+  ison[buttonmaptoposition[button]] = flag;
+}
+
+bool tab_object_buttonbar::get_ison(int button) {
+  return ison[buttonmaptoposition[button]];
+}
+
 char *tab_object_buttonbar::get_text(int button) {
   if (!arc[buttonmaptoposition[button]]) return nullptr;
   if (!onmain[buttonmaptoposition[button]]) return nullptr;

@@ -20,7 +20,7 @@ tab_coyote::tab_coyote() {
 tab_coyote::~tab_coyote() {}
 
 void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
-  device_coyote *md = static_cast<device_coyote*>(device);
+  auto md = static_cast<device_coyote*>(device);
   if (!md) return;
   ESP_LOGD("coyote", "got sync data %d from %s", syncstatus, t->gettabname());
   if (syncstatus == SYNC_ALLOFF) {
@@ -63,7 +63,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
   }
 
   if (main_mode == MODE_MANUAL && sw == tab_object_buttonbar::switch1 && state) {
-    device_coyote *md = static_cast<device_coyote*>(device);
+    auto md = static_cast<device_coyote*>(device);
     if (ison == 0) {
       ison = 1;
       md->set_ab_mode(mode_a,mode_b);
@@ -76,7 +76,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
   }
 
   if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && state) {  // Stop
-    device_coyote *md = static_cast<device_coyote*>(device);   
+    auto md = static_cast<device_coyote*>(device);   
     main_mode = MODE_MANUAL;
     modeselect->reset();
     ison = false;
@@ -84,7 +84,7 @@ void tab_coyote::switch_change(int sw, boolean state) {
   }
 
   if (sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) { // click to move to the next mode, then back to start
-    device_coyote *md = static_cast<device_coyote*>(device);
+    auto md = static_cast<device_coyote*>(device);
     coyote_mode mode;
     if (sw == tab_object_buttonbar::rotary1) 
       mode = md->get().chan_a().get_mode();
@@ -134,7 +134,7 @@ void tab_coyote::loop(bool active) {
   if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
 
     if (timermillis < millis()) {
-      device_coyote *md = static_cast<device_coyote*>(device);
+      auto md = static_cast<device_coyote*>(device);
       need_refresh = true;
       if (ison == 0) {
         ison = 1;
@@ -158,19 +158,22 @@ void tab_coyote::loop(bool active) {
     }
   }
 
-  if (active && need_refresh) {
-    device_coyote *md = static_cast<device_coyote*>(device);
+  if (need_refresh) {
+    auto md = static_cast<device_coyote*>(device);
+    if (!buttonbar) return;
     need_refresh = false;
 
     int power = md->get().chan_a().get_power_pc();
     buttonbar->set_value(tab_object_buttonbar::rotary1, power); 
+    buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%" LV_PRId32 "%%", power);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, power));
+    if (active) buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, power));
 
     power = md->get().chan_b().get_power_pc();
     buttonbar->set_value(tab_object_buttonbar::rotary2, power); 
+    buttonbar->set_ison(tab_object_buttonbar::rotary2, ison);
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%" LV_PRId32 "%%", power);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, power));
+    if (active) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, power));
 
     buttonbar->set_click_text(tab_object_buttonbar::rotary1,ison?"Mode A":"");
     buttonbar->set_click_text(tab_object_buttonbar::rotary2,ison?"Mode B":"");
@@ -205,7 +208,7 @@ void tab_coyote::loop(bool active) {
 }
 
 void tab_coyote::coyote_mode_change_cb(lv_event_t *event) {
-  tab_coyote *ctab = static_cast<tab_coyote *>(lv_event_get_user_data(event));
+  auto ctab = static_cast<tab_coyote *>(lv_event_get_user_data(event));
   ctab->main_mode = static_cast<tab_coyote::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("coyote", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), ctab->main_mode);
   ctab->need_refresh = true;
@@ -240,6 +243,7 @@ void tab_coyote::coyote_tab_create() {
   
   buttonbar = new tab_object_buttonbar(page);
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
+  buttonbar->set_onmain(tab_object_buttonbar::rotary2, true);
 
   tab_create_status(page);
   rand_timer->view(page);

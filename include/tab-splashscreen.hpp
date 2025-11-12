@@ -29,7 +29,11 @@ class tab_splashscreen: public Tab {
      static void popup_add_wifi_device(void);
 
      struct FoundControl {
-      Tab* tab; 
+      Tab* tab;
+      int control;
+      char *name;
+      bool ison;
+      int value;
      };
      static const size_t kMaxFound = 4;
      FoundControl found[kMaxFound];

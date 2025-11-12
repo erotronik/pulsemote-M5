@@ -49,37 +49,29 @@ void tab_splashscreen::loop(boolean activetab) {
       auto * bbar = st->buttonbar;
       if (bbar) {
         for (int i=0; i< buttonbar->maxbuttons; i++) {
-          char *tx = bbar->get_text(i);
-          if (tx) {
-            ESP_LOGD("","%s=%s=%d\n",st->gettabname(), tx, bbar->get_value(i));
+          int j = buttonbar->rotary_order[i];
+          if (j!=-1) {
+            char *tx = bbar->get_text(j);
+            if (tx && found_count < kMaxFound) {
+              found[found_count++] = { st, j, tx, bbar->get_ison(j), bbar->get_value(j) };
+              ESP_LOGD("","%s=%s=%d\n",st->gettabname(), tx, bbar->get_value(j));
+            }
           }
         }
       }
     }
-
-#if 0
-
-    for (auto * st: tabs) {
-      size_t n = 0;
-      const defaultcontrol_t* dc = st->getdefaultcontrols(n);
-      if (!dc || n == 0) continue;
-      st->loop(false);
-      for (size_t i = 0; i < n && found_count < kMaxFound; ++i) {
-        found[found_count++] = { st, &dc[i] };
-      }
-    }
-    for (size_t i = 0; i < kMaxFound; ++i) {
-      if (i<found_count) {
-        auto* st  = found[i].tab;
-        auto* dc  = found[i].ctrl;
-        buttonbar->set_text_fmt(buttonbar->rotary_order[i],"%s\n%s\n%d%%",st->gettabname(),dc->name,dc->value); // FIXME
-        buttonbar->set_value(buttonbar->rotary_order[i],dc->ison ? dc->value : 0);
+    for (int i=0; i < kMaxFound; i++) {
+      int j = buttonbar->rotary_order[i];
+      if (i < found_count) {
+        auto st = found[i].tab;
+        buttonbar->set_text_fmt(j, "%s\n%s", st->gettabname(), found[i].name);
+        buttonbar->set_value(j, found[i].value);
+        buttonbar->set_ison(j, found[i].ison);
       } else {
-        buttonbar->set_text_fmt(buttonbar->rotary_order[i],"");
-        buttonbar->set_value(buttonbar->rotary_order[i],0);
+        buttonbar->set_text(j, "");
+        buttonbar->set_value(j, 0);
       }
     }
-#endif
     needs_refresh = false;
   }
 }
@@ -105,17 +97,14 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
 
 void tab_splashscreen::encoder_change(int sw, int change) {
   ESP_LOGI("splashscreen", "Encoder %d: %+d", sw, change);
-  needs_refresh = true;
-#if 0
   for (size_t i = 0; i < found_count; ++i) {
     if (sw == buttonbar->rotary_order[i]) {
       auto* st  = found[i].tab;
-      auto* dc  = found[i].ctrl;
-      st->encoder_change(dc->mapbutton, change);
+      st->encoder_change(found[i].control, change);
       st->loop(false);
     }
   }
-#endif
+  needs_refresh = true;
 }
 
 void tab_splashscreen::focus_change(boolean focus) {
