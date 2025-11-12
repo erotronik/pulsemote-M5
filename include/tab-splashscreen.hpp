@@ -14,8 +14,9 @@ class tab_splashscreen: public Tab {
     void loop(boolean activetab) override;
     void setup(void) override;
     const char* gettabname(void) override { return "Pulsemote";};
+    void focus_change(boolean focus) override;
+    void gotsyncdata(Tab *t, sync_data status) override;
     lv_obj_t *lv_debug_window;
-
 
     private:
      unsigned long batterycheckmillis = 0;
@@ -25,8 +26,14 @@ class tab_splashscreen: public Tab {
 
      void updateicons(void);
      int buttonhue[5] = {0, 0, 0, 0, 0};
-     void dump_connected_devices(void);
      static void popup_add_wifi_device(void);
 
+     struct FoundControl {
+      Tab* tab; 
+      const defaultcontrol_t* ctrl; 
+     };
+     static const size_t kMaxFound = 4;
+     FoundControl found[kMaxFound];
+     size_t found_count = 0;
 };
 

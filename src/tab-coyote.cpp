@@ -16,6 +16,10 @@ tab_coyote::tab_coyote() {
     device = nullptr;
     bool need_refresh =false;
     ison = true;
+    default_controls_[0] = { tab_object_buttonbar::rotary1 };
+    strcpy(default_controls_[0].name,"A");
+    default_controls_[1] = { tab_object_buttonbar::rotary2 };
+    strcpy(default_controls_[1].name,"B");  
 }
 tab_coyote::~tab_coyote() {}
 
@@ -157,6 +161,16 @@ void tab_coyote::loop(bool active) {
       }
     }
   }
+  if (!active && need_refresh) {
+    device_coyote *md = static_cast<device_coyote*>(device);
+    need_refresh = false;
+    int power = md->get().chan_a().get_power_pc();
+    default_controls_[0].value = power;
+    default_controls_[0].ison = ison;
+    power = md->get().chan_b().get_power_pc();
+    default_controls_[1].value = power;
+    default_controls_[1].ison = ison;
+  }
 
   if (active && need_refresh) {
     device_coyote *md = static_cast<device_coyote*>(device);
@@ -166,6 +180,7 @@ void tab_coyote::loop(bool active) {
     buttonbar->set_value(tab_object_buttonbar::rotary1, power); 
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%" LV_PRId32 "%%", power);
     buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, power));
+    default_controls_[0].value = power;
 
     power = md->get().chan_b().get_power_pc();
     buttonbar->set_value(tab_object_buttonbar::rotary2, power); 

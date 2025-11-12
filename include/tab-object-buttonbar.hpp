@@ -20,6 +20,9 @@ class tab_object_buttonbar {
     static const int rotary4 = 3;
     static const int switch1 = 4;
     static const int maxbuttons = 5;
+
+    const int rotary_order[5] = { rotary1, rotary2, rotary3, rotary4 };
+
     lv_obj_t *container;
 
   private:

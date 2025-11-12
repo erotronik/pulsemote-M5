@@ -16,19 +16,6 @@ tab_splashscreen::tab_splashscreen() {
 };
 tab_splashscreen::~tab_splashscreen(){};
 
-// just a test mode to display what we think all the connected
-// devices are to the debug window when you push a button
-// on the splashscreen
-
-void tab_splashscreen::dump_connected_devices(void) {
-  int i=0;
-  for (const auto& t: tabs) {
-    printf_log("%i %s: ", i, t->gettabname());
-    printf_log("count=%d\n",t->getcyclecount());
-    i++;
-  }
-}
-
 void tab_splashscreen::updateicons() {
   int level = max(0,min(4,M5.Power.getBatteryLevel() / 20));
   char iconb[128] ="";
@@ -48,12 +35,34 @@ void tab_splashscreen::loop(boolean activetab) {
     }
     m5io_showanalogrgb(5, lv_color_hsv_to_rgb(0, 0, 5));  // cherry LED (very bright)
   }
-  if (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 2000) { // every 2 sec
+  if (activetab && (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 2000)) { // every 2 sec
     updateicons();
     batterycheckmillis = millis();
   }
-  if (needs_refresh) {
-    // TBD
+  if (needs_refresh && activetab) {
+    buttonbar->set_text(tab_object_buttonbar::switch1, "Add\nDevice");
+
+    found_count = 0;
+    for (auto * st: tabs) {
+      size_t n = 0;
+      const defaultcontrol_t* dc = st->getdefaultcontrols(n);
+      if (!dc || n == 0) continue;
+      st->loop(false);
+      for (size_t i = 0; i < n && found_count < kMaxFound; ++i) {
+        found[found_count++] = { st, &dc[i] };
+      }
+    }
+    for (size_t i = 0; i < kMaxFound; ++i) {
+      if (i<found_count) {
+        auto* st  = found[i].tab;
+        auto* dc  = found[i].ctrl;
+        buttonbar->set_text_fmt(buttonbar->rotary_order[i],"%s\n%s\n%d%%",st->gettabname(),dc->name,dc->value); // FIXME
+        buttonbar->set_value(buttonbar->rotary_order[i],dc->ison ? dc->value : 0);
+      } else {
+        buttonbar->set_text_fmt(buttonbar->rotary_order[i],"");
+        buttonbar->set_value(buttonbar->rotary_order[i],0);
+      }
+    }
     needs_refresh = false;
   }
 }
@@ -73,13 +82,29 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
     popup_add_wifi_device();
   }
   if (sw == tab_object_buttonbar::rotary1 && value) {
-    dump_connected_devices();
-    updateicons();
+    needs_refresh = true;
   }
 }
 
 void tab_splashscreen::encoder_change(int sw, int change) {
   ESP_LOGI("splashscreen", "Encoder %d: %+d", sw, change);
+  needs_refresh = true;
+  for (size_t i = 0; i < found_count; ++i) {
+    if (sw == buttonbar->rotary_order[i]) {
+      auto* st  = found[i].tab;
+      auto* dc  = found[i].ctrl;
+      st->encoder_change(dc->mapbutton, change);
+      st->loop(false);
+    }
+  }
+}
+
+void tab_splashscreen::focus_change(boolean focus) {
+  needs_refresh = true;
+}
+
+void tab_splashscreen::gotsyncdata(Tab *t, sync_data syncstatus) {
+  needs_refresh = true;
 }
 
 void tab_splashscreen::setup(void) {
@@ -122,8 +147,8 @@ void tab_splashscreen::setup(void) {
   lv_obj_move_foreground(icons_bg);
 
   buttonbar = new tab_object_buttonbar(page);
-  buttonbar->set_text(tab_object_buttonbar::switch1, "Add\nDevice");
   lv_obj_set_style_pad_all(buttonbar->container, 0, 0);
   lv_obj_set_style_margin_all(buttonbar->container, 0, 0);
   lv_obj_set_width(buttonbar->container, LV_PCT(100));
+  needs_refresh = true;
 }
