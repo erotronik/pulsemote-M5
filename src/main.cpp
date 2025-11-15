@@ -1,9 +1,7 @@
-#ifdef M5_BOARD
-   #include <M5Unified.h>
-#endif
 #include <Arduino.h>
 #include "comms-bt.hpp"
 
+#include "hardware-tft.h"
 #include "m5io.h"
 #include "tab-coyote.hpp"
 #include "tab-mk312.hpp"
@@ -20,8 +18,6 @@
 #include "lvgl-utils.h"
 
 lv_obj_t *tv;
-lv_display_t *display;
-lv_indev_t *indev;
 
 std::list<Tab*> tabs;
 
@@ -175,9 +171,7 @@ void handletabloops(void) {
 // Main UI loop
 
 void main_loop() {
-#ifdef M5_BOARD
-  M5.update();
-#endif
+  hardware_tft_loop();
   lv_task_handler();
   handlehardwarecallbacks();
   handlebuttonpushes();
@@ -199,24 +193,13 @@ void loop() {}; // We use FreeRTOS tasks instead
 // Usual setup start
 
 void setup() {
-#ifdef M5_BOARD
-  M5.begin();
-#endif
-  lv_init();
-  lv_init_pulsemote();
-  lv_tick_set_cb(lvgl_tick_function);
-  display = lv_display_create(SCREENW, SCREENH);
-  lv_display_set_flush_cb(display, lvgl_display_flush);
-  static lv_color_t buf1[SCREENW * 15];
-  lv_display_set_buffers(display, buf1, nullptr, sizeof(buf1), LV_DISPLAY_RENDER_MODE_PARTIAL);
-  indev = lv_indev_create();
-  lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
-  lv_indev_set_read_cb(indev, lvgl_touchpad_read);
+  hardware_tft_init();
   ESP_LOGD("setup","display setup done");
+  m5io_init();
+  ESP_LOGD("setup","io setup done");  
   setup_tabs();
   ESP_LOGD("setup","tab setup done");
-  m5io_init();
-  ESP_LOGD("setup","io setup done");
+
 
   printf_log("Version %s\n\n",__DATE__);
   printf_log("Scanning for devices...\n");

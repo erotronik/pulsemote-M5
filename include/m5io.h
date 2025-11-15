@@ -123,11 +123,15 @@ void rotaryReaderTask(void* pArgs) {
 void m5io_init(void) {
   event_queue = xQueueCreate(10, sizeof(event_t));
 
+
+#ifdef M5
   Wire.begin();
 
   pinMode(INTA, INPUT_PULLUP);
   pinMode(INTB, INPUT_PULLUP);
+#endif
 
+#ifdef M5
   // initialize semaphore for reader task
   rotaryISRSemaphore = xSemaphoreCreateBinary();
 
@@ -158,4 +162,5 @@ void m5io_init(void) {
 
   xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 1); // gui core
 
+#endif
 }
