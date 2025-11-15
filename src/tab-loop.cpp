@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <Arduino.h>
 
 #include "tab.hpp"
 #include "device-loop.hpp" 
@@ -72,8 +73,8 @@ void tab_loop::update_chart(int32_t new_data) {
   // Add new data at the end
   data[LOOP_DATA_POINTS - 1] = new_data;
 
-  int loopreadingmin = std::min({setpoint_min, *std::min_element(data,data+LOOP_DATA_POINTS)});
-  int loopreadingmax = std::max({setpoint_max, *std::max_element(data,data+LOOP_DATA_POINTS)});
+  int loopreadingmin = std::max<int>({setpoint_min,*std::min_element(data, data + LOOP_DATA_POINTS)});
+  int loopreadingmax = std::max<int>({setpoint_max,*std::max_element(data, data + LOOP_DATA_POINTS)});
 
   if (chart) lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, loopreadingmin, loopreadingmax);
 }
