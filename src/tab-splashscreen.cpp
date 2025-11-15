@@ -1,4 +1,6 @@
+#ifdef M5_BOARD
 #include "M5Unified.h"
+#endif
 #include <memory>
 
 #include "tab-object-timer.hpp"
@@ -17,13 +19,22 @@ tab_splashscreen::tab_splashscreen() {
 tab_splashscreen::~tab_splashscreen(){};
 
 void tab_splashscreen::updateicons() {
+  #ifdef M5_BOARD
   int level = max(0,min(4,M5.Power.getBatteryLevel() / 20));
+  #else
+  int level = 0;
+  #endif
   char iconb[128] ="";
   for (const auto& t : tabs) {
     strncat(iconb,t->geticons(),sizeof(iconb)-1);
   }
   boolean is_bluetooth_scanning = true; // todo
-  lv_label_set_text_fmt(labelicons, "%s %s %s %s",iconb, is_bluetooth_scanning?LV_SYMBOL_BLUETOOTH:"",batteryicons[level], M5.Power.isCharging()?batteryicons[5]:"");
+  #ifdef M5_BOARD
+  bool charging = M5.Power.isCharging();
+  #else
+  bool charging = false;
+  #endif
+  lv_label_set_text_fmt(labelicons, "%s %s %s %s",iconb, is_bluetooth_scanning?LV_SYMBOL_BLUETOOTH:"",batteryicons[level], charging?batteryicons[5]:"");
 }
 
 void tab_splashscreen::loop(boolean activetab) {

@@ -2,7 +2,9 @@
 #include "lvgl-utils.h" // for printf_log()
 #include "device-dgbutton.hpp" 
 #include "tab-dgbutton.hpp"
+#ifdef M5_BOARD
 #include <M5Unified.h>
+#endif
 
 tab_dgbutton::tab_dgbutton() {
   page = nullptr;
@@ -26,9 +28,11 @@ void tab_dgbutton::loop(boolean activetab) {
     if (0 && state == device_dgbutton::dgbutton_event::HELD) {
       printf_log("DG Button Pushed\n");
       send_sync_data(SYNC_ALLOFF);
+#ifdef M5_BOARD
       M5.Speaker.begin();
       M5.Speaker.tone(660, 100);
       M5.Speaker.tone(2000, 1000);
+#endif
     }
   }
 }

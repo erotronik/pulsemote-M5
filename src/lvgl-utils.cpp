@@ -1,7 +1,9 @@
 #define LV_CONF_INCLUDE_SIMPLE
 #include <esp_timer.h>
 #include <lvgl.h>
+#ifdef M5_BOARD
 #include <M5Unified.h>
+#endif
 #include "lvgl-utils.h"
 #include "tab-splashscreen.hpp"
 #include <tab.hpp>
@@ -25,7 +27,6 @@ void lv_init_pulsemote(void) {
   lv_style_set_bg_color(&lvpulsemote_style_checked, lv_palette_main(LV_PALETTE_BLUE));
   lv_style_set_bg_opa(&lvpulsemote_style_checked, LV_OPA_COVER);
 }
-
 
 // Log to serial, and if the splashscreen is there, also to the debug window of the splashscreen
 
@@ -78,14 +79,17 @@ void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area,
   uint32_t h = (area->y2 - area->y1 + 1);
 
   lv_draw_sw_rgb565_swap(px_map, w * h);
+#ifdef M5_BOARD
   M5.Display.pushImageDMA<uint16_t>(area->x1, area->y1, w, h,
                                     (uint16_t *)px_map);
+#endif
   lv_disp_flush_ready(disp);
 }
 
 uint32_t lvgl_tick_function() { return (esp_timer_get_time() / 1000LL); }
 
 void lvgl_touchpad_read(lv_indev_t *drv, lv_indev_data_t *data) {
+#ifdef M5_BOARD
   M5.update();
   auto count = M5.Touch.getCount();
 
@@ -97,4 +101,5 @@ void lvgl_touchpad_read(lv_indev_t *drv, lv_indev_data_t *data) {
     data->point.x = touch.x;
     data->point.y = touch.y;
   }
+#endif
 }
