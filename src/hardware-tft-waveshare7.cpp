@@ -1,4 +1,4 @@
-#ifdef WAVESHARE_7
+#ifdef BOARD_WAVESHARE_ESP32_S3_TOUCH_LCD_7
 
 #include <Arduino.h>
 #include <esp_display_panel.hpp>
