@@ -1,9 +1,11 @@
 #pragma once
 
+#ifdef M5
 #include "PCA9685.h"
 #include "Rotary.h"
 #include "RotaryEncOverMCP.h"
 #include "lvgl-utils.h"
+#endif
 
 typedef struct {
   int target;
@@ -13,6 +15,8 @@ typedef struct {
 typedef uint8_t byte;
 
 QueueHandle_t event_queue;
+
+#ifdef M5
 
 void RotaryEncoderChanged(bool clockwise, int id);
 
@@ -26,6 +30,7 @@ void RotaryEncoderChanged(bool clockwise, int id);
 // a3 is sw3_rota, a4 is sw3_rotb, a5 = sw3_button
 
 Adafruit_MCP23X17 mcp;
+
 #if defined (CONFIG_IDF_TARGET_ESP32S3)
 constexpr uint8_t INTA = 6;
 constexpr uint8_t INTB = 7;
@@ -124,14 +129,11 @@ void m5io_init(void) {
   event_queue = xQueueCreate(10, sizeof(event_t));
 
 
-#ifdef M5
   Wire.begin();
 
   pinMode(INTA, INPUT_PULLUP);
   pinMode(INTB, INPUT_PULLUP);
-#endif
 
-#ifdef M5
   // initialize semaphore for reader task
   rotaryISRSemaphore = xSemaphoreCreateBinary();
 
@@ -162,5 +164,13 @@ void m5io_init(void) {
 
   xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 1); // gui core
 
-#endif
 }
+#else
+  const byte numencoders = 4;
+  void m5io_init(void) {
+      event_queue = xQueueCreate(10, sizeof(event_t));
+  }
+  void m5io_showanalogrgb(byte sw, lv_color_t rgb) {
+  }
+
+#endif

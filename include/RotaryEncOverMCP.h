@@ -9,6 +9,7 @@
 #define SRC_ROTARYENCOVERMCP_H_
 
 /* Describes new objects based on the Rotary and Adafruit MCP23017 library */
+#ifdef M5
 #include <Adafruit_MCP23X17.h>
 #include <Rotary.h>
 
@@ -72,6 +73,6 @@ private:
     rotaryActionFunc actionFunc = nullptr;  /* function pointer, will be called when there is an action happening */
     int id = 0;                             /* optional ID for identification */
 };
-
+#endif
 
 #endif /* SRC_ROTARYENCOVERMCP_H_ */
