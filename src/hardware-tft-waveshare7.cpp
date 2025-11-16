@@ -1,7 +1,7 @@
 #ifdef WAVESHARE_7
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h> 
+#include <esp_display_panel.hpp>
 
 #define GPIO_INPUT_IO_4     4
 
@@ -40,7 +40,7 @@ void lvgl_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data)
     }
     esp_panel::drivers::TouchPoint points[5];
 
-    touch->readRawData(1,0);
+    touch->readRawData(-1,0,0);
     int count = touch->getPoints(points, 5);
 
     if (count > 0) {
@@ -67,6 +67,9 @@ void hardware_tft_init() {
   lcd->init();
   lcd->reset();
   lcd->begin();   
+
+  auto backlight = panel->getBacklight();
+  backlight->on();
 
   lv_init();
   lv_init_pulsemote();
