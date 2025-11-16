@@ -2,7 +2,7 @@
 #include "comms-bt.hpp"
 
 #include "hardware-tft.h"
-#include "m5io.h"
+#include "hardware-io-m5.h"
 #include "tab-coyote.hpp"
 #include "tab-mk312.hpp"
 #include "tab-thrustalot.hpp"

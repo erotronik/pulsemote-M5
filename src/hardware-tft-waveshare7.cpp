@@ -58,7 +58,7 @@ void hardware_tft_loop() {
 }
 
 void hardware_tft_init() {
-  pinMode(GPIO_INPUT_IO_4, OUTPUT);
+  pinMode(GPIO_INPUT_IO_4, OUTPUT); // not sure if esp_panel takes care of this
 
   panel = new esp_panel::board::Board();
   panel->init(); 

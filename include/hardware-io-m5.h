@@ -1,10 +1,12 @@
 #pragma once
 
+#include "lvgl-utils.h"
+#include <Arduino.h>
+
 #ifdef M5
 #include "PCA9685.h"
 #include "Rotary.h"
 #include "RotaryEncOverMCP.h"
-#include "lvgl-utils.h"
 #endif
 
 typedef struct {
@@ -166,6 +168,7 @@ void m5io_init(void) {
 
 }
 #else
+  // Waveshare has no IO (yet) but can't use the same M5 libraries anyway due to i2c driver conflicts
   const byte numencoders = 4;
   void m5io_init(void) {
       event_queue = xQueueCreate(10, sizeof(event_t));
