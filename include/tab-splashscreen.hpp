@@ -25,7 +25,7 @@ class tab_splashscreen: public Tab {
      bool needs_refresh = false;
 
      void updateicons(void);
-     int buttonhue[5] = {0, 0, 0, 0, 0};
+     int buttonhue[tab_object_buttonbar::maxbuttons] = {0, 0, 0, 0, 0};
      static void popup_add_wifi_device(void);
 
      struct FoundControl {
@@ -35,7 +35,7 @@ class tab_splashscreen: public Tab {
       bool ison;
       int value;
      };
-     static const size_t kMaxFound = 4;
+     static const size_t kMaxFound = tab_object_buttonbar::maxbuttons -1;
      FoundControl found[kMaxFound];
      size_t found_count = 0;
 };

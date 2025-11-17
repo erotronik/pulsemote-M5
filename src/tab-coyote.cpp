@@ -126,7 +126,7 @@ void tab_coyote::encoder_change(int sw, int change) {
 
 void tab_coyote::focus_change(boolean focus) {
   buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
-  buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+  //buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
   need_refresh = true;
 }
 
@@ -249,6 +249,7 @@ void tab_coyote::coyote_tab_create() {
   timer->view(page);
   sync->view(page);
 
+  buttonbar->set_click_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 

@@ -31,10 +31,10 @@ void tab_splashscreen::updateicons() {
   boolean is_bluetooth_scanning = true; // todo
   #ifdef M5_BOARD
   bool charging = M5.Power.isCharging();
-  #else
-  bool charging = false;
-  #endif
   lv_label_set_text_fmt(labelicons, "%s %s %s %s",iconb, is_bluetooth_scanning?LV_SYMBOL_BLUETOOTH:"",batteryicons[level], charging?batteryicons[5]:"");
+  #else
+  lv_label_set_text_fmt(labelicons, "%s %s",iconb, is_bluetooth_scanning?LV_SYMBOL_BLUETOOTH:"");
+  #endif
 }
 
 void tab_splashscreen::loop(boolean activetab) {

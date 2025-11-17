@@ -18,13 +18,12 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
 
     // pushed the arc or the button above it?
     int arc_index = -1;
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < maxbuttons; ++i) {
         if (self->arc[i] == obj) { arc_index = i; break; }
     }
     if (arc_index < 0) {
-      for (int i = 0; i <5; ++i) {
+      for (int i = 0; i < maxbuttons; ++i) {
         if (self->press[i] == hit) { 
-          ESP_LOGD("XXX","PRESSED ABOVE"); 
           for (const auto& t : tabs) {
             if (self == t->buttonbar) {
               int contr = t->buttonbar->all_order[i];
@@ -120,7 +119,7 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
 #endif
   lv_obj_set_style_pad_top(container, 19+arc_label_gap, 0);     // <-- add headroom
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < maxbuttons; i++) {
     arc[i] = lv_arc_create(container);
     lv_obj_set_size(arc[i], arc_size, arc_size);  
     lv_obj_set_align(arc[i], LV_ALIGN_BOTTOM_LEFT);

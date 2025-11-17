@@ -191,7 +191,7 @@ void tab_mqtt_socket::focus_change(boolean focus) {
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
-  buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+  //buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
 }
 
 void tab_mqtt_socket::tab_create_status(lv_obj_t *tv2) {
@@ -226,6 +226,8 @@ void tab_mqtt_socket::tab_create() {
   mqttsubscribe(mqtt_topic);
 
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
+  buttonbar->set_click_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+
 }
 
 // return false if we removed ourselves from the connected devices list
