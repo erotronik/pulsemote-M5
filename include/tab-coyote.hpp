@@ -28,7 +28,6 @@ class tab_coyote: public Tab {
 
     private:
         static void coyote_mode_change_cb(lv_event_t *event);
-
         void coyote_tab_create(void);
         lv_obj_t *tab_status;
         void tab_create_status(lv_obj_t *tv2);

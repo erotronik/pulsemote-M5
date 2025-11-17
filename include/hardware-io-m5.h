@@ -3,10 +3,10 @@
 #include "lvgl-utils.h"
 #include <Arduino.h>
 
-#ifdef M5
+#ifdef M5_BOARD
 #include "PCA9685.h"
 #include "Rotary.h"
-#include "RotaryEncOverMCP.h"
+#include "hardware-RotaryEncOverMCP.h"
 #endif
 
 typedef struct {
@@ -18,7 +18,7 @@ typedef uint8_t byte;
 
 QueueHandle_t event_queue;
 
-#ifdef M5
+#ifdef M5_BOARD
 
 void RotaryEncoderChanged(bool clockwise, int id);
 

@@ -9,7 +9,7 @@
 #define SRC_ROTARYENCOVERMCP_H_
 
 /* Describes new objects based on the Rotary and Adafruit MCP23017 library */
-#ifdef M5
+#ifdef M5_BOARD
 #include <Adafruit_MCP23X17.h>
 #include <Rotary.h>
 
