@@ -18,7 +18,7 @@ esp_panel::drivers::LCD   *lcd   = nullptr;
 static const uint32_t screenWidth = 800;
 static const uint32_t screenHeight = 480;
 //int buf_size_in_bytes can be divided if doing a partial refresh, /8 or etc
-static const int buf_size_in_bytes = screenWidth * screenHeight * sizeof(lv_color_t) /16;
+static const int buf_size_in_bytes = screenWidth * screenHeight * sizeof(lv_color_t) /10; // 10 to 25% waveshare doc
 static lv_color_t *disp_draw_buf, *disp_draw_buf2 = NULL;
 //static uint16_t disp_draw_buf[buf_size_in_bytes / sizeof(lv_color_t)];
 

@@ -27,9 +27,11 @@ class tab_object_buttonbar {
     static const int switch1 = 4;
     static const int maxbuttons = 5;
 
+    const int all_order[maxbuttons] = { rotary1, rotary2, switch1, rotary3, rotary4 };
     const int rotary_order[maxbuttons] = { rotary1, rotary2, rotary3, rotary4, -1 };
 
     lv_obj_t *container;
+    static void arc_event_cb(lv_event_t * e);
 
   private:
     lv_obj_t *arc[maxbuttons];

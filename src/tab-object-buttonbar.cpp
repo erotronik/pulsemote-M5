@@ -1,24 +1,98 @@
 #include "lvgl-utils.h"
 #include "tab-object-buttonbar.hpp"
+#include "tab.hpp"
 
-// Pushed the screen on an arc?
+// We don't want the default handler for the arcs as you can jump to
+// 100 without much effort, instead follow clicks around the arc
 
-#if 0
-void mk312_arc_event_handler(lv_event_t *event) {
-  tab_mk312 *mk312_tab =
-      static_cast<tab_mk312 *>(lv_event_get_user_data(event));
-  lv_event_code_t code = lv_event_get_code(event);
-  if (code == LV_EVENT_CLICKED) {
-  ESP_LOGD("mk312","touched an arc");
-    for (int i=0;i<5;i++) {
-      if ((lv_obj_t *)lv_event_get_target(event) == mk312_tab->arc[i]) {
-          ESP_LOGD("mk312","touched arc %d",i);
-          mk312_tab->switch_change(i, true);
+static float wrap_deg(float a) {
+    a = fmodf(a, 360.0f);
+    if (a < 0.0f) a += 360.0f;
+    return a;
+}
+
+void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
+    tab_object_buttonbar * self = static_cast<tab_object_buttonbar *>(lv_event_get_user_data(e));
+    lv_obj_t* hit = static_cast<lv_obj_t *>(lv_event_get_target(e));
+    lv_obj_t* obj = lv_obj_get_parent(hit);
+
+    // pushed the arc or the button above it?
+    int arc_index = -1;
+    for (int i = 0; i < 5; ++i) {
+        if (self->arc[i] == obj) { arc_index = i; break; }
+    }
+    if (arc_index < 0) {
+      for (int i = 0; i <5; ++i) {
+        if (self->press[i] == hit) { 
+          ESP_LOGD("XXX","PRESSED ABOVE"); 
+          for (const auto& t : tabs) {
+            if (self == t->buttonbar) {
+              int contr = t->buttonbar->all_order[i];
+              t->switch_change(contr, true);
+            }
+          }
+        }
+      }
+      return;
+    }
+
+    lv_indev_t * indev = lv_indev_get_act();
+    if (!indev) return;
+    lv_point_t p;
+    lv_indev_get_point(indev, &p);
+
+    static time_t lastclickmillis = 0;
+    static int increment = 1;
+
+    lv_area_t coords;
+    lv_obj_get_coords(obj, &coords);
+
+    lv_coord_t cx = coords.x1 + lv_area_get_width(&coords)  / 2;
+    lv_coord_t cy = coords.y1 + lv_area_get_height(&coords) / 2;
+
+    float dx = (float)p.x - (float)cx;
+    float dy = (float)p.y - (float)cy;
+
+    // tap angle top=0 clockwise space
+    float tap_rad = atan2f(dx, -dy);
+    float tap_deg_top = wrap_deg(tap_rad * 180.0f / (float)M_PI); // 0..360
+
+    int32_t v    = lv_arc_get_value(obj);
+    int32_t vmin = lv_arc_get_min_value(obj);
+    int32_t vmax = lv_arc_get_max_value(obj);
+
+    float t = 0.0f;
+    if (vmax != vmin) {
+        t = (float)(v - vmin) / (float)(vmax - vmin);  // 0..1
+    }
+    float cur_deg_top = wrap_deg(t * 360.0f); 
+
+    float delta_forward  = wrap_deg(tap_deg_top - cur_deg_top);
+    float delta_backward = wrap_deg(cur_deg_top - tap_deg_top);
+
+    time_t now = millis();
+    int ms = now-lastclickmillis;
+    lastclickmillis = now;
+    if (ms>600) {
+      increment = 1;
+    } else if (increment<5) {
+      increment++;
+    }
+
+    ESP_LOGD("angle","arc=%d tap=%f cur=%f f=%f b=%f", arc_index, tap_deg_top, cur_deg_top, delta_forward, delta_backward);
+
+    // find the tab....
+    for (const auto& t : tabs) {
+      if (self == t->buttonbar) {
+        int contr = t->buttonbar->all_order[arc_index];
+        ESP_LOGD("click","found tab %s",t->gettabname());
+        if (contr == tab_object_buttonbar::switch1)
+          t->switch_change(contr, true);
+        else
+          t->encoder_change(contr, delta_forward < delta_backward?increment:-increment);
       }
     }
-  }
 }
-#endif
 
 tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
   container = lv_obj_create(parent);
@@ -31,23 +105,44 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
   lv_obj_set_align(container, LV_ALIGN_BOTTOM_LEFT);
   lv_obj_set_width(container, LV_PCT(100));
   lv_obj_set_height(container, LV_SIZE_CONTENT);
+  lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
 
-  lv_obj_set_style_pad_top(container, 25, 0);     // <-- add headroom
+
+#ifdef BOARD_WAVESHARE_ESP32_S3_TOUCH_LCD_7
+  const int arc_size = 100; // todo this better
+  const int arc_gap = 74; // 100*5+75*4 = 796
+  const int arc_label_gap = 20;
+#else
+  const int arc_size = 60;
+  const int arc_gap = 4; //((320-62*5)/4+62)
+  const int arc_label_gap = 6;
+
+#endif
+  lv_obj_set_style_pad_top(container, 19+arc_label_gap, 0);     // <-- add headroom
 
   for (int i = 0; i < 5; i++) {
     arc[i] = lv_arc_create(container);
-    lv_obj_set_size(arc[i], 60, 60);
+    lv_obj_set_size(arc[i], arc_size, arc_size);  
     lv_obj_set_align(arc[i], LV_ALIGN_BOTTOM_LEFT);
-    lv_obj_set_x(arc[i], (64* i)); //((320-62*5)/4+62)
+    lv_obj_set_x(arc[i], ((arc_size+arc_gap)* i)); 
     lv_arc_set_rotation(arc[i], 270);
     lv_arc_set_bg_angles(arc[i], 0, 360);
     lv_arc_set_value(arc[i], 0);
     lv_obj_remove_style(arc[i], NULL, LV_PART_KNOB);
     lv_obj_remove_flag(arc[i], LV_OBJ_FLAG_CLICKABLE);
+
     lv_obj_t *xarclabel = lv_label_create(arc[i]);
     lv_label_set_text(xarclabel, "");
     lv_obj_set_style_text_align(xarclabel, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_center(xarclabel);
+
+    // hitbox overlay as a child of the arc
+    lv_obj_t* hit = lv_obj_create(arc[i]);
+    lv_obj_remove_style_all(hit);
+    lv_obj_set_size(hit, LV_PCT(100), LV_PCT(100));
+    lv_obj_center(hit);
+    lv_obj_add_flag(hit, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(hit, arc_event_cb, LV_EVENT_CLICKED, this);
 
     // --- Badge ABOVE the arc (compact, won't cover the circle) ---
     press[i] = lv_obj_create(container);
@@ -59,9 +154,11 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
     lv_obj_set_style_bg_opa(press[i], LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(press[i], lv_palette_darken(LV_PALETTE_BLUE, 3), 0);
     lv_obj_set_style_pad_hor(press[i], 6, 0);
-    lv_obj_set_width(press[i],60);
+    lv_obj_set_width(press[i],arc_size);
     lv_obj_set_style_pad_ver(press[i], 2, 0);
     lv_obj_set_style_border_width(press[i], 0, 0);
+    lv_obj_add_event_cb(press[i], arc_event_cb, LV_EVENT_CLICKED, this);
+    lv_obj_add_flag(press[i], LV_OBJ_FLAG_CLICKABLE);
 
     // Label inside the badge
     lv_obj_t *badge_label = lv_label_create(press[i]);
@@ -71,7 +168,7 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
     lv_obj_center(badge_label);
 
     // Place the badge just above the arc
-    lv_obj_align_to(press[i], arc[i], LV_ALIGN_OUT_TOP_MID, 0, -6);
+    lv_obj_align_to(press[i], arc[i], LV_ALIGN_OUT_TOP_MID, 0, -arc_label_gap);
 
     //lv_obj_add_event_cb(arc[i], mk312_arc_event_handler, LV_EVENT_ALL, this);
   }
