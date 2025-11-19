@@ -13,7 +13,6 @@ void hardware_tft_loop() {
 void hardware_tft_init() {
   M5.begin();
   lv_init();
-  lv_init_pulsemote();
   lv_tick_set_cb(lvgl_tick_function);
   display = lv_display_create(SCREENW, SCREENH);
   lv_display_set_flush_cb(display, lvgl_display_flush);
@@ -22,6 +21,8 @@ void hardware_tft_init() {
   indev = lv_indev_create();
   lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(indev, lvgl_touchpad_read);
+  lv_init_pulsemote();
+
 }
 
 void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {

@@ -19,10 +19,13 @@ void lv_init_pulsemote(void) {
   lv_style_init(&lvpulsemote_style_tab);
   lv_style_set_pad_all(&lvpulsemote_style_tab, 0);
   lv_style_set_pad_top(&lvpulsemote_style_tab, 10);
+  lv_style_set_bg_opa(&lvpulsemote_style_tab, LV_OPA_COVER);
+  lv_style_set_bg_color(&lvpulsemote_style_tab, lv_color_hex(0x000000));
 
   lv_style_init(&lvpulsemote_style_checked);
   lv_style_set_bg_color(&lvpulsemote_style_checked, lv_palette_main(LV_PALETTE_BLUE));
   lv_style_set_bg_opa(&lvpulsemote_style_checked, LV_OPA_COVER);
+
 }
 
 // Log to serial, and if the splashscreen is there, also to the debug window of the splashscreen

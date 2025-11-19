@@ -110,8 +110,10 @@ void tab_splashscreen::switch_change(int sw, boolean value) {
   needs_refresh = true;
 }
 
+
 void tab_splashscreen::encoder_change(int sw, int change) {
   ESP_LOGI("splashscreen", "Encoder %d: %+d", sw, change);
+
   for (size_t i = 0; i < found_count; ++i) {
     if (sw == buttonbar->rotary_order[i]) {
       auto* st  = found[i].tab;
@@ -130,8 +132,11 @@ void tab_splashscreen::gotsyncdata(Tab *t, sync_data syncstatus) {
   needs_refresh = true;
 }
 
+
 void tab_splashscreen::setup(void) {
   page = lv_tabview_add_tab(tv, gettabname());
+
+  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
 
   lv_obj_set_style_pad_all(page, 0, 0);
   lv_obj_set_style_pad_top(page, 4, 0);
@@ -174,4 +179,5 @@ void tab_splashscreen::setup(void) {
   lv_obj_set_style_margin_all(buttonbar->container, 0, 0);
   lv_obj_set_width(buttonbar->container, LV_PCT(100));
   needs_refresh = true;
+
 }

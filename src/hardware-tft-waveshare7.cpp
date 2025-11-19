@@ -64,15 +64,11 @@ void hardware_tft_init() {
   panel->init(); 
   panel->begin();
   lcd = panel->getLCD();
-  lcd->init();
-  lcd->reset();
-  lcd->begin();   
 
   auto backlight = panel->getBacklight();
   backlight->on();
 
   lv_init();
-  lv_init_pulsemote();
   lv_tick_set_cb(lvgl_tick_function);
   display = lv_display_create(screenWidth, screenHeight);
   lv_display_set_flush_cb(display, lvgl_display_flush);
@@ -89,6 +85,7 @@ void hardware_tft_init() {
   lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(indev, lvgl_touchpad_read);
 
+  lv_init_pulsemote();
 }
 
 
