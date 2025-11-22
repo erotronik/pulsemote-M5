@@ -52,33 +52,14 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
     float dx = (float)p.x - (float)cx;
     float dy = (float)p.y - (float)cy;
 
-    // tap angle top=0 clockwise space
-    float tap_rad = atan2f(dx, -dy);
-    float tap_deg_top = wrap_deg(tap_rad * 180.0f / (float)M_PI); // 0..360
-
-    int32_t v    = lv_arc_get_value(obj);
-    int32_t vmin = lv_arc_get_min_value(obj);
-    int32_t vmax = lv_arc_get_max_value(obj);
-
-    float t = 0.0f;
-    if (vmax != vmin) {
-        t = (float)(v - vmin) / (float)(vmax - vmin);  // 0..1
-    }
-    float cur_deg_top = wrap_deg(t * 360.0f); 
-
-    float delta_forward  = wrap_deg(tap_deg_top - cur_deg_top);
-    float delta_backward = wrap_deg(cur_deg_top - tap_deg_top);
-
     time_t now = millis();
     int ms = now-lastclickmillis;
     lastclickmillis = now;
-    if (ms>600) {
+    if (ms<500) {
+      increment = 5;
+    } else {
       increment = 1;
-    } else if (increment<5) {
-      increment++;
     }
-
-    ESP_LOGD("angle","arc=%d tap=%f cur=%f f=%f b=%f", arc_index, tap_deg_top, cur_deg_top, delta_forward, delta_backward);
 
     // find the tab....
     for (const auto& t : tabs) {
@@ -88,7 +69,7 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
         if (contr == tab_object_buttonbar::switch1)
           t->switch_change(contr, true);
         else
-          t->encoder_change(contr, delta_forward < delta_backward?increment:-increment);
+          t->encoder_change(contr, dx>0?increment:-increment);
       }
     }
 }

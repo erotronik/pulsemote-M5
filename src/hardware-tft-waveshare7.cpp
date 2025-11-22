@@ -64,7 +64,6 @@ void hardware_tft_init() {
   panel->init(); 
   panel->begin();
   lcd = panel->getLCD();
-
   auto backlight = panel->getBacklight();
   backlight->on();
 
@@ -86,6 +85,8 @@ void hardware_tft_init() {
   lv_indev_set_read_cb(indev, lvgl_touchpad_read);
 
   lv_init_pulsemote();
+
+
 }
 
 
