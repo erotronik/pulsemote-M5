@@ -46,8 +46,8 @@ class device_ossm : public Device {
  private:
 
   void ble_ossm_send(String newValue);
-  StaticJsonDocument<256> rxstatus;
-  StaticJsonDocument<512> patternlist;
+  JsonDocument rxstatus;
+  JsonDocument patternlist;
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
   friend class DeviceossmNimBLEClientCallback;
