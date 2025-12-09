@@ -4,6 +4,7 @@
 #include "tab.hpp"
 #include "tab-coyote.hpp"
 #include "lvgl-utils.h"
+#include <Arduino.h>
 
 tab_coyote::tab_coyote() {
     page = nullptr;
@@ -16,6 +17,8 @@ tab_coyote::tab_coyote() {
     device = nullptr;
     bool need_refresh =false;
     ison = true;
+    level_a_req = 0;
+    level_b_req = 0;
 }
 tab_coyote::~tab_coyote() {}
 
@@ -113,11 +116,15 @@ void tab_coyote::encoder_change(int sw, int change) {
   device_coyote *md = static_cast<device_coyote*>(device);
   need_refresh = true;
 
-  if (sw == tab_object_buttonbar::rotary1) 
-    md->get().chan_a().put_power_diff(change);
-  else if (sw == tab_object_buttonbar::rotary2)
-    md->get().chan_b().put_power_diff(change); 
-  if (sw == tab_object_buttonbar::rotary4) {
+  if (sw == tab_object_buttonbar::rotary1) {
+    level_a_req = min(99, max(0, level_a_req + change));
+    md->get().chan_a().put_power_pc(level_a_req);
+  }
+  else if (sw == tab_object_buttonbar::rotary2) {
+    level_b_req = min(99, max(0, level_b_req + change));
+    md->get().chan_b().put_power_pc(level_b_req); 
+  }
+  else if (sw == tab_object_buttonbar::rotary4) {
     rand_timer->rotary_change(change);
     timer->rotary_change(change);
     modeselect->rotary_change(change);
@@ -157,22 +164,33 @@ void tab_coyote::loop(bool active) {
       }
     }
   }
+  if (need_refresh) last_refresh = millis();
+
+  // check the power level 500mS after we've done something, just to make sure
+  if (last_refresh !=0 && last_refresh+500 < millis()) {
+    auto md = static_cast<device_coyote*>(device);
+    last_refresh = 0;
+    need_refresh = true;
+    level_a_req = md->get().chan_a().get_power_pc();
+    level_b_req = md->get().chan_b().get_power_pc();
+    ESP_LOGD("coyote","did a refresh to A %d B %d", level_a_req, level_b_req);
+  }
 
   if (need_refresh && buttonbar) {
     auto md = static_cast<device_coyote*>(device);
     need_refresh = false;
 
-    int power = md->get().chan_a().get_power_pc();
-    buttonbar->set_value(tab_object_buttonbar::rotary1, power); 
+    //int power = md->get().chan_a().get_power_pc();
+    buttonbar->set_value(tab_object_buttonbar::rotary1, level_a_req); 
     buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%d%%", power);
-    if (active) buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, power));
+    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%d%%", level_a_req);
+    if (active) buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, level_a_req));
 
-    power = md->get().chan_b().get_power_pc();
-    buttonbar->set_value(tab_object_buttonbar::rotary2, power); 
+    //power = md->get().chan_b().get_power_pc();
+    buttonbar->set_value(tab_object_buttonbar::rotary2, level_b_req); 
     buttonbar->set_ison(tab_object_buttonbar::rotary2, ison);
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%d%%", power);
-    if (active) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, power));
+    buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%d%%", level_b_req);
+    if (active) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b_req));
 
     buttonbar->set_click_text(tab_object_buttonbar::rotary1,ison?"Mode A":"");
     buttonbar->set_click_text(tab_object_buttonbar::rotary2,ison?"Mode B":"");
@@ -204,6 +222,8 @@ void tab_coyote::loop(bool active) {
         buttonbar->set_value(tab_object_buttonbar::rotary4,  0);
     }
   }
+
+
 }
 
 void tab_coyote::coyote_mode_change_cb(lv_event_t *event) {

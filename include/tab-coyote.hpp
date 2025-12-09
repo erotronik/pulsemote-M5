@@ -30,10 +30,13 @@ class tab_coyote: public Tab {
         static void coyote_mode_change_cb(lv_event_t *event);
         void coyote_tab_create(void);
         lv_obj_t *tab_status;
+        time_t last_refresh = 0;
         void tab_create_status(lv_obj_t *tv2);
         bool ison;
         coyote_mode mode_a;
         coyote_mode mode_b;
+        int level_a_req;
+        int level_b_req;
         int timermillis = 0;
 };
 
