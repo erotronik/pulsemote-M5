@@ -194,27 +194,28 @@ void tab_ossm::loop(boolean activetab) {
     need_refresh = false;
     need_knob_refresh = true;
   }
-  if (activetab && need_knob_refresh) {
+  if (need_knob_refresh) {
     device_ossm *md = static_cast<device_ossm *>(device);
 
     need_knob_refresh = false;
  
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed);
     buttonbar->set_value(tab_object_buttonbar::rotary1,knob_speed);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(0, 100, knob_speed): lv_color_hsv_to_rgb(0, 0, 0));
+    buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
+    if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(0, 100, knob_speed): lv_color_hsv_to_rgb(0, 0, 0));
 
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary2,"Stroke\n%d%%",knob_stroke);
     buttonbar->set_value(tab_object_buttonbar::rotary2,knob_stroke);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(60, 100, knob_stroke));
+    if (activetab)  buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(60, 100, knob_stroke));
 
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary3,"Depth\n%d%%",knob_depth);
     buttonbar->set_value(tab_object_buttonbar::rotary3,knob_depth);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary3, lv_color_hsv_to_rgb(120, 100, knob_depth));
+    if (activetab)  buttonbar->set_rgb(tab_object_buttonbar::rotary3, lv_color_hsv_to_rgb(120, 100, knob_depth));
 
     buttonbar->set_click_text(tab_object_buttonbar::rotary1,"patn");
     buttonbar->set_click_text(tab_object_buttonbar::rotary2,main_pattern == 0? "" : "reset");
 
-    segbar_set(&mybar, knob_depth-knob_stroke, knob_depth);
+    if (activetab) segbar_set(&mybar, knob_depth-knob_stroke, knob_depth);
 
     if (main_mode == MODE_MANUAL) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
@@ -227,11 +228,11 @@ void tab_ossm::loop(boolean activetab) {
     if (main_pattern == 0 || ((main_mode == MODE_RANDOM || main_mode == MODE_TIMER) && (rand_timer->has_focus() || timer->has_focus()))) {
       buttonbar->set_value(tab_object_buttonbar::rotary4, 0);
       buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
-      buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(0, 0, 0));
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(0, 0, 0));
     } else {
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary4,"Sens\n%d%%",knob_sensation);
       buttonbar->set_value(tab_object_buttonbar::rotary4,knob_sensation);
-      buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(180, 100, knob_sensation));
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(180, 100, knob_sensation));
     }
   }
 }
@@ -278,6 +279,8 @@ void tab_ossm::tab_create() {
   lv_obj_add_event_cb(modeselect->getdropdownobject(), ossm_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
   buttonbar = new tab_object_buttonbar(page);
+  buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
+
   tab_create_status(page);
   segbar_create(page,&mybar,150,12);
   rand_timer->view(page);
