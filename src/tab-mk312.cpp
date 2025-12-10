@@ -88,6 +88,8 @@ void tab_mk312::switch_change(int sw, boolean value) {
   if ((sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) && value) {
     lockpanel = !lockpanel;
     md->etbox_setpanellock(lockpanel);
+    buttonbar->set_onmain(tab_object_buttonbar::rotary1, lockpanel);
+    buttonbar->set_onmain(tab_object_buttonbar::rotary2, lockpanel);
     if (lockpanel) {
       level_a = 0;
       level_b = 0;
@@ -200,7 +202,7 @@ void tab_mk312::loop(boolean activetab) {
     need_refresh = false;
     need_knob_refresh = true;
   }
-  if (activetab && need_knob_refresh) {
+  if (need_knob_refresh) {
 
     need_knob_refresh = false;
     if (main_mode == MODE_MANUAL) {
@@ -222,15 +224,17 @@ void tab_mk312::loop(boolean activetab) {
     if (lockpanel) {
       buttonbar->set_click_text(tab_object_buttonbar::rotary1,"");
       buttonbar->set_value(tab_object_buttonbar::rotary1,level_a);
+      buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%" LV_PRId32 "%%", level_a);
-      buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, level_a));
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, level_a));
       buttonbar->set_value(tab_object_buttonbar::rotary2,level_b);
+      buttonbar->set_ison(tab_object_buttonbar::rotary2, ison);
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%" LV_PRId32 "%%", level_b);
-      buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b));
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b));
     } else {
       buttonbar->set_click_text(tab_object_buttonbar::rotary1,"unlock");
-      buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 0, 0));
-      buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 0, 0));
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 0, 0));
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 0, 0));
       buttonbar->set_value(tab_object_buttonbar::rotary1,0);
       buttonbar->set_value(tab_object_buttonbar::rotary2,0);
       buttonbar->set_text(tab_object_buttonbar::rotary1, LV_SYMBOL_CHARGE);
@@ -293,6 +297,7 @@ void tab_mk312::tab_create() {
   lv_obj_add_event_cb(modeselect->getdropdownobject(), mk312_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
   buttonbar = new tab_object_buttonbar(page);
+
   tab_create_status(page);
   rand_timer->view(page);
   timer->view(page);
