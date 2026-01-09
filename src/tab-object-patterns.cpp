@@ -2,6 +2,8 @@
 
 tab_object_patterns::tab_object_patterns() {};
 
+#include "esp_log.h"
+
 
 void tab_object_patterns::selectpattern(lv_obj_t *parent, const char *patterns[],int patterns_n) {
   ESP_LOGD("pattern","select called");
@@ -33,11 +35,11 @@ void tab_object_patterns::show(int i) {
   lv_dropdown_open(dd);
 }
 
-boolean tab_object_patterns::visible() {
+bool tab_object_patterns::visible() {
   return (is_visible);
 }
 
-boolean tab_object_patterns::highlight_next_field() {
+bool tab_object_patterns::highlight_next_field() {
   if (!lv_dropdown_is_open(dd)) {
     lv_dropdown_open(dd);
     return true;
@@ -52,7 +54,7 @@ void tab_object_patterns::reset() {
   lv_obj_send_event(dd, LV_EVENT_VALUE_CHANGED, NULL);
 }
 
-boolean tab_object_patterns::rotary_change(int change) {
+bool tab_object_patterns::rotary_change(int change) {
   if (lv_dropdown_is_open(dd)) {
     uint16_t selected_id = lv_dropdown_get_selected(dd);
     uint16_t option_count = lv_dropdown_get_option_count(dd);

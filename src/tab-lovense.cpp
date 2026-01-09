@@ -45,7 +45,7 @@ void tab_lovense::encoder_change(int sw, int change) {
   need_knob_refresh = true;
 }
 
-void tab_lovense::switch_change(int sw, boolean value) {
+void tab_lovense::switch_change(int sw, bool value) {
   need_refresh = true;
   device_lovense *md = static_cast<device_lovense *>(device);
 
@@ -120,7 +120,7 @@ void tab_lovense::gotsyncdata(Tab *t, sync_data syncstatus) {
   }
 }
 
-void tab_lovense::loop(boolean activetab) {
+void tab_lovense::loop(bool activetab) {
   device_lovense *md = static_cast<device_lovense *>(device);
 
   if ( millis() - battery_time > 60000) { // just every minute
@@ -222,7 +222,7 @@ void lovense_mode_change_cb(lv_event_t *event) {
   lovense_tab->sync->show((lovense_tab->main_mode == tab_lovense::MODE_SYNC));
 }
 
-void tab_lovense::focus_change(boolean focus) {
+void tab_lovense::focus_change(bool focus) {
   ESP_LOGD("lovense", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
@@ -278,7 +278,7 @@ void tab_lovense::tab_create() {
 }
 
 // return false if we removed ourselves from the connected devices list
-boolean tab_lovense::hardware_changed(void) {
+bool tab_lovense::hardware_changed(void) {
   need_refresh = true;
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());

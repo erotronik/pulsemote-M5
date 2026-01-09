@@ -76,7 +76,7 @@ void tab_funosr::encoder_change(int sw, int change) {
   need_knob_refresh = true;
 }
 
-void tab_funosr::switch_change(int sw, boolean value) {
+void tab_funosr::switch_change(int sw, bool value) {
   need_refresh = true;
 
   if (sw == tab_object_buttonbar::rotary2 && value) {
@@ -158,7 +158,7 @@ void tab_funosr::gotsyncdata(Tab *t, sync_data syncstatus) {
   }
 }
 
-void tab_funosr::loop(boolean activetab) {
+void tab_funosr::loop(bool activetab) {
 
   if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
     if (timermillis < millis()) {
@@ -252,7 +252,7 @@ void funosr_mode_change_cb(lv_event_t *event) {
   funosr_tab->sync->show((funosr_tab->main_mode == tab_funosr::MODE_SYNC));
 }
 
-void tab_funosr::focus_change(boolean focus) {
+void tab_funosr::focus_change(bool focus) {
   ESP_LOGD("funosr", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   if (buttonbar) buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
@@ -342,7 +342,7 @@ void tab_funosr::segbar_set(segbar_t *bar, int x, int y) {
 }
 
 // return false if we removed ourselves from the connected devices list
-boolean tab_funosr::hardware_changed(void) {
+bool tab_funosr::hardware_changed(void) {
   need_refresh = true;
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());

@@ -52,7 +52,7 @@ void tab_ossm::encoder_change(int sw, int change) {
   need_knob_refresh = true;
 }
 
-void tab_ossm::switch_change(int sw, boolean value) {
+void tab_ossm::switch_change(int sw, bool value) {
   need_refresh = true;
   device_ossm *md = static_cast<device_ossm *>(device);
 
@@ -133,7 +133,7 @@ void tab_ossm::gotsyncdata(Tab *t, sync_data syncstatus) {
   }
 }
 
-void tab_ossm::loop(boolean activetab) {
+void tab_ossm::loop(bool activetab) {
   device_ossm *md = static_cast<device_ossm *>(device);
 
   if (!firstdata) {
@@ -247,7 +247,7 @@ void ossm_mode_change_cb(lv_event_t *event) {
   ossm_tab->sync->show((ossm_tab->main_mode == tab_ossm::MODE_SYNC));
 }
 
-void tab_ossm::focus_change(boolean focus) {
+void tab_ossm::focus_change(bool focus) {
   ESP_LOGD("ossm", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
@@ -335,7 +335,7 @@ void tab_ossm::segbar_set(segbar_t *bar, int x, int y) {
 }
 
 // return false if we removed ourselves from the connected devices list
-boolean tab_ossm::hardware_changed(void) {
+bool tab_ossm::hardware_changed(void) {
   need_refresh = true;
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());

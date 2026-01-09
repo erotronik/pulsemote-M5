@@ -8,6 +8,6 @@ class tab_bubblebottle : public Tab {
   tab_bubblebottle();
   ~tab_bubblebottle();
 
-  void loop(boolean activetab) override;
-  boolean hardware_changed(void) override;
+  void loop(bool activetab) override;
+  bool hardware_changed(void) override;
 };

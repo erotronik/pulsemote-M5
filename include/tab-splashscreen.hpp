@@ -9,12 +9,12 @@ class tab_splashscreen: public Tab {
         tab_splashscreen();
         ~tab_splashscreen();
 
-    void switch_change(int sw, boolean state) override;
+    void switch_change(int sw, bool state) override;
     void encoder_change(int sw, int change) override;
-    void loop(boolean activetab) override;
+    void loop(bool activetab) override;
     void setup(void) override;
     const char* gettabname(void) override { return "Pulsemote";};
-    void focus_change(boolean focus) override;
+    void focus_change(bool focus) override;
     void gotsyncdata(Tab *t, sync_data status) override;
     lv_obj_t *lv_debug_window;
 

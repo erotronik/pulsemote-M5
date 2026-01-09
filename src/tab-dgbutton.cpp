@@ -15,7 +15,7 @@ tab_dgbutton::tab_dgbutton() {
 tab_dgbutton::~tab_dgbutton() {
 }
 
-void tab_dgbutton::loop(boolean activetab) {
+void tab_dgbutton::loop(bool activetab) {
   device_dgbutton *md = static_cast<device_dgbutton *>(device);
   device_dgbutton::dgbutton_event state;
   if (xQueueReceive(md->events,&state, 0)) {
@@ -38,7 +38,7 @@ void tab_dgbutton::loop(boolean activetab) {
 }
   
 // return false if we removed ourselves from the connected devices list
-boolean tab_dgbutton::hardware_changed(void) {
+bool tab_dgbutton::hardware_changed(void) {
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());
   } else if (last_change == D_CONNECTED) {

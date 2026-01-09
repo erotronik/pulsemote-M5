@@ -7,8 +7,8 @@ class tab_object_timer;
 class tab_object_timer {
  public:
   tab_object_timer(bool moderandom);
-  boolean highlight_next_field(void);
-  boolean has_focus(void);
+  bool highlight_next_field(void);
+  bool has_focus(void);
   void show(bool x);
   int gettimeon(void);
   int gettimeoff(void);
@@ -21,5 +21,5 @@ class tab_object_timer {
   bool moderandom;
   lv_obj_t* active_btn;
   lv_obj_t* container;
-  boolean is_visible;
+  bool is_visible;
 };

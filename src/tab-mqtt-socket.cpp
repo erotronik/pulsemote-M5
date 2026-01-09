@@ -33,7 +33,7 @@ void tab_mqtt_socket::encoder_change(int sw, int change) {
   }
 }
 
-void tab_mqtt_socket::switch_change(int sw, boolean value) {
+void tab_mqtt_socket::switch_change(int sw, bool value) {
   need_refresh = true;
 
   if (sw == tab_object_buttonbar::rotary4 && value) {
@@ -98,7 +98,7 @@ void tab_mqtt_socket::gotsyncdata(Tab *t, sync_data syncstatus) {
   }
 }
 
-void tab_mqtt_socket::loop(boolean activetab) {
+void tab_mqtt_socket::loop(bool activetab) {
   if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
     if (timermillis < millis()) {
       need_refresh = true;
@@ -186,7 +186,7 @@ void mqtt_socket_mode_change_cb(lv_event_t *event) {
   mqtt_socket_tab->sync->show((mqtt_socket_tab->main_mode == tab_mqtt_socket::MODE_SYNC));
 }
 
-void tab_mqtt_socket::focus_change(boolean focus) {
+void tab_mqtt_socket::focus_change(bool focus) {
   ESP_LOGD("mqtt_socket", "focus cb %s on %d: %d",
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
@@ -231,7 +231,7 @@ void tab_mqtt_socket::tab_create() {
 }
 
 // return false if we removed ourselves from the connected devices list
-boolean tab_mqtt_socket::hardware_changed(void) {
+bool tab_mqtt_socket::hardware_changed(void) {
   need_refresh = true;
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());

@@ -7,9 +7,9 @@ class tab_object_modes {
     tab_object_modes();
     void createdropdown(lv_obj_t *parent, const char *options);
     lv_obj_t *getdropdownobject(void) { return dd; }
-    boolean highlight_next_field(void);
-    boolean has_focus(void);
-    boolean rotary_change(int change);
+    bool highlight_next_field(void);
+    bool has_focus(void);
+    bool rotary_change(int change);
     void reset();
 
   private:

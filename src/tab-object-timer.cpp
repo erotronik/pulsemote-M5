@@ -6,7 +6,7 @@
 
 tab_object_timer::tab_object_timer(bool irandom) { moderandom = irandom; }
 
-boolean tab_object_timer::has_focus(void) { return (active_btn  && container && is_visible); }
+bool tab_object_timer::has_focus(void) { return (active_btn  && container && is_visible); }
 
 void tab_object_timer::rotary_change(int change) {
   if (!container) return;
@@ -15,13 +15,13 @@ void tab_object_timer::rotary_change(int change) {
 
   uint32_t *id_ptr = (uint32_t *)lv_obj_get_user_data(active_btn);
   int32_t id = *id_ptr - 1;
-  value[id] = max(1, value[id]+change);
+  value[id] = std::max<int>(1, value[id]+change);
   if (moderandom) {
     // special cases so ranges make sense
-    if (id == 0) value[1] = max(value[0], value[1]);
-    if (id == 1) value[0] = min(value[0], value[1]);
-    if (id == 2) value[3] = max(value[2], value[3]);
-    if (id == 3) value[2] = min(value[2], value[3]);
+    if (id == 0) value[1] = std::max(value[0], value[1]);
+    if (id == 1) value[0] = std::min(value[0], value[1]);
+    if (id == 2) value[3] = std::max(value[2], value[3]);
+    if (id == 3) value[2] = std::min(value[2], value[3]);
   }
   lv_obj_t *btns = container;
   int j = 4;
@@ -32,7 +32,7 @@ void tab_object_timer::rotary_change(int change) {
   }
 }
 
-boolean tab_object_timer::highlight_next_field() {
+bool tab_object_timer::highlight_next_field() {
   if (!container) return false;
   if (!is_visible) return false;
   if (!active_btn) {
@@ -88,14 +88,14 @@ void tab_object_timer::show(bool show) {
 
 int tab_object_timer::gettimeon(void) {
   if (moderandom)
-    return random(value[0], value[1]);
+    return value[0] + rand() % (value[1] - value[0]);
   else
     return value[0];
 }
 
 int tab_object_timer::gettimeoff(void) {
   if (moderandom)
-    return random(value[2], value[3]);
+    return value[2] + rand() % (value[3] - value[2]);
   else
     return value[1];
 }

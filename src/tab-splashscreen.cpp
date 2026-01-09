@@ -28,7 +28,7 @@ void tab_splashscreen::updateicons() {
   for (const auto& t : tabs) {
     strncat(iconb,t->geticons(),sizeof(iconb)-1);
   }
-  boolean is_bluetooth_scanning = true; // todo
+  bool is_bluetooth_scanning = true; // todo
   #ifdef M5_BOARD
   bool charging = M5.Power.isCharging();
   lv_label_set_text_fmt(labelicons, "%s %s %s %s",iconb, is_bluetooth_scanning?LV_SYMBOL_BLUETOOTH:"",batteryicons[level], charging?batteryicons[5]:"");
@@ -37,7 +37,7 @@ void tab_splashscreen::updateicons() {
   #endif
 }
 
-void tab_splashscreen::loop(boolean activetab) {
+void tab_splashscreen::loop(bool activetab) {
   if (activetab) {
     const byte map[]={3,2,0,1};
     for (int i = 0; i < 4; i++) {
@@ -96,7 +96,7 @@ void tab_splashscreen::popup_add_wifi_device() {
   }
 }
 
-void tab_splashscreen::switch_change(int sw, boolean value) {
+void tab_splashscreen::switch_change(int sw, bool value) {
   ESP_LOGI("splashscreen", "new callback button %d %s", sw, value ? "push" : "release");
   if (sw == tab_object_buttonbar::switch1 && value) {
     popup_add_wifi_device();
@@ -124,7 +124,7 @@ void tab_splashscreen::encoder_change(int sw, int change) {
   needs_refresh = true;
 }
 
-void tab_splashscreen::focus_change(boolean focus) {
+void tab_splashscreen::focus_change(bool focus) {
   needs_refresh = true;
 }
 

@@ -45,7 +45,7 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
   }
 }
 
-void tab_coyote::switch_change(int sw, boolean state) {
+void tab_coyote::switch_change(int sw, bool state) {
   need_refresh = true;
 
   if (sw == tab_object_buttonbar::rotary4 && state) {
@@ -131,7 +131,7 @@ void tab_coyote::encoder_change(int sw, int change) {
   }
 }
 
-void tab_coyote::focus_change(boolean focus) {
+void tab_coyote::focus_change(bool focus) {
   buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
   //buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
   need_refresh = true;
@@ -273,7 +273,7 @@ void tab_coyote::coyote_tab_create() {
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
-boolean tab_coyote::hardware_changed(void) {
+bool tab_coyote::hardware_changed(void) {
   need_refresh = true;
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());

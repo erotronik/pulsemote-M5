@@ -17,7 +17,7 @@ class tab_mqtt;
 class tab_mqtt : public Tab {
   public:
     tab_mqtt();
-    void loop(boolean activetab) override;
+    void loop(bool activetab) override;
     const char *geticons(void) override;
     const char* gettabname(void) override;
     void setup(void) override;

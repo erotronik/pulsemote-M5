@@ -3,7 +3,7 @@
 #include <coyote.hpp>
 #include <device.hpp>
 
-boolean temporary_has_a_coyote(void);
+bool temporary_has_a_coyote(void);
 
 class device_coyote : public Device {
  public:

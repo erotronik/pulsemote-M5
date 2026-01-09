@@ -19,7 +19,7 @@ std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new 
 NimBLEScan *pBLEScan;
 NimBLEAdvertisedDevice *found_bledevice;
 Device *found_device;
-boolean scanthread_is_scanning = false;
+bool scanthread_is_scanning = false;
 
 class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) override {
@@ -80,7 +80,7 @@ void scan_comms_init(void) {
 }
 
 void scan_loop() {
-  boolean repeatscan = false;  // if we found something and connected to it, keep scanning for more
+  bool repeatscan = false;  // if we found something and connected to it, keep scanning for more
 
   do {
     ESP_LOGI("comms-bt", "Scanning for %ds on core%d", scanTime, xPortGetCoreID());
@@ -90,7 +90,7 @@ void scan_loop() {
       ESP_LOGI(found_device->getShortName(), "found device");
       vTaskDelay(pdMS_TO_TICKS(100));
       found_device->set_callback(device_change_handler);
-      boolean connected = found_device->connect_to_device(found_bledevice);
+      bool connected = found_device->connect_to_device(found_bledevice);
       if (!connected) {
         ESP_LOGD(found_device->getShortName(),"connection failed");
         delete found_device;    

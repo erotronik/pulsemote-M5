@@ -36,7 +36,7 @@ void tab_thrustalot::encoder_change(int sw, int change) {
   need_knob_refresh = true;
 }
 
-void tab_thrustalot::switch_change(int sw, boolean value) {
+void tab_thrustalot::switch_change(int sw, bool value) {
   need_refresh = true;
   device_thrustalot *md = static_cast<device_thrustalot *>(device);
 
@@ -111,7 +111,7 @@ int tab_thrustalot::tempo_to_ms(int tempo) {
 // otherwise start one thrust, when out then wait for temp, then send it in again etc
 // cbpos is 1 for in, 2 for out, 0 if 'moving'
 
-void tab_thrustalot::loop(boolean activetab) {
+void tab_thrustalot::loop(bool activetab) {
   device_thrustalot *md = static_cast<device_thrustalot *>(device);
   int thruststate;
 
@@ -225,7 +225,7 @@ void thrustalot_mode_change_cb(lv_event_t *event) {
   thrustalot_tab->sync->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_SYNC));
 }
 
-void tab_thrustalot::focus_change(boolean focus) {
+void tab_thrustalot::focus_change(bool focus) {
   ESP_LOGD("thrustalot", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
@@ -267,7 +267,7 @@ void tab_thrustalot::tab_create() {
 }
 
 // return false if we removed ourselves from the connected devices list
-boolean tab_thrustalot::hardware_changed(void) {
+bool tab_thrustalot::hardware_changed(void) {
   need_refresh = true;
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());

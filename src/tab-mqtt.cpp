@@ -17,7 +17,7 @@ tab_mqtt::tab_mqtt() {
   //events = xQueueCreate(10,sizeof(sync_data));
 }
 
-void tab_mqtt::loop(boolean activetab) {
+void tab_mqtt::loop(bool activetab) {
   //sync_data syncstatus;
   //if (xQueueReceive(events, &syncstatus, 0))
   //  send_sync_data(syncstatus);
@@ -41,7 +41,7 @@ void tab_mqtt::loop(boolean activetab) {
             char topic[100];
             snprintf(topic,sizeof(topic)-1, "wled/%s", mid);
             ESP_LOGD("popup","creating %s",topic);
-            boolean exists = false;
+            bool exists = false;
             for (const auto& allt : tabs) {
               if (!strcasecmp(allt->gettabname(),mid))
                 exists = true;
@@ -169,7 +169,7 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
       char topic[100];
       snprintf(topic,sizeof(topic)-1, "zigbee2mqtt/%s/set", txt);
       ESP_LOGD("popup","creating %s",topic);
-      boolean exists = false;
+      bool exists = false;
       for (const auto& allt : tabs) {
         if (!strcasecmp(allt->gettabname(),txt))
           exists = true;

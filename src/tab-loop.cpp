@@ -15,14 +15,14 @@ tab_loop::tab_loop() {
 tab_loop::~tab_loop() {
 }
 
-void tab_loop::switch_change(int sw, boolean state) {
+void tab_loop::switch_change(int sw, bool state) {
   if (sw == tab_object_buttonbar::switch1 && state) {
     is_on = !is_on;
     changed_state();
   }
 }
 
-void tab_loop::focus_change(boolean focus) {
+void tab_loop::focus_change(bool focus) {
   buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, 25)); // red
   buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(120, 100, 25)); // green
   for (int i : {tab_object_buttonbar::rotary3, tab_object_buttonbar::rotary4, tab_object_buttonbar::switch1}) 
@@ -85,7 +85,7 @@ void tab_loop::changed_state() {
   send_sync_data(is_on?SYNC_ON:SYNC_OFF);
 }
 
-void tab_loop::loop(boolean activetab) {
+void tab_loop::loop(bool activetab) {
   int state;
   device_loop *md = static_cast<device_loop *>(device);
   if (md && xQueueReceive(md->events,&state, 0)) {
@@ -150,7 +150,7 @@ void tab_loop::loop_tab_create() {
 }
   
 // return false if we removed ourselves from the connected devices list
-boolean tab_loop::hardware_changed(void) {
+bool tab_loop::hardware_changed(void) {
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());
   } else if (last_change == D_CONNECTED) {

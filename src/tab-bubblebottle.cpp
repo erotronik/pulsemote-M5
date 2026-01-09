@@ -12,7 +12,7 @@ tab_bubblebottle::tab_bubblebottle() {
 tab_bubblebottle::~tab_bubblebottle() {
 }
 
-void tab_bubblebottle::loop(boolean activetab) {
+void tab_bubblebottle::loop(bool activetab) {
   device_bubblebottle *md = static_cast<device_bubblebottle *>(device);
   int state;
   if (xQueueReceive(md->events,&state, 0)) {
@@ -22,7 +22,7 @@ void tab_bubblebottle::loop(boolean activetab) {
 }
   
 // return false if we removed ourselves from the connected devices list
-boolean tab_bubblebottle::hardware_changed(void) {
+bool tab_bubblebottle::hardware_changed(void) {
   if (last_change == D_CONNECTING) {
     printf_log("Connecting %s\n", device->getShortName());
   } else if (last_change == D_CONNECTED) {

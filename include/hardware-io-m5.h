@@ -1,7 +1,6 @@
 #pragma once
 
 #include "lvgl-utils.h"
-#include <Arduino.h>
 
 #ifdef M5_BOARD
 #include "PCA9685.h"

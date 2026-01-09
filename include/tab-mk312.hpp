@@ -11,10 +11,10 @@ class tab_mk312 : public Tab {
   tab_mk312();
   ~tab_mk312();
   void encoder_change(int sw, int change) override;
-  void switch_change(int sw, boolean state) override;
-  void loop(boolean activetab) override;
-  void focus_change(boolean focus) override;
-  boolean hardware_changed(void) override;
+  void switch_change(int sw, bool state) override;
+  void loop(bool activetab) override;
+  void focus_change(bool focus) override;
+  bool hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
   int wanted_mode = 0;
 

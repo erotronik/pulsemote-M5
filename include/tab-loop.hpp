@@ -8,11 +8,11 @@ class tab_loop : public Tab {
     tab_loop();
     ~tab_loop();
 
-    void loop(boolean activetab) override;
-    boolean hardware_changed(void) override;
+    void loop(bool activetab) override;
+    bool hardware_changed(void) override;
     void encoder_change(int sw, int change) override;
-    void switch_change(int sw, boolean state) override;
-    void focus_change(boolean focus) override;
+    void switch_change(int sw, bool state) override;
+    void focus_change(bool focus) override;
 
   private:
     void loop_tab_create();

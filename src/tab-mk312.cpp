@@ -45,7 +45,7 @@ void tab_mk312::encoder_change(int sw, int change) {
   }
 }
 
-void tab_mk312::switch_change(int sw, boolean value) {
+void tab_mk312::switch_change(int sw, bool value) {
   need_refresh = true;
   device_mk312 *md = static_cast<device_mk312 *>(device);
 
@@ -149,7 +149,7 @@ void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
   }
 }
 
-void tab_mk312::loop(boolean activetab) {
+void tab_mk312::loop(bool activetab) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
   if (!md) return;
 
@@ -262,7 +262,7 @@ void mk312_pattern_change_cb(lv_event_t *event) {
   mk312_tab->patternselect->hide();
 }
 
-void tab_mk312::focus_change(boolean focus) {
+void tab_mk312::focus_change(bool focus) {
   ESP_LOGD("mk312", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
   need_refresh = true;
   buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
@@ -310,7 +310,7 @@ void tab_mk312::tab_create() {
 }
 
 // return false if we removed ourselves from the connected devices list
-boolean tab_mk312::hardware_changed(void) {
+bool tab_mk312::hardware_changed(void) {
   ESP_LOGD("mk312","hardware changed %d", last_change);
   need_refresh = true;
   if (last_change == D_CONNECTING) {

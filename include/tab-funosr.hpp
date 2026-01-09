@@ -8,10 +8,10 @@ class tab_funosr : public Tab {
   tab_funosr();
   ~tab_funosr();
   void encoder_change(int sw, int change) override;
-  void switch_change(int sw, boolean state) override;
-  void loop(boolean activetab) override;
-  void focus_change(boolean focus) override;
-  boolean hardware_changed(void) override;
+  void switch_change(int sw, bool state) override;
+  void loop(bool activetab) override;
+  void focus_change(bool focus) override;
+  bool hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
 
   enum main_modes {

@@ -8,6 +8,6 @@ class tab_dgbutton : public Tab {
   tab_dgbutton();
   ~tab_dgbutton();
 
-  void loop(boolean activetab) override;
-  boolean hardware_changed(void) override;
+  void loop(bool activetab) override;
+  bool hardware_changed(void) override;
 };

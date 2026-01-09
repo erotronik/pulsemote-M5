@@ -7,12 +7,12 @@ class tab_object_patterns {
     tab_object_patterns();
     void selectpattern(lv_obj_t *parent, const char *options[], int n);
     lv_obj_t *getdropdownobject(void) { return dd; }
-    boolean highlight_next_field(void);
-    boolean visible(void);
+    bool highlight_next_field(void);
+    bool visible(void);
     uint32_t hide(void);
     void show(int i=0);
 
-    boolean rotary_change(int change);
+    bool rotary_change(int change);
     void reset();
 
   private:

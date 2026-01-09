@@ -25,16 +25,16 @@ class Tab {
   };
 
   // Called when a physical push switch is pushed or released
-  virtual void switch_change(int sw, boolean state) {};
+  virtual void switch_change(int sw, bool state) {};
 
   // Called when a physical encoder knob is changed
   virtual void encoder_change(int sw, int change) {};
 
   // Tab can have a loop function that is called periodically, but don't rely on the timing
-  virtual void loop(boolean activetab) {};
+  virtual void loop(bool activetab) {};
 
   // Called when a tab gets the focus so it can update it's display if needed
-  virtual void focus_change(boolean focus) {};
+  virtual void focus_change(bool focus) {};
 
   // Called once when a tab is set up for the first time
   virtual void setup(void) {};
@@ -43,7 +43,7 @@ class Tab {
   virtual void gotsyncdata(Tab *t, sync_data syncdata) {};
 
   // Callback for when hardware state has changed
-  virtual boolean hardware_changed(void) { return true; };
+  virtual bool hardware_changed(void) { return true; };
 
   // A tab returns the number of on/off cycles that have happened, but tabs can override it to count other events
   virtual int getcyclecount(void) { return cyclecount; };

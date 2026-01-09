@@ -9,10 +9,10 @@ class tab_coyote: public Tab {
         tab_coyote();
         ~tab_coyote();
         void encoder_change(int sw, int change) override;
-        virtual boolean hardware_changed(void) override;
-        void switch_change(int sw, boolean state) override;
-        void loop(boolean activetab) override;
-        void focus_change(boolean focus) override;
+        virtual bool hardware_changed(void) override;
+        void switch_change(int sw, bool state) override;
+        void loop(bool activetab) override;
+        void focus_change(bool focus) override;
         void gotsyncdata(Tab *t, sync_data status) override;
 
         enum main_modes {
