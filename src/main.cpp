@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "comms-bt.hpp"
 
 #include "hardware-tft.h"

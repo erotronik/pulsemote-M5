@@ -1,6 +1,5 @@
 #ifdef BOARD_WAVESHARE_ESP32_S3_TOUCH_LCD_7
 
-#include <Arduino.h>
 #include <esp_display_panel.hpp>
 
 #define GPIO_INPUT_IO_4     4

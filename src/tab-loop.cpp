@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <Arduino.h>
 
 #include "tab.hpp"
 #include "device-loop.hpp" 

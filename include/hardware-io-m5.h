@@ -8,6 +8,11 @@
 #include "hardware-RotaryEncOverMCP.h"
 #endif
 
+//#include "i2c_bus_m5.h"
+//#include "hardware-pca9685-min.h"
+//static I2CBusM5 i2c(M5.Ex_I2C);
+//static PCA9685 pca(M5.Ex_I2C, 0x42);
+
 typedef struct {
   int target;
   int value;
@@ -20,6 +25,7 @@ QueueHandle_t event_queue;
 #ifdef M5_BOARD
 
 void RotaryEncoderChanged(bool clockwise, int id);
+
 
 // MCP23017 is port expander on I2C x021 and INT on pin 6/7 (different if not
 // CoreS3)
@@ -68,9 +74,13 @@ void m5io_showanalogrgb(byte sw, lv_color_t rgb) {
   static byte pinstarts[] = {0, 3, 11, 8, 6};
   byte base = pinstarts[sw - 1];
   PCA.setPWM(base, rgb.red * 16);
+  //pca.setPWM(base + 0, (uint16_t)rgb.red * 16);
+
   if (sw != 5) {
     PCA.setPWM(base + 1, rgb.green * 16);  // FastLED is 8 bit, PCA is 12 bit
     PCA.setPWM(base + 2, rgb.blue * 16);
+    //pca.setPWM(base + 1, (uint16_t)rgb.green * 16);
+    //pca.setPWM(base + 2, (uint16_t)rgb.blue * 16);
   }
 }
 
@@ -126,6 +136,8 @@ void rotaryReaderTask(void* pArgs) {
   }
 }
 
+#include <M5Unified.h>
+
 void m5io_init(void) {
   event_queue = xQueueCreate(10, sizeof(event_t));
 
@@ -139,8 +151,8 @@ void m5io_init(void) {
   rotaryISRSemaphore = xSemaphoreCreateBinary();
 
   if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL, PCA9685_MODE2_INVERT)) {
+  //if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
     printf_log("No PCA9685 found");
-    return;
   }
 
   delay(250);

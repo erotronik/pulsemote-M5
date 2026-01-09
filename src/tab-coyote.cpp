@@ -4,7 +4,6 @@
 #include "tab.hpp"
 #include "tab-coyote.hpp"
 #include "lvgl-utils.h"
-#include <Arduino.h>
 
 tab_coyote::tab_coyote() {
     page = nullptr;
