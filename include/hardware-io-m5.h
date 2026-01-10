@@ -4,15 +4,15 @@
 #include <M5Unified.h>
 
 #ifdef M5_BOARD
-#include "PCA9685.h"
+//#include "PCA9685.h"
 #include "Rotary.h"
 #include "hardware-RotaryEncOverMCP.h"
 #endif
 
-//#include "i2c_bus_m5.h"
-//#include "hardware-pca9685-min.h"
+#include "i2c_bus_m5.h"
+#include "hardware-pca9685-min.h"
 //static I2CBusM5 i2c(M5.Ex_I2C);
-//static PCA9685 pca(M5.Ex_I2C, 0x42);
+static PCA9685 pca(M5.Ex_I2C, 0x42);
 
 typedef struct {
   int target;
@@ -72,7 +72,7 @@ const byte numencoders = 4;
 // LED8 is R on SW4, LED9 is G on SW4, LED10 is B on SW4
 // LED6 is Cherry LED
 
-PCA9685 PCA(0x42);
+//PCA9685 PCA(0x42);
 
 // Switch number 1-4 (5 for cherry, single LED), and lv_color_t
 
@@ -180,10 +180,13 @@ void rotaryReaderTask(void* pArgs) {
         byte sw = idx + 1;
         uint8_t base = pinstarts[idx];
 
-        PCA.setPWM(base + 0, rgb.red * 16);
+        //PCA.setPWM(base + 0, rgb.red * 16);
+        pca.setPWM(base + 0, (uint16_t)rgb.red * 16);
         if (sw != 5) {
-          PCA.setPWM(base + 1, rgb.green * 16);
-          PCA.setPWM(base + 2, rgb.blue * 16);
+          pca.setPWM(base + 1, (uint16_t)rgb.green * 16);
+          pca.setPWM(base + 2, (uint16_t)rgb.blue * 16);
+          //PCA.setPWM(base + 1, rgb.green * 16);
+          //PCA.setPWM(base + 2, rgb.blue * 16);
         }
       }
     }
@@ -198,8 +201,8 @@ void m5io_init(void) {
 
   M5.Ex_I2C.begin();
 
-  if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL, PCA9685_MODE2_INVERT)) {
-  //if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
+  //if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL, PCA9685_MODE2_INVERT)) {
+  if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
     printf_log("No PCA9685 found");
   }
 
