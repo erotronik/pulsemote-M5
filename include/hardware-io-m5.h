@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lvgl-utils.h"
+#include <M5Unified.h>
 
 #ifdef M5_BOARD
 #include "PCA9685.h"
@@ -25,7 +26,6 @@ QueueHandle_t event_queue;
 #ifdef M5_BOARD
 
 void RotaryEncoderChanged(bool clockwise, int id);
-
 
 // MCP23017 is port expander on I2C x021 and INT on pin 6/7 (different if not
 // CoreS3)
@@ -71,6 +71,7 @@ PCA9685 PCA(0x42);
 // Switch number 1-4 (5 for cherry, single LED), and lv_color_t
 
 void m5io_showanalogrgb(byte sw, lv_color_t rgb) {
+
   static byte pinstarts[] = {0, 3, 11, 8, 6};
   byte base = pinstarts[sw - 1];
   PCA.setPWM(base, rgb.red * 16);
@@ -112,7 +113,7 @@ void handlemcpinterrupt() {
 
 // Interrupt from MCP means a button or rotary encoder changed
 
-void IRAM_ATTR intactive() {
+static void IRAM_ATTR intactive(void* arg) {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   xSemaphoreGiveFromISR(rotaryISRSemaphore, &xHigherPriorityTaskWoken);
   if (xHigherPriorityTaskWoken) {
@@ -123,8 +124,25 @@ void IRAM_ATTR intactive() {
 void rotaryReaderTask(void* pArgs) {
   (void)pArgs;
 
-  attachInterrupt(digitalPinToInterrupt(INTA), intactive, FALLING);
-  attachInterrupt(digitalPinToInterrupt(INTB), intactive, FALLING);
+  // Configure INTA/INTB as input with pullup + falling-edge interrupt
+  gpio_config_t io{};
+  io.pin_bit_mask = (1ULL << INTA) | (1ULL << INTB);
+  io.mode = GPIO_MODE_INPUT;
+  io.pull_up_en = GPIO_PULLUP_ENABLE;
+  io.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  io.intr_type = GPIO_INTR_NEGEDGE;   // FALLING
+  ESP_ERROR_CHECK(gpio_config(&io));
+
+  esp_err_t err = gpio_install_isr_service(ESP_INTR_FLAG_IRAM);
+  if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
+    ESP_ERROR_CHECK(err);
+  }
+
+  // initialize semaphore for reader task
+  rotaryISRSemaphore = xSemaphoreCreateBinary();
+
+  ESP_ERROR_CHECK(gpio_isr_handler_add((gpio_num_t)INTA, intactive, nullptr));
+  ESP_ERROR_CHECK(gpio_isr_handler_add((gpio_num_t)INTB, intactive, nullptr));
 
   mcp.readGPIOA(); // no interrupts unless you do a mcp.readGPIOA();
   mcp.readGPIOB();
@@ -136,19 +154,14 @@ void rotaryReaderTask(void* pArgs) {
   }
 }
 
-#include <M5Unified.h>
 
 void m5io_init(void) {
   event_queue = xQueueCreate(10, sizeof(event_t));
 
+  M5.Ex_I2C.begin();
+  //Wire.begin();
 
-  Wire.begin();
 
-  pinMode(INTA, INPUT_PULLUP);
-  pinMode(INTB, INPUT_PULLUP);
-
-  // initialize semaphore for reader task
-  rotaryISRSemaphore = xSemaphoreCreateBinary();
 
   if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL, PCA9685_MODE2_INVERT)) {
   //if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
