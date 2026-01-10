@@ -81,7 +81,7 @@ void device_mk312::etbox_flushcb(void) {
   mktx_n = 0;
 }
 
-void device_mk312::etbox_txcb(byte c) {
+void device_mk312::etbox_txcb(uint8_t c) {
   mktx[mktx_n++] = c;
   if (mktx_n == mktx_maxlen) etbox_flushcb();
 }
@@ -102,11 +102,11 @@ bool device_mk312::connected() {
   return BOX.isconnected();
 }
 
-void device_mk312::etbox_setbyte(word address, byte data) {
+void device_mk312::etbox_setbyte(word address, uint8_t data) {
   if (BOX.isconnected()) BOX.setbyte(address, data);
 }
 
-byte device_mk312::etbox_getbyte(word address) {
+uint8_t device_mk312::etbox_getbyte(word address) {
   if (BOX.isconnected()) return BOX.getbyte(address);
   return 0;
 }
@@ -152,11 +152,11 @@ void device_mk312::etbox_off(void) {
   etbox_setbyte(ETMEM_runcommand2, ETCOMMAND_LCDWRITESTRING);
 }
 
-void device_mk312::etbox_setlevela(byte data) {
+void device_mk312::etbox_setlevela(uint8_t data) {
   etbox_setbyte(ETMEM_knoba, (data * 256+99) / 100); // Round up to match the display
 }
 
-void device_mk312::etbox_setlevelb(byte data) {
+void device_mk312::etbox_setlevelb(uint8_t data) {
   etbox_setbyte(ETMEM_knobb, (data * 256+99) / 100); // Round up to match the display
 }
 

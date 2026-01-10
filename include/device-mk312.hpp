@@ -4,11 +4,6 @@
 #include <Venerate.h>
 #include <device.hpp>
 
-// temporary so we can get rid of Arduino.h everywhere
-#ifndef byte
-#define byte uint8_t
-#endif
-
 class device_mk312_NimBLEClientCallback;
 class device_mk312;
 
@@ -36,11 +31,11 @@ class device_mk312 : public Device {
   void etbox_on(int mode);
   void etbox_off(void);
   int get_last_mode(void);
-  void etbox_setbyte(word a, byte d);
-  void etbox_setlevela(byte d);
-  void etbox_setlevelb(byte d);
+  void etbox_setbyte(word a, uint8_t d);
+  void etbox_setlevela(uint8_t d);
+  void etbox_setlevelb(uint8_t d);
   void etbox_setpanellock(bool x);
-  byte etbox_getbyte(word a);
+  uint8_t etbox_getbyte(word a);
   void next_mode(void);
   int get_mode(void);
   bool connected(void);
@@ -76,12 +71,12 @@ class device_mk312 : public Device {
   int lastvalidmode =0;
 
   void etbox_flushcb(void);
-  void etbox_txcb(byte c);
+  void etbox_txcb(uint8_t c);
   int etbox_rxcb(char* p, int x);
 
   static const int mktx_maxlen = 20;  // For sending via bluetooth max is 20 bytes
-  byte mktx[mktx_maxlen];
-  byte mktx_n = 0;
+  uint8_t mktx[mktx_maxlen];
+  uint8_t mktx_n = 0;
 
   static const int NOTIFY_QUEUE_LEN =5; 
   static const int NOTIFY_MAX_DATA = 64;
