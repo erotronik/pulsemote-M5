@@ -61,7 +61,7 @@ RotaryEncOverMCP rotaryEncoders[] = {
 
 // Switch number 1-4 (5 for cherry, single LED), and lv_color_t
 
-void m5io_showanalogrgb(uint8_t sw, lv_color_t rgb) {
+void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb) {
   if (sw < 1 || sw > LED_COUNT) return;
 
   taskENTER_CRITICAL(&g_led_mux);
@@ -173,29 +173,22 @@ void rotaryReaderTask(void* pArgs) {
 }
 
 
-void m5io_init(void) {
-  ESP_LOGE("M5IO", "Initializing M5 IO");
-
+void pulsemote_pcb_init(void) {
   auto& i2c = M5.Ex_I2C;
   i2c.begin();
 
-
   event_queue = xQueueCreate(10, sizeof(event_t));
 
-
-  ESP_LOGE("M5IO", "PCA");
   pca.attach(i2c, 0x42);
   if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
     ESP_LOGE("PCA9685", "No PCA9685 found");
     return;
   }
-  ESP_LOGE("M5IO", "MCP");
   mcp.attach(i2c, 0x21);
   if (!mcp.begin()) {
     ESP_LOGE("MCP23017", "No MCP23017 found");
     return;
   }
-    ESP_LOGE("M5IO", "Initializing MCP");
   if (!mcp.setupInterrupts(false, true, HIGH)) {
     ESP_LOGE("MCP23017", "Failed to setup interrupts");
     return;
@@ -211,8 +204,6 @@ void m5io_init(void) {
 
   for (uint8_t i = 0; i < numencoders; i++)
     rotaryEncoders[i].init();  // currently a NOP
-
-      ESP_LOGE("M5IO", "Creating Task");
 
   xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 1); // gui core
 }

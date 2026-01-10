@@ -9,6 +9,7 @@
 #include "lvgl-utils.h"
 #include "comms-wifi.hpp"
 #include "tab-mqtt.hpp"
+#include <pulsemote-pcb.hpp>
 
 tab_splashscreen::tab_splashscreen() {
   page = nullptr;
@@ -42,9 +43,9 @@ void tab_splashscreen::loop(bool activetab) {
     const uint8_t map[]={3,2,0,1};
     for (int i = 0; i < 4; i++) {
       buttonhue[map[i]]= ((millis()%20000*360)/20000+20*i)%360;  // cycle colours every 20s
-      m5io_showanalogrgb(map[i] + 1, lv_color_hsv_to_rgb(buttonhue[map[i]], 100, 50));  // rotary LED
+      pulsemote_pcb_setleds(map[i] + 1, lv_color_hsv_to_rgb(buttonhue[map[i]], 100, 50));  // rotary LED
     }
-    m5io_showanalogrgb(5, lv_color_hsv_to_rgb(0, 0, 5));  // cherry LED (very bright)
+    pulsemote_pcb_setleds(5, lv_color_hsv_to_rgb(0, 0, 5));  // cherry LED (very bright)
   }
   if (activetab && (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 2000)) { // every 2 sec
     updateicons();

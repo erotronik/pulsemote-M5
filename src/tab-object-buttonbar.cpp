@@ -1,6 +1,7 @@
 #include "lvgl-utils.h"
 #include "tab-object-buttonbar.hpp"
 #include "tab.hpp"
+#include <pulsemote-pcb.hpp>
 
 // We don't want the default handler for the arcs as you can jump to
 // 100 without much effort, instead follow clicks around the arc
@@ -206,11 +207,11 @@ void tab_object_buttonbar::set_onmain(int button, bool flag) {
 
 // leds and buttons are numbered differently
 void tab_object_buttonbar::set_rgb(int button, lv_color_t rgb) {
-  m5io_showanalogrgb(buttonmaptorgb[button], rgb);
+  pulsemote_pcb_setleds(buttonmaptorgb[button], rgb);
 }
 
 void tab_object_buttonbar::set_rgb_all(lv_color_t rgb) {
   for (int button : {tab_object_buttonbar::rotary1, tab_object_buttonbar::rotary2, tab_object_buttonbar::rotary3, tab_object_buttonbar::rotary4, tab_object_buttonbar::switch1}) {
-    m5io_showanalogrgb(buttonmaptorgb[button], rgb);
+    pulsemote_pcb_setleds(buttonmaptorgb[button], rgb);
   }
 }

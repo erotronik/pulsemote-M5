@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <queue.h>
 
-void m5io_showanalogrgb(uint8_t sw, lv_color_t rgb);
-void m5io_init(void);
+void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb);
+void pulsemote_pcb_init(void);
 const uint8_t numencoders = 4;
 
 typedef struct {

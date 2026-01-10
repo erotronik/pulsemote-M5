@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
 #include <M5Unified.h>
-//#include "m5_i2c.hpp"
 
 // Minimal MCP23017 (I2C) helper using M5Unified m5::I2C_Class register helpers.
 // - BANK=0 register map

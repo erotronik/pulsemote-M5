@@ -14,7 +14,7 @@
 #include "tab-mqtt.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
-#include "pulsemote-pcb.hpp"
+#include <pulsemote-pcb.hpp>
 
 lv_obj_t *tv;
 
@@ -194,8 +194,8 @@ void loop() {}; // We use FreeRTOS tasks instead
 void setup() {
   hardware_tft_init();
   ESP_LOGD("setup","display setup done");
-  m5io_init();
-  ESP_LOGD("setup","io setup done");  
+  pulsemote_pcb_init();
+  ESP_LOGD("setup","pcb setup done");  
   setup_tabs();
   ESP_LOGD("setup","tab setup done");
 
