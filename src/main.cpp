@@ -20,8 +20,8 @@ lv_obj_t *tv;
 
 std::list<Tab*> tabs;
 
-byte lastencodervalue[numencoders] = {128, 128, 128, 128};
-byte encodervalue[numencoders] = {128, 128, 128, 128};
+uint8_t lastencodervalue[numencoders] = {128, 128, 128, 128};
+uint8_t encodervalue[numencoders] = {128, 128, 128, 128};
 
 void RotaryEncoderChanged(bool clockwise, int id) {
   encodervalue[id] += clockwise ? 1 : -1;
@@ -33,7 +33,7 @@ void RotaryEncoderChanged(bool clockwise, int id) {
 
 void handlebuttonpushes() {
   event_t received_event;
-  byte count = 4;  // a few callbacks allowed per loop, arbitary
+  uint8_t count = 4;  // a few callbacks allowed per loop, arbitary
   while (count > 0 && xQueueReceive(event_queue, &received_event, 0)) {
     // find what device tab is active as physical buttons must only work on active tab
     lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));

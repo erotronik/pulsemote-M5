@@ -49,7 +49,7 @@ class device_thrustalot : public Device {
   NimBLERemoteCharacteristic* uuid_tx_Characteristic;
 
   static const int mkbuffer_maxlen =100;
-  byte mkbuffer[mkbuffer_maxlen];
-  byte mkwptr = 0;
+  uint8_t mkbuffer[mkbuffer_maxlen];
+  uint8_t mkwptr = 0;
 
 };

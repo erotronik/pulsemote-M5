@@ -87,7 +87,7 @@ void tab_mqtt::setup(void) {
 }
 
 #if 0
-void tab_mqtt::callback(char* topic, byte* payload, unsigned int length) {
+void tab_mqtt::callback(char* topic, uint8_t* payload, unsigned int length) {
   sync_data syncstatus = SYNC_START;
   std::string paystring (reinterpret_cast<const char*>(payload), length); 
   ESP_LOGI("mqtt","got topic=%s message=%s", topic, paystring.c_str());

@@ -26,7 +26,7 @@ typedef void (*rotaryActionFunc)(bool clockwise, int id);
  * */
 class RotaryEncOverMCP {
 public:
-    RotaryEncOverMCP(MCP23017* mcp, byte pinA, byte pinB, rotaryActionFunc actionFunc = nullptr, int id = 0)
+    RotaryEncOverMCP(MCP23017* mcp, uint8_t pinA, uint8_t pinB, rotaryActionFunc actionFunc = nullptr, int id = 0)
     : rot(pinA, pinB), mcp(mcp),
       pinA(pinA), pinB(pinB),
       actionFunc(actionFunc), id(id) {

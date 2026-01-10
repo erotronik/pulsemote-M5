@@ -39,7 +39,7 @@ void tab_splashscreen::updateicons() {
 
 void tab_splashscreen::loop(bool activetab) {
   if (activetab) {
-    const byte map[]={3,2,0,1};
+    const uint8_t map[]={3,2,0,1};
     for (int i = 0; i < 4; i++) {
       buttonhue[map[i]]= ((millis()%20000*360)/20000+20*i)%360;  // cycle colours every 20s
       m5io_showanalogrgb(map[i] + 1, lv_color_hsv_to_rgb(buttonhue[map[i]], 100, 50));  // rotary LED

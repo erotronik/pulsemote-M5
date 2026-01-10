@@ -18,7 +18,7 @@ extern lv_style_t lvpulsemote_style_status;
 extern lv_style_t lvpulsemote_style_tab;
 extern lv_style_t lvpulsemote_style_checked;
 
-void m5io_showanalogrgb(byte sw, const lv_color_t rgb);
+void m5io_showanalogrgb(uint8_t sw, const lv_color_t rgb);
 
 int lv_get_tabview_idx_from_page(lv_obj_t *l, lv_obj_t *page);
 void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area,uint8_t *px_map);

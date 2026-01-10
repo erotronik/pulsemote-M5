@@ -34,7 +34,7 @@ class tab_mqtt : public Tab {
     lv_style_t style_selected;
     lv_obj_t * popup_add_device_modal;
 
-    //void callback(char* topic, byte* payload, unsigned int length);
+    //void callback(char* topic, uint8_t* payload, unsigned int length);
     //QueueHandle_t events;
 };
 

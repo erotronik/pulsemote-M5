@@ -39,7 +39,7 @@ class tab_mqtt_socket : public Tab {
   void tab_create(void);
   void tab_create_status(lv_obj_t *tv2);
   bool need_knob_refresh = false;
-  byte preset = 0;
+  uint8_t preset = 0;
   bool ison;
   bool lockpanel = false;
   int level_a, level_b;

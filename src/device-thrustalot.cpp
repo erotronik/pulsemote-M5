@@ -115,8 +115,8 @@ void device_thrustalot::ble_mk_callback(
     BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData,
     size_t length, bool isNotify) {
   char bug[100];
-  byte j = 0;
-  for (byte i = 0; i < length; i++) {
+  uint8_t j = 0;
+  for (uint8_t i = 0; i < length; i++) {
     bug[j] = (char)(*(pData + i));
     if (bug[j] == '\n' || j == length - 1 || j == 98) {
       bug[j + 1] = 0;

@@ -12,9 +12,7 @@
 static PCA9685 pca(M5.Ex_I2C, 0x42);
 #endif
 
-typedef uint8_t byte;
 #ifdef M5_BOARD
-
 static constexpr int LED_COUNT = 6; // 4 switches + cherry
 static lv_color_t g_led[LED_COUNT];
 static uint32_t g_dirty = 0;
@@ -44,8 +42,8 @@ constexpr uint8_t INTB = 7;
 constexpr uint8_t INTA = 27;
 constexpr uint8_t INTB = 19;
 #endif
-const byte buttonpins[] = {10, 13, 5, 0, 14};
-const byte numbuttons = sizeof(buttonpins);
+const uint8_t buttonpins[] = {10, 13, 5, 0, 14};
+const uint8_t numbuttons = sizeof(buttonpins);
 
 QueueHandle_t event_queue = nullptr;
 
@@ -67,7 +65,7 @@ RotaryEncOverMCP rotaryEncoders[] = {
 
 // Switch number 1-4 (5 for cherry, single LED), and lv_color_t
 
-void m5io_showanalogrgb(byte sw, lv_color_t rgb) {
+void m5io_showanalogrgb(uint8_t sw, lv_color_t rgb) {
   if (sw < 1 || sw > LED_COUNT) return;
 
   taskENTER_CRITICAL(&g_led_mux);
@@ -93,9 +91,9 @@ void handlemcpinterrupt() {
   }
   // check for button change
   unsigned long now = millis();
-  for (byte i = 0; i < numbuttons; i++) {
+  for (uint8_t i = 0; i < numbuttons; i++) {
     if (now - lastbuttondebounce[i] > 150) {  // debounce time
-      byte result = (data >> buttonpins[i]) & 1;
+      uint8_t result = (data >> buttonpins[i]) & 1;
       if (buttonpins[i] == 14) result = !result;  // cherry is inverted
       if (result != lastbuttonstates[i]) {
         event_t new_event = {.target = i, .value = result};
@@ -141,7 +139,7 @@ void rotaryReaderTask(void* pArgs) {
   mcp.readGPIOA(); // no interrupts unless you do a mcp.readGPIOA();
   mcp.readGPIOB();
 
-  static const byte pinstarts[LED_COUNT] = {0, 3, 11, 8, 6, 0}; // adjust last if needed
+  static const uint8_t pinstarts[LED_COUNT] = {0, 3, 11, 8, 6, 0}; // adjust last if needed
 
   while (true) {
     uint32_t bits = 0;
@@ -165,7 +163,7 @@ void rotaryReaderTask(void* pArgs) {
         rgb = g_led[idx];
         taskEXIT_CRITICAL(&g_led_mux);
 
-        byte sw = idx + 1;
+        uint8_t sw = idx + 1;
         uint8_t base = pinstarts[idx];
 
         pca.setPWM(base + 0, (uint16_t)rgb.red * 16);
@@ -199,15 +197,15 @@ void m5io_init(void) {
     return;
   }
 
-  for (byte i = 0; i <= 15; ++i) {
+  for (uint8_t i = 0; i <= 15; ++i) {
     if (i == 0 || i == 5 || i == 10 || i == 13)
       mcp.pinMode(i, mcp.XINPUT);
     else
       mcp.pinMode(i, mcp.XINPUT_PULLUP);
   }
-  for (byte pin = 0; pin < 16; pin++) mcp.setupInterruptPin(pin, CHANGE);
+  for (uint8_t pin = 0; pin < 16; pin++) mcp.setupInterruptPin(pin, CHANGE);
 
-  for (byte i = 0; i < numencoders; i++)
+  for (uint8_t i = 0; i < numencoders; i++)
     rotaryEncoders[i].init();  // currently a NOP
 
   xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 1); // gui core
@@ -215,11 +213,11 @@ void m5io_init(void) {
 }
 #else
   // Waveshare has no IO (yet) but can't use the same M5 libraries anyway due to i2c driver conflicts
-  const byte numencoders = 4;
+  const uint8_t numencoders = 4;
   void m5io_init(void) {
       event_queue = xQueueCreate(10, sizeof(event_t));
   }
-  void m5io_showanalogrgb(byte sw, lv_color_t rgb) {
+  void m5io_showanalogrgb(uint8_t sw, lv_color_t rgb) {
   }
 
 #endif
