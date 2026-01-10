@@ -25,6 +25,13 @@ QueueHandle_t event_queue;
 
 #ifdef M5_BOARD
 
+static constexpr int LED_COUNT = 6; // 4 switches + cherry
+static lv_color_t g_led[LED_COUNT];
+static uint32_t g_dirty = 0;
+static portMUX_TYPE g_led_mux = portMUX_INITIALIZER_UNLOCKED;
+static TaskHandle_t g_led_task = nullptr;
+static constexpr uint32_t NOTIF_LED = 1u << 0;
+
 void RotaryEncoderChanged(bool clockwise, int id);
 
 // MCP23017 is port expander on I2C x021 and INT on pin 6/7 (different if not
@@ -70,17 +77,15 @@ PCA9685 PCA(0x42);
 // Switch number 1-4 (5 for cherry, single LED), and lv_color_t
 
 void m5io_showanalogrgb(byte sw, lv_color_t rgb) {
+  if (sw < 1 || sw > LED_COUNT) return;
 
-  static byte pinstarts[] = {0, 3, 11, 8, 6};
-  byte base = pinstarts[sw - 1];
-  PCA.setPWM(base, rgb.red * 16);
-  //pca.setPWM(base + 0, (uint16_t)rgb.red * 16);
+  taskENTER_CRITICAL(&g_led_mux);
+  g_led[sw - 1] = rgb;
+  g_dirty |= (1u << (sw - 1));
+  taskEXIT_CRITICAL(&g_led_mux);
 
-  if (sw != 5) {
-    PCA.setPWM(base + 1, rgb.green * 16);  // FastLED is 8 bit, PCA is 12 bit
-    PCA.setPWM(base + 2, rgb.blue * 16);
-    //pca.setPWM(base + 1, (uint16_t)rgb.green * 16);
-    //pca.setPWM(base + 2, (uint16_t)rgb.blue * 16);
+  if (g_led_task) {
+    xTaskNotify(g_led_task, NOTIF_LED, eSetBits);
   }
 }
 
@@ -125,6 +130,7 @@ void rotaryReaderTask(void* pArgs) {
   (void)pArgs;
 
   rotaryTask = xTaskGetCurrentTaskHandle();
+  g_led_task = xTaskGetCurrentTaskHandle();
 
   // Configure INTA/INTB as input with pullup + falling-edge interrupt
   gpio_config_t io{};
@@ -146,22 +152,51 @@ void rotaryReaderTask(void* pArgs) {
   mcp.readGPIOA(); // no interrupts unless you do a mcp.readGPIOA();
   mcp.readGPIOB();
 
+  static const byte pinstarts[LED_COUNT] = {0, 3, 11, 8, 6, 0}; // adjust last if needed
+
   while (true) {
-    uint32_t n = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(50));
+    uint32_t n = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(20));
     if (n > 0) {
       handlemcpinterrupt();
     }
+    uint32_t bits = 0;
+    xTaskNotifyWait(0, UINT32_MAX, &bits,0);
+    if (bits & NOTIF_LED) {
+      uint32_t mask;
+
+      taskENTER_CRITICAL(&g_led_mux);
+      mask = g_dirty;
+      g_dirty = 0;
+      taskEXIT_CRITICAL(&g_led_mux);
+
+      for (int idx = 0; idx < LED_COUNT; idx++) {
+        if (!(mask & (1u << idx))) continue;
+
+        lv_color_t rgb;
+        taskENTER_CRITICAL(&g_led_mux);
+        rgb = g_led[idx];
+        taskEXIT_CRITICAL(&g_led_mux);
+
+        byte sw = idx + 1;
+        uint8_t base = pinstarts[idx];
+
+        PCA.setPWM(base + 0, rgb.red * 16);
+        if (sw != 5) {
+          PCA.setPWM(base + 1, rgb.green * 16);
+          PCA.setPWM(base + 2, rgb.blue * 16);
+        }
+      }
+    }
   }
 }
-
+        //pca.setPWM(base + 0, (uint16_t)rgb.red * 16)
+          //pca.setPWM(base + 1, (uint16_t)rgb.green * 16);
+          //pca.setPWM(base + 2, (uint16_t)rgb.blue * 16); 
 
 void m5io_init(void) {
   event_queue = xQueueCreate(10, sizeof(event_t));
 
   M5.Ex_I2C.begin();
-  //Wire.begin();
-
-
 
   if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL, PCA9685_MODE2_INVERT)) {
   //if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
