@@ -4,14 +4,12 @@
 #include <M5Unified.h>
 
 #ifdef M5_BOARD
-//#include "PCA9685.h"
 #include "Rotary.h"
 #include "hardware-RotaryEncOverMCP.h"
 #endif
 
-#include "i2c_bus_m5.h"
-#include "hardware-pca9685-min.h"
-//static I2CBusM5 i2c(M5.Ex_I2C);
+#include "hardware-m5-i2c.h"
+#include "hardware-pca9685.h"
 static PCA9685 pca(M5.Ex_I2C, 0x42);
 
 typedef struct {
