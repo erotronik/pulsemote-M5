@@ -48,8 +48,7 @@ constexpr uint8_t INTB = 19;
 const byte buttonpins[] = {10, 13, 5, 0, 14};
 const byte numbuttons = sizeof(buttonpins);
 
-// semaphore for reading of the rotary encoder
-SemaphoreHandle_t rotaryISRSemaphore = nullptr;
+static TaskHandle_t rotaryTask = nullptr;
 
 RotaryEncOverMCP rotaryEncoders[] = {
     RotaryEncOverMCP(&mcp, 9, 8, &RotaryEncoderChanged, 0),
@@ -115,7 +114,8 @@ void handlemcpinterrupt() {
 
 static void IRAM_ATTR intactive(void* arg) {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  xSemaphoreGiveFromISR(rotaryISRSemaphore, &xHigherPriorityTaskWoken);
+  vTaskNotifyGiveFromISR(rotaryTask, &xHigherPriorityTaskWoken);
+
   if (xHigherPriorityTaskWoken) {
     portYIELD_FROM_ISR();
   }
@@ -123,6 +123,8 @@ static void IRAM_ATTR intactive(void* arg) {
 
 void rotaryReaderTask(void* pArgs) {
   (void)pArgs;
+
+  rotaryTask = xTaskGetCurrentTaskHandle();
 
   // Configure INTA/INTB as input with pullup + falling-edge interrupt
   gpio_config_t io{};
@@ -138,9 +140,6 @@ void rotaryReaderTask(void* pArgs) {
     ESP_ERROR_CHECK(err);
   }
 
-  // initialize semaphore for reader task
-  rotaryISRSemaphore = xSemaphoreCreateBinary();
-
   ESP_ERROR_CHECK(gpio_isr_handler_add((gpio_num_t)INTA, intactive, nullptr));
   ESP_ERROR_CHECK(gpio_isr_handler_add((gpio_num_t)INTB, intactive, nullptr));
 
@@ -148,7 +147,8 @@ void rotaryReaderTask(void* pArgs) {
   mcp.readGPIOB();
 
   while (true) {
-    if (xSemaphoreTake(rotaryISRSemaphore, portMAX_DELAY) == pdPASS) {
+    uint32_t n = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(50));
+    if (n > 0) {
       handlemcpinterrupt();
     }
   }
