@@ -8,6 +8,7 @@
 
 #include "hardware-m5-i2c.h"
 #include "hardware-pca9685.h"
+#include "hardware-mcp23017.h"
 static PCA9685 pca(M5.Ex_I2C, 0x42);
 #endif
 
@@ -18,8 +19,9 @@ static constexpr int LED_COUNT = 6; // 4 switches + cherry
 static lv_color_t g_led[LED_COUNT];
 static uint32_t g_dirty = 0;
 static portMUX_TYPE g_led_mux = portMUX_INITIALIZER_UNLOCKED;
-static TaskHandle_t g_led_task = nullptr;
+static TaskHandle_t rotaryTask = nullptr;
 static constexpr uint32_t NOTIF_LED = 1u << 0;
+static constexpr uint32_t NOTIF_MCP = 1u << 1;
 
 void RotaryEncoderChanged(bool clockwise, int id);
 
@@ -32,7 +34,8 @@ void RotaryEncoderChanged(bool clockwise, int id);
 // a0 is sw4_button, a1 is sw4_rotb, a2 = sw4_rota
 // a3 is sw3_rota, a4 is sw3_rotb, a5 = sw3_button
 
-Adafruit_MCP23X17 mcp;
+//Adafruit_MCP23X17 mcp;
+MCP23017 mcp(M5.Ex_I2C, 0x21);
 
 #if defined (CONFIG_IDF_TARGET_ESP32S3)
 constexpr uint8_t INTA = 6;
@@ -44,9 +47,7 @@ constexpr uint8_t INTB = 19;
 const byte buttonpins[] = {10, 13, 5, 0, 14};
 const byte numbuttons = sizeof(buttonpins);
 
-static TaskHandle_t rotaryTask = nullptr;
 QueueHandle_t event_queue = nullptr;
-
 
 RotaryEncOverMCP rotaryEncoders[] = {
     RotaryEncOverMCP(&mcp, 9, 8, &RotaryEncoderChanged, 0),
@@ -74,8 +75,8 @@ void m5io_showanalogrgb(byte sw, lv_color_t rgb) {
   g_dirty |= (1u << (sw - 1));
   taskEXIT_CRITICAL(&g_led_mux);
 
-  if (g_led_task) {
-    xTaskNotify(g_led_task, NOTIF_LED, eSetBits);
+  if (rotaryTask) {
+    xTaskNotify(rotaryTask, NOTIF_LED, eSetBits);
   }
 }
 
@@ -84,6 +85,7 @@ static unsigned long lastbuttondebounce[numbuttons] = {0};
 
 void handlemcpinterrupt() {
   auto data = mcp.getCapturedInterrupt();
+  //ESP_LOGE("MCP23017", "Interrupt data: 0x%04X", data);
 
   // check for rotary encoder change
   for (int i = 0; i < numencoders; i++) {
@@ -108,19 +110,16 @@ void handlemcpinterrupt() {
 // Interrupt from MCP means a button or rotary encoder changed
 
 static void IRAM_ATTR intactive(void* arg) {
+  //ESP_LOGE("MCP23017", "GPIO interrupt");
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  vTaskNotifyGiveFromISR(rotaryTask, &xHigherPriorityTaskWoken);
-
-  if (xHigherPriorityTaskWoken) {
-    portYIELD_FROM_ISR();
-  }
+  xTaskNotifyFromISR(rotaryTask, NOTIF_MCP, eSetBits, &xHigherPriorityTaskWoken);
+  if (xHigherPriorityTaskWoken) portYIELD_FROM_ISR();
 }
 
 void rotaryReaderTask(void* pArgs) {
   (void)pArgs;
 
   rotaryTask = xTaskGetCurrentTaskHandle();
-  g_led_task = xTaskGetCurrentTaskHandle();
 
   // Configure INTA/INTB as input with pullup + falling-edge interrupt
   gpio_config_t io{};
@@ -145,12 +144,11 @@ void rotaryReaderTask(void* pArgs) {
   static const byte pinstarts[LED_COUNT] = {0, 3, 11, 8, 6, 0}; // adjust last if needed
 
   while (true) {
-    uint32_t n = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(20));
-    if (n > 0) {
+    uint32_t bits = 0;
+    xTaskNotifyWait(0, UINT32_MAX, &bits, pdMS_TO_TICKS(10));
+    if (bits & NOTIF_MCP) {
       handlemcpinterrupt();
     }
-    uint32_t bits = 0;
-    xTaskNotifyWait(0, UINT32_MAX, &bits,0);
     if (bits & NOTIF_LED) {
       uint32_t mask;
 
@@ -170,46 +168,42 @@ void rotaryReaderTask(void* pArgs) {
         byte sw = idx + 1;
         uint8_t base = pinstarts[idx];
 
-        //PCA.setPWM(base + 0, rgb.red * 16);
         pca.setPWM(base + 0, (uint16_t)rgb.red * 16);
         if (sw != 5) {
           pca.setPWM(base + 1, (uint16_t)rgb.green * 16);
           pca.setPWM(base + 2, (uint16_t)rgb.blue * 16);
-          //PCA.setPWM(base + 1, rgb.green * 16);
-          //PCA.setPWM(base + 2, rgb.blue * 16);
         }
       }
     }
   }
 }
-        //pca.setPWM(base + 0, (uint16_t)rgb.red * 16)
-          //pca.setPWM(base + 1, (uint16_t)rgb.green * 16);
-          //pca.setPWM(base + 2, (uint16_t)rgb.blue * 16); 
+
 
 void m5io_init(void) {
   event_queue = xQueueCreate(10, sizeof(event_t));
 
   M5.Ex_I2C.begin();
 
-  //if (!PCA.begin(PCA9685_MODE1_AUTOINCR | PCA9685_MODE1_ALLCALL, PCA9685_MODE2_INVERT)) {
   if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
     printf_log("No PCA9685 found");
   }
-
-  delay(250);
-
-  if (!mcp.begin_I2C(0x21)) {
-    printf_log("No MCP23X17 found");
+  if (!mcp.begin()) {
+    ESP_LOGE("MCP23017", "No MCP23017 found");
+    printf_log("No MCP23017 found");
     return;
   }
 
-  mcp.setupInterrupts(false, true, HIGH);
+  if (!mcp.setupInterrupts(false, true, HIGH)) {
+    ESP_LOGE("MCP23017", "Failed to setup interrupts");
+    printf_log("Failed to setup interrupts"); 
+    return;
+  }
 
   for (byte i = 0; i <= 15; ++i) {
     if (i == 0 || i == 5 || i == 10 || i == 13)
-      mcp.pinMode(i, INPUT);
+      mcp.pinMode(i, mcp.XINPUT);
     else
-      mcp.pinMode(i, INPUT_PULLUP);
+      mcp.pinMode(i, mcp.XINPUT_PULLUP);
   }
   for (byte pin = 0; pin < 16; pin++) mcp.setupInterruptPin(pin, CHANGE);
 

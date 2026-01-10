@@ -10,7 +10,8 @@
 
 /* Describes new objects based on the Rotary and Adafruit MCP23017 library */
 #ifdef M5_BOARD
-#include <Adafruit_MCP23X17.h>
+//#include <Adafruit_MCP23X17.h>
+#include "hardware-mcp23017.h"
 #include <Rotary.h>
 
 /* function pointer definition */
@@ -25,7 +26,7 @@ typedef void (*rotaryActionFunc)(bool clockwise, int id);
  * */
 class RotaryEncOverMCP {
 public:
-    RotaryEncOverMCP(Adafruit_MCP23X17* mcp, byte pinA, byte pinB, rotaryActionFunc actionFunc = nullptr, int id = 0)
+    RotaryEncOverMCP(MCP23017* mcp, byte pinA, byte pinB, rotaryActionFunc actionFunc = nullptr, int id = 0)
     : rot(pinA, pinB), mcp(mcp),
       pinA(pinA), pinB(pinB),
       actionFunc(actionFunc), id(id) {
@@ -57,7 +58,7 @@ public:
         }
     }
 
-    Adafruit_MCP23X17* getMCP() {
+    MCP23017* getMCP() {
         return mcp;
     }
 
@@ -67,7 +68,7 @@ public:
 
 private:
     Rotary rot;                         /* the rotary object which will be created*/
-    Adafruit_MCP23X17* mcp = nullptr;   /* pointer the I2C GPIO expander it's connected to */
+    MCP23017* mcp = nullptr;   /* pointer the I2C GPIO expander it's connected to */
     uint8_t pinA = 0;
     uint8_t pinB = 0;           /* the pin numbers for output A and output B */
     rotaryActionFunc actionFunc = nullptr;  /* function pointer, will be called when there is an action happening */
