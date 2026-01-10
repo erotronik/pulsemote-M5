@@ -31,11 +31,11 @@ class device_mk312 : public Device {
   void etbox_on(int mode);
   void etbox_off(void);
   int get_last_mode(void);
-  void etbox_setbyte(word a, uint8_t d);
+  void etbox_setbyte(uint16_t a, uint8_t d);
   void etbox_setlevela(uint8_t d);
   void etbox_setlevelb(uint8_t d);
   void etbox_setpanellock(bool x);
-  uint8_t etbox_getbyte(word a);
+  uint8_t etbox_getbyte(uint16_t a);
   void next_mode(void);
   int get_mode(void);
   bool connected(void);

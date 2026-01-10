@@ -102,11 +102,11 @@ bool device_mk312::connected() {
   return BOX.isconnected();
 }
 
-void device_mk312::etbox_setbyte(word address, uint8_t data) {
+void device_mk312::etbox_setbyte(uint16_t address, uint8_t data) {
   if (BOX.isconnected()) BOX.setbyte(address, data);
 }
 
-uint8_t device_mk312::etbox_getbyte(word address) {
+uint8_t device_mk312::etbox_getbyte(uint16_t address) {
   if (BOX.isconnected()) return BOX.getbyte(address);
   return 0;
 }
