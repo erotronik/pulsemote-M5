@@ -1,7 +1,6 @@
 #include "comms-bt.hpp"
 
 #include "hardware-tft.h"
-#include "hardware-io-m5.h"
 #include "tab-coyote.hpp"
 #include "tab-mk312.hpp"
 #include "tab-thrustalot.hpp"
@@ -15,6 +14,7 @@
 #include "tab-mqtt.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
+#include "hardware-io-m5.hpp"
 
 lv_obj_t *tv;
 

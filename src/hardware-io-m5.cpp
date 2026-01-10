@@ -1,26 +1,17 @@
-#pragma once
-
 #include "lvgl-utils.h"
 #include <M5Unified.h>
+#include "hardware-io-m5.hpp"
 
 #ifdef M5_BOARD
 #include "Rotary.h"
 #include "hardware-RotaryEncOverMCP.h"
-#endif
 
 #include "hardware-m5-i2c.h"
 #include "hardware-pca9685.h"
 static PCA9685 pca(M5.Ex_I2C, 0x42);
-
-typedef struct {
-  int target;
-  int value;
-} event_t;
+#endif
 
 typedef uint8_t byte;
-
-QueueHandle_t event_queue;
-
 #ifdef M5_BOARD
 
 static constexpr int LED_COUNT = 6; // 4 switches + cherry
@@ -54,13 +45,14 @@ const byte buttonpins[] = {10, 13, 5, 0, 14};
 const byte numbuttons = sizeof(buttonpins);
 
 static TaskHandle_t rotaryTask = nullptr;
+QueueHandle_t event_queue = nullptr;
+
 
 RotaryEncOverMCP rotaryEncoders[] = {
     RotaryEncOverMCP(&mcp, 9, 8, &RotaryEncoderChanged, 0),
     RotaryEncOverMCP(&mcp, 11, 12, &RotaryEncoderChanged, 1),
     RotaryEncOverMCP(&mcp, 4, 3, &RotaryEncoderChanged, 2),
     RotaryEncOverMCP(&mcp, 1, 2, &RotaryEncoderChanged, 3)};
-const byte numencoders = 4;
 
 // PWM controller is PCA9685PW on 0x42
 //
