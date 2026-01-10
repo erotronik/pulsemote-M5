@@ -14,7 +14,7 @@
 #include "tab-mqtt.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
-#include "hardware-io-m5.hpp"
+#include "pulsemote-pcb.hpp"
 
 lv_obj_t *tv;
 

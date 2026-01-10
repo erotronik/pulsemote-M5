@@ -10,8 +10,7 @@
 
 /* Describes new objects based on the Rotary and Adafruit MCP23017 library */
 #ifdef M5_BOARD
-//#include <Adafruit_MCP23X17.h>
-#include "hardware-mcp23017.h"
+#include "mcp23017.hpp"
 #include <Rotary.h>
 
 /* function pointer definition */

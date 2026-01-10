@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <M5Unified.h>
+#include "m5_i2c.hpp"
 
 // Minimal MCP23017 (I2C) helper using M5Unified m5::I2C_Class register helpers.
 // - BANK=0 register map
@@ -9,26 +10,31 @@
 
 class MCP23017 {
 public:
-  MCP23017(const m5::I2C_Class& i2c, uint8_t addr7, uint32_t freq_hz = 400000)
-    : bus(i2c), addr(addr7), freq(freq_hz) {}
+  MCP23017() = default;
+
+  void attach(const m5::I2C_Class& i2c, uint8_t addr7, uint32_t freq_hz = 400000) {
+    bus = &i2c;
+    addr = addr7;
+    freq = freq_hz;
+  }
 
   void setClock(uint32_t freq_hz) { freq = freq_hz; }
 
   bool begin() {
     uint8_t iocon = 0;
-    if (!bus.readRegister(addr, IOCON, &iocon, 1, freq)) return false;
+    if (!bus->readRegister(addr, IOCON, &iocon, 1, freq)) return false;
     // Force BANK=0 (bit7=0). Keep SEQOP=0 for sequential reads.
     iocon &= ~(1u << 7); // BANK = 0
     iocon &= ~(1u << 5); // SEQOP = 0
-    if (!bus.writeRegister8(addr, IOCON, iocon, freq)) return false;
-    if (!bus.writeRegister8(addr, IOCON2, iocon, freq)) return false;
+    if (!bus->writeRegister8(addr, IOCON, iocon, freq)) return false;
+    if (!bus->writeRegister8(addr, IOCON2, iocon, freq)) return false;
     return true;
   }
 
   // setupInterrupts(mirror, openDrain, polarity)
   bool setupInterrupts(bool mirror, bool openDrain, uint8_t polarityHigh) {
     uint8_t iocon = 0;
-    if (!bus.readRegister(addr, IOCON, &iocon, 1, freq)) return false;
+    if (!bus->readRegister(addr, IOCON, &iocon, 1, freq)) return false;
 
     // BANK already forced 0 in begin(); keep it 0.
     iocon &= ~(1u << 7); // BANK=0
@@ -38,8 +44,8 @@ public:
     if (openDrain)    iocon |=  (1u << 2); else iocon &= ~(1u << 2); // ODR
     if (polarityHigh == HIGH) iocon |=  (1u << 1); else iocon &= ~(1u << 1); // INTPOL
 
-    if (!bus.writeRegister8(addr, IOCON,  iocon, freq)) return false;
-    if (!bus.writeRegister8(addr, IOCON2, iocon, freq)) return false;
+    if (!bus->writeRegister8(addr, IOCON,  iocon, freq)) return false;
+    if (!bus->writeRegister8(addr, IOCON2, iocon, freq)) return false;
     return true;
   }
 
@@ -82,25 +88,25 @@ public:
 
   uint8_t readGPIOA() {
   uint8_t v = 0xFF;  // default to pulled-up (safe)
-  bus.readRegister(addr, GPIOA, &v, 1, freq);
+  bus->readRegister(addr, GPIOA, &v, 1, freq);
   return v;
 }
 
 uint8_t readGPIOB() {
   uint8_t v = 0xFF;
-  bus.readRegister(addr, GPIOB, &v, 1, freq);
+  bus->readRegister(addr, GPIOB, &v, 1, freq);
   return v;
 }
 
 uint16_t readGPIOAB() {
   uint8_t buf[2] = {0xFF, 0xFF};
-  bus.readRegister(addr, GPIOA, buf, 2, freq); // GPIOA then GPIOB
+  bus->readRegister(addr, GPIOA, buf, 2, freq); // GPIOA then GPIOB
   return (uint16_t)buf[0] | ((uint16_t)buf[1] << 8);
 }
 
   uint16_t getCapturedInterrupt() {
     uint8_t buf[2] = {0xFF, 0xFF};
-    bus.readRegister(addr, INTCAPA, buf, 2, freq);
+    bus->readRegister(addr, INTCAPA, buf, 2, freq);
     return (uint16_t)buf[0] | ((uint16_t)buf[1] << 8);
   }
 
@@ -109,14 +115,14 @@ uint16_t readGPIOAB() {
   // We'll read INTCAP and ignore the result.
   bool clearInterrupts() {
     uint8_t buf[2];
-    return bus.readRegister(addr, INTCAPA, buf, 2, freq);
+    return bus->readRegister(addr, INTCAPA, buf, 2, freq);
   }
 
   static constexpr uint8_t XINPUT        = 0x00;
   static constexpr uint8_t XINPUT_PULLUP = 0x02;
 
 private:
-  const m5::I2C_Class& bus;
+  const m5::I2C_Class* bus = nullptr;
   uint8_t addr;
   uint32_t freq;
 
@@ -138,13 +144,13 @@ private:
 
   bool read16(uint8_t regA, uint16_t& out) {
     uint8_t buf[2] = {0, 0};
-    if (!bus.readRegister(addr, regA, buf, 2, freq)) return false;
+    if (!bus->readRegister(addr, regA, buf, 2, freq)) return false;
     out = (uint16_t)buf[0] | ((uint16_t)buf[1] << 8);
     return true;
   }
 
   bool write16(uint8_t regA, uint16_t v) {
     uint8_t buf[2] = {(uint8_t)(v & 0xFF), (uint8_t)(v >> 8)};
-    return bus.writeRegister(addr, regA, buf, 2, freq);
+    return bus->writeRegister(addr, regA, buf, 2, freq);
   }
 };

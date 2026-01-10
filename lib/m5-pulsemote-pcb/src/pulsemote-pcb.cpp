@@ -1,18 +1,17 @@
-#include "lvgl-utils.h"
 #include <M5Unified.h>
-#include "hardware-io-m5.hpp"
+#include <lvgl.h>
 
-#ifdef M5_BOARD
+#include "../include/pulsemote-pcb.hpp"
+
 #include "Rotary.h"
-#include "hardware-RotaryEncOverMCP.h"
+#include "rotaryencoders.hpp"
 
-#include "hardware-m5-i2c.h"
-#include "hardware-pca9685.h"
-#include "hardware-mcp23017.h"
-static PCA9685 pca(M5.Ex_I2C, 0x42);
-#endif
+#include "pca9685.hpp"
+#include "mcp23017.hpp"
 
-#ifdef M5_BOARD
+MCP23017 mcp;
+PCA9685 pca;
+
 static constexpr int LED_COUNT = 6; // 4 switches + cherry
 static lv_color_t g_led[LED_COUNT];
 static uint32_t g_dirty = 0;
@@ -31,9 +30,6 @@ void RotaryEncoderChanged(bool clockwise, int id);
 // b6 = cherry button
 // a0 is sw4_button, a1 is sw4_rotb, a2 = sw4_rota
 // a3 is sw3_rota, a4 is sw3_rotb, a5 = sw3_button
-
-//Adafruit_MCP23X17 mcp;
-MCP23017 mcp(M5.Ex_I2C, 0x21);
 
 #if defined (CONFIG_IDF_TARGET_ESP32S3)
 constexpr uint8_t INTA = 6;
@@ -178,22 +174,30 @@ void rotaryReaderTask(void* pArgs) {
 
 
 void m5io_init(void) {
+  ESP_LOGE("M5IO", "Initializing M5 IO");
+
+  auto& i2c = M5.Ex_I2C;
+  i2c.begin();
+
+
   event_queue = xQueueCreate(10, sizeof(event_t));
 
-  M5.Ex_I2C.begin();
 
+  ESP_LOGE("M5IO", "PCA");
+  pca.attach(i2c, 0x42);
   if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
-    printf_log("No PCA9685 found");
-  }
-  if (!mcp.begin()) {
-    ESP_LOGE("MCP23017", "No MCP23017 found");
-    printf_log("No MCP23017 found");
+    ESP_LOGE("PCA9685", "No PCA9685 found");
     return;
   }
-
+  ESP_LOGE("M5IO", "MCP");
+  mcp.attach(i2c, 0x21);
+  if (!mcp.begin()) {
+    ESP_LOGE("MCP23017", "No MCP23017 found");
+    return;
+  }
+    ESP_LOGE("M5IO", "Initializing MCP");
   if (!mcp.setupInterrupts(false, true, HIGH)) {
     ESP_LOGE("MCP23017", "Failed to setup interrupts");
-    printf_log("Failed to setup interrupts"); 
     return;
   }
 
@@ -208,16 +212,7 @@ void m5io_init(void) {
   for (uint8_t i = 0; i < numencoders; i++)
     rotaryEncoders[i].init();  // currently a NOP
 
+      ESP_LOGE("M5IO", "Creating Task");
+
   xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 1); // gui core
-
 }
-#else
-  // Waveshare has no IO (yet) but can't use the same M5 libraries anyway due to i2c driver conflicts
-  const uint8_t numencoders = 4;
-  void m5io_init(void) {
-      event_queue = xQueueCreate(10, sizeof(event_t));
-  }
-  void m5io_showanalogrgb(uint8_t sw, lv_color_t rgb) {
-  }
-
-#endif
