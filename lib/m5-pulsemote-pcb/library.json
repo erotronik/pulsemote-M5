@@ -1,5 +1,5 @@
 {
-  "name": "m5-pulsemote-hardware",
+  "name": "m5-pulsemote-pcb",
   "version": "0.1.0",
   "frameworks": ["arduino"],
   "platforms": ["espressif32"],

@@ -4,6 +4,11 @@
 #include <Venerate.h>
 #include <device.hpp>
 
+// temporary so we can get rid of Arduino.h everywhere
+#ifndef byte
+#define byte uint8_t
+#endif
+
 class device_mk312_NimBLEClientCallback;
 class device_mk312;
 

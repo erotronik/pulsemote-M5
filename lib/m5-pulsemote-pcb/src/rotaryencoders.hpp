@@ -4,12 +4,9 @@
  *  Created on: 21.05.2018
  *      Author: Maxi
  */
-
-#ifndef SRC_ROTARYENCOVERMCP_H_
-#define SRC_ROTARYENCOVERMCP_H_
+#pragma once
 
 /* Describes new objects based on the Rotary and Adafruit MCP23017 library */
-#ifdef M5_BOARD
 #include "mcp23017.hpp"
 #include <Rotary.h>
 
@@ -50,21 +47,6 @@ public:
         }
     }
 
-    /* Poll the encoder. Will cause an I2C transfer. */
-    void poll() {
-        if(mcp != nullptr) {
-            feedInput(mcp->readGPIOAB());
-        }
-    }
-
-    MCP23017* getMCP() {
-        return mcp;
-    }
-
-    int getID() {
-        return id;
-    }
-
 private:
     Rotary rot;                         /* the rotary object which will be created*/
     MCP23017* mcp = nullptr;   /* pointer the I2C GPIO expander it's connected to */
@@ -73,6 +55,3 @@ private:
     rotaryActionFunc actionFunc = nullptr;  /* function pointer, will be called when there is an action happening */
     int id = 0;                             /* optional ID for identification */
 };
-#endif
-
-#endif /* SRC_ROTARYENCOVERMCP_H_ */
