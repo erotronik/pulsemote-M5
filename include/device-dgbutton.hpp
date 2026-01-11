@@ -38,7 +38,7 @@ class device_dgbutton : public Device {
   enum class dgbutton_state { WFHELLO, SENDSTART, LISTEN};
   dgbutton_state state = dgbutton_state::WFHELLO;
 
-  void ble_dgbutton_send(String newValue);
+  void ble_dgbutton_send(const char* newValue);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
   friend class DevicedgbuttonNimBLEClientCallback;
