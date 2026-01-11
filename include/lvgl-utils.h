@@ -21,8 +21,6 @@ void lv_hide_tab(lv_obj_t *page);
 void printf_log(const char *format, ...);
 void lv_init_pulsemote(void);
 
-//#include "esp_timer.h"
-//
-//static inline uint32_t millis(){
-//    return (uint32_t)(esp_timer_get_time() / 1000ULL);
-//}
+#if defined(ARDUINO)
+#include <Arduino.h>
+#endif

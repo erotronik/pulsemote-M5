@@ -5,7 +5,6 @@
 #include "device-loop.hpp"
 #include "device.hpp"
 #include <functional>
-#include <map>
 
 NimBLEUUID loop_SERVICE_BLEUUID("19b10010-e8f2-537e-4f6c-d104768a1214");
 NimBLEUUID loop_UUID_RX("19b10013-e8f2-537e-4f6c-d104768a1214");

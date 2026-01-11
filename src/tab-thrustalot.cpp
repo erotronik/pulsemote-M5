@@ -28,10 +28,10 @@ void tab_thrustalot::encoder_change(int sw, int change) {
     timer->rotary_change(change);
   }
   if (sw == tab_object_buttonbar::rotary1) {
-    knob_speed = min(99,max(1,knob_speed+change));
+    knob_speed = std::min(99,std::max(1,knob_speed+change));
   }
   if (sw == tab_object_buttonbar::rotary2) {
-    knob_tempo = min(99,max(0,knob_tempo+change));
+    knob_tempo = std::min(99,std::max(0,knob_tempo+change));
   }
   need_knob_refresh = true;
 }
@@ -181,8 +181,6 @@ void tab_thrustalot::loop(bool activetab) {
     need_knob_refresh = true;
   }
   if (activetab && need_knob_refresh) {
-    device_thrustalot *md = static_cast<device_thrustalot *>(device);
-
     need_knob_refresh = false;
  
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed);

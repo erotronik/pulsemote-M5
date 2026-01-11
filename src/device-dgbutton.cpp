@@ -5,7 +5,6 @@
 #include "device-dgbutton.hpp"
 #include "device.hpp"
 #include <functional>
-#include <map>
 
 NimBLEUUID dgbutton_SERVICE_BLEUUID("180c");
 NimBLEUUID dgbutton_UUID_RX("150b");
@@ -74,7 +73,7 @@ void device_dgbutton::ble_mk_callback(
         state = dgbutton_state::SENDSTART;
 
         // please tell us when the button is pushed and released
-        uint8_t a[] = { 0x50, 0x01, 
+        const uint8_t a[] = { 0x50, 0x01, 
                         0x01, 0x01, 
                         0x00, // 01 = invert push/release
                         0x01, // 01 = send a 5c on held every second

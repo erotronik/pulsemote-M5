@@ -5,7 +5,6 @@
 #include "comms-bt.hpp"
 #include "device.hpp"
 #include <functional>
-#include <map>
 
 // !B11X -- thrust to next half
 // !B21XX -- old random
@@ -81,6 +80,9 @@ device_thrustalot::~device_thrustalot() {
   // disconnect
 }
 
+static inline int map_int(int x,int in_min, int in_max, int out_min, int out_max){
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
 void device_thrustalot::ble_thrustalot_send(const char* newValue) {
   if (is_connected) {
@@ -93,7 +95,7 @@ void device_thrustalot::ble_thrustalot_send(const char* newValue) {
 void device_thrustalot::thrustsendspeed(int speed) {
   // have to scale it, we're passed pc from 0 (5 actually) to 100 map it to 45 to 255
   char speeds[20];
-  sprintf(speeds, "!S%03dX", map(speed, 0, 100, 45, 255));
+  sprintf(speeds, "!S%03dX", map_int(speed, 0, 100, 45, 255));
   ble_thrustalot_send(speeds);
 }
 
@@ -106,13 +108,9 @@ void device_thrustalot::thrustallthewayout(void) {
 
 }
 
-static inline long map_long(long x,long in_min, long in_max, long out_min, long out_max){
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
 void device_thrustalot::thrustonetime(int speed) {
   char speeds[20];
-  sprintf(speeds, "!U%03dX", map_long(speed, 0, 100, 45, 255));
+  sprintf(speeds, "!U%03dX", map_int(speed, 0, 100, 45, 255));
   ble_thrustalot_send(speeds);  
 }
 

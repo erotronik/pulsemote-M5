@@ -5,7 +5,6 @@
 #include <device-mk312.hpp>
 #include <device.hpp>
 #include <functional>
-#include <map>
 
 static void venerate_logger(void* ctx, const char* msg) {
   ESP_LOGD("Venerate", "%s", msg);

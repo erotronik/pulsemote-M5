@@ -5,7 +5,6 @@
 #include "comms-bt.hpp"
 #include "device.hpp"
 #include <functional>
-#include <map>
 
 // Lovense Hush for now
 // https://docs.buttplug.io/docs/stpihkal/protocols/lovense/

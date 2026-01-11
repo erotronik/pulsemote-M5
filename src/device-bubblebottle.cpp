@@ -5,7 +5,6 @@
 #include "device-bubblebottle.hpp"
 #include "device.hpp"
 #include <functional>
-#include <map>
 
 NimBLEUUID BUBBLEBOTTLE_SERVICE_BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID BUBBLEBOTTLE_UUID_RX("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
