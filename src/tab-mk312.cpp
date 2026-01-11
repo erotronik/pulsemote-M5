@@ -297,6 +297,8 @@ void tab_mk312::tab_create() {
   lv_obj_add_event_cb(modeselect->getdropdownobject(), mk312_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
   buttonbar = new tab_object_buttonbar(page);
+  buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
+  buttonbar->set_onmain(tab_object_buttonbar::rotary2, true);
 
   tab_create_status(page);
   rand_timer->view(page);
