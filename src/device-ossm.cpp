@@ -28,31 +28,36 @@ void device_ossm::notify(type_of_change change) {
   if (update_callback) update_callback(change, this);
 }
 
-void device_ossm::ble_ossm_send(String newValue) {
+void device_ossm::ble_ossm_send(const char* newValue) {
   if (!is_connected) 
     return;
   ESP_LOGI("ossm","Sending %s" ,newValue);
-  device_ossm::ossm_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+  device_ossm::ossm_tx_Characteristic->writeValue(newValue, strlen(newValue));
 }
 
 void device_ossm::set_speed(int speed) {
-  ble_ossm_send("set:speed:" +String(speed));
+  std::snprintf(send_buf, sizeof(send_buf), "set:speed:%d", speed);
+  ble_ossm_send(send_buf);
 }
 
 void device_ossm::set_stroke(int s) {
-  ble_ossm_send("set:stroke:" +String(s));
+  std::snprintf(send_buf, sizeof(send_buf), "set:stroke:%d", s);
+  ble_ossm_send(send_buf);
 }
 
 void device_ossm::set_depth(int s) {
-  ble_ossm_send("set:depth:" +String(s));
+  std::snprintf(send_buf, sizeof(send_buf), "set:depth:%d", s);
+  ble_ossm_send(send_buf);
 }
 
 void device_ossm::set_sensation(int s) {
-  ble_ossm_send("set:sensation:" +String(s));
+  std::snprintf(send_buf, sizeof(send_buf), "set:sensation:%d", s);
+  ble_ossm_send(send_buf);
 }
 
 void device_ossm::set_pattern(int s) {
-  ble_ossm_send("set:pattern:" +String(s));
+  std::snprintf(send_buf, sizeof(send_buf), "set:pattern:%d", s);
+  ble_ossm_send(send_buf);
 }
 
 void device_ossm::connected_callback() {

@@ -45,7 +45,8 @@ class device_ossm : public Device {
 
  private:
 
-  void ble_ossm_send(String newValue);
+  void ble_ossm_send(const char*newValue);
+  char send_buf[32];
   JsonDocument rxstatus;
   JsonDocument patternlist;
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
