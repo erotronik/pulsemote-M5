@@ -21,8 +21,8 @@ NimBLEAdvertisedDevice *found_bledevice;
 Device *found_device;
 bool scanthread_is_scanning = false;
 
-class PulsemoteAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
-  void onResult(NimBLEAdvertisedDevice *advertisedDevice) override {
+class PulsemoteAdvertisedDeviceCallbacks : public NimBLEScanCallbacks {
+  void onResult(const NimBLEAdvertisedDevice *advertisedDevice) override {
     ESP_LOGI("comms-bt", "Advertised Device: %s", advertisedDevice->toString().c_str());
     // can't connect while scanning is going on - it locks up everything.
     found_device = nullptr;
@@ -50,7 +50,7 @@ bool ble_get_service(NimBLERemoteService*& service, NimBLEClient* bleClient, Nim
   return true;
 }
 
-bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, notify_callback notifyCallback, bool response) {
+bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteristic*& c, NimBLEUUID uuid, NimBLERemoteCharacteristic::notify_callback notifyCallback, bool response) {
   ESP_LOGD("get_char", "Getting characteristic %s", uuid.toString().c_str());
   c = service->getCharacteristic(uuid);
   if (c == nullptr) {
@@ -69,9 +69,9 @@ bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteri
 
 void scan_comms_init(void) {
   NimBLEDevice::init("m5");
-  NimBLEDevice::setPower(ESP_PWR_LVL_P6, ESP_BLE_PWR_TYPE_ADV);  // send advertisements with 6 dbm
+  //NimBLEDevice::setPower(ESP_PWR_LVL_P6, ESP_BLE_PWR_TYPE_ADV);  // send advertisements with 6 dbm
   pBLEScan = NimBLEDevice::getScan(); // create new scan
-  pBLEScan->setAdvertisedDeviceCallbacks(new PulsemoteAdvertisedDeviceCallbacks());
+  pBLEScan->setScanCallbacks(new PulsemoteAdvertisedDeviceCallbacks());
   pBLEScan->setActiveScan(true); // active scan uses more power, but get results faster
   pBLEScan->setInterval(512);
   pBLEScan->setWindow(32); // less or equal setInterval value
@@ -79,32 +79,55 @@ void scan_comms_init(void) {
 }
 
 void scan_loop() {
-  bool repeatscan = false;  // if we found something and connected to it, keep scanning for more
+  for (;;) {
+    bool repeatscan = false;  // reset each pass
 
-  do {
     ESP_LOGI("comms-bt", "Scanning for %ds on core%d", scanTime, xPortGetCoreID());
-    pBLEScan->start(scanTime, false);  // up to (30 seconds)
+    pBLEScan->getResults(scanTime * 1000, false);  // blocks until timeout or stop()
+    ESP_LOGI("comms-bt", "Scanning stopped");
 
-    if (found_device && found_bledevice) {
-      ESP_LOGI(found_device->getShortName(), "found device");
+    // Take ownership of what the callback found, then clear globals
+    auto* dev = found_device;
+    auto* adv = found_bledevice;
+    found_device = nullptr;
+    found_bledevice = nullptr;
+
+    if (dev && adv) {
+      ESP_LOGI("comms-bt", "found device: %s", dev->getShortName());
+
       vTaskDelay(pdMS_TO_TICKS(100));
-      found_device->set_callback(device_change_handler);
-      bool connected = found_device->connect_to_device(found_bledevice);
+      dev->set_callback(device_change_handler);
+
+      bool connected = dev->connect_to_device(adv);
       if (!connected) {
-        ESP_LOGD(found_device->getShortName(),"connection failed");
-        delete found_device;    
-        found_device = NULL;
+        // give NimBLE task time to finish any pending callbacks
+        vTaskDelay(pdMS_TO_TICKS(250));
+        ESP_LOGD("comms-bt", "%s connection failed", dev->getShortName());
+        delete dev;
+        dev = nullptr;
       }
-      ESP_LOGD("comms-bt","removing bledevice and scan again");
-      delete found_bledevice;
-      repeatscan = true;
-      vTaskDelay(pdMS_TO_TICKS(100));
-    }
-    pBLEScan->clearResults();  // delete results fromBLEScan buffer to release memory
-    vTaskDelay(pdMS_TO_TICKS(10));
-  } while (repeatscan);
-}
 
+      delete adv;
+      adv = nullptr;
+
+      // If we successfully connected (or you want to continue regardless), rescan
+      repeatscan = (dev != nullptr);   // or just `true` if you always want to rescan
+      // If you keep `dev`, make sure you have a plan to delete it later.
+    } else {
+      // If one is set and the other isn't, that's a race/logic bug worth logging
+      if (dev || adv) {
+        ESP_LOGW("comms-bt", "partial find (dev=%p adv=%p) - race?", dev, adv);
+        delete dev;
+        delete adv;
+      }
+    }
+
+    pBLEScan->clearResults();
+    vTaskDelay(pdMS_TO_TICKS(10));
+
+    if (!repeatscan) break;
+  }
+}
 // We scan in a separate task - scanning is a blocking
 // operation. All the communication with the Bluetooth devices also happens
 // in this task.

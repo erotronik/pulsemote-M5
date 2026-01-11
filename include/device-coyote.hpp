@@ -7,7 +7,7 @@ bool temporary_has_a_coyote(void);
 
 class device_coyote : public Device {
  public:
-  bool is_device(NimBLEAdvertisedDevice* advertisedDevice) {
+  bool is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
     if (!coyote.is_coyote(advertisedDevice))
       return false;
     //if (temporary_has_a_coyote()) {

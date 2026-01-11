@@ -21,7 +21,7 @@ static void venerate_logger(void* ctx, const char* msg) {
 NimBLEUUID MK312_SERVICE_BLEUUID("0000ffe0-0000-1000-8000-00805f9b34fb");
 NimBLEUUID MK312_UUID_RXTX("0000ffe1-0000-1000-8000-00805f9b34fb");
 
-bool device_mk312::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
+bool device_mk312::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
   if (advertisedDevice->isAdvertisingService(MK312_SERVICE_BLEUUID)) {
     // any BLE UART will match this so only try to connect to something with name MK or 312 in the name
     if (strstr(advertisedDevice->getName().c_str(),"312")) return true;
@@ -92,14 +92,21 @@ void device_mk312::etbox_txcb(uint8_t c) {
 }
 
 int device_mk312::etbox_rxcb(char* p, int x) {
-  NotifyPacket received;
+  NotifyPacket r;
+  int written = 0;
 
-  if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
-    int copyLen = (received.length < x) ? received.length : x;
-    memcpy(p, received.data, copyLen);
-    return copyLen;
+  if (xQueueReceive(notifyQueue, &r, pdMS_TO_TICKS(200)) != pdTRUE) return 0;
+
+  int n = (r.length < x) ? r.length : x;
+  memcpy(p, r.data, n);
+  written += n;
+
+  while (written < x && xQueueReceive(notifyQueue, &r, pdMS_TO_TICKS(20)) == pdTRUE) {
+    n = (r.length < (x - written)) ? r.length : (x - written);
+    memcpy(p + written, r.data, n);
+    written += n;
   }
-  return 0;
+  return written;
 }
 
 bool device_mk312::connected() {
@@ -227,10 +234,13 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
             std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&device_mk312::etbox_flushcb, this));
   BOX.setdebug(2, venerate_logger, nullptr);
+  vTaskDelay(pdMS_TO_TICKS(100));
   BOX.newhello();
   if (!BOX.isconnected()) {
     ESP_LOGE(getShortName(), "couldnt do hello handshake to box");
-    //bleClient->disconnect();
+
+    bleClient->disconnect();
+    vTaskDelay(pdMS_TO_TICKS(100));
     NimBLEDevice::deleteClient(bleClient);
     bleClient = NULL;
     notify(D_DISCONNECTED);
@@ -239,7 +249,8 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
   int y = BOX.getbyte(ETMEM_knoba); // any location really just to ensure the handshake worked
   if (y == -1) {
     ESP_LOGE(getShortName(), "couldnt get data from box");
-    //bleClient->disconnect();
+    bleClient->disconnect();
+    vTaskDelay(pdMS_TO_TICKS(100));
     NimBLEDevice::deleteClient(bleClient);
     bleClient = NULL;
     notify(D_DISCONNECTED);

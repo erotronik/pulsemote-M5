@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "logger.h"
 
-#define maxrxbytes 4
+#define maxrxbytes 10
 
 #define ETMEM_panellock 0x400F
 #define ETMEM_knoba 0x4064

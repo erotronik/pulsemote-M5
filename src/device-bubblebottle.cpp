@@ -10,7 +10,7 @@ NimBLEUUID BUBBLEBOTTLE_SERVICE_BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID BUBBLEBOTTLE_UUID_RX("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID BUBBLEBOTTLE_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
 
-bool device_bubblebottle::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
+bool device_bubblebottle::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
    if (advertisedDevice->isAdvertisingService(BUBBLEBOTTLE_SERVICE_BLEUUID)) {
     uint8_t *md = (uint8_t *)advertisedDevice->getManufacturerData().data();
     if (md && md[0] == 0xf1 && md[1] == 0xf1) 

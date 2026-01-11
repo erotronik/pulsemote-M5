@@ -35,7 +35,7 @@ class device_ossm : public Device {
   int get_sensation(void);
   int get_pattern(void);
 
-  bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
+  bool is_device(const NimBLEAdvertisedDevice* advertisedDevice) override;
 
   const char* pattern_name_for_idx(int idx);
 

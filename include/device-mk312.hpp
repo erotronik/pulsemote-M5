@@ -26,7 +26,7 @@ class device_mk312 : public Device {
                              "Phase1", "Phase2", "Phase3", "User1",  "User2",
                              "User3",  "User4", "Luck"};
 
-  bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
+  bool is_device(const NimBLEAdvertisedDevice* advertisedDevice) override;
   void set_mode(int p);
   void etbox_on(int mode);
   void etbox_off(void);

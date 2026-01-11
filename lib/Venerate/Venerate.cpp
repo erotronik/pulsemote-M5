@@ -103,9 +103,9 @@ int Venerate::cp(uint8_t msg[], uint8_t n, uint8_t reply[]) {
         _state = 0;
     } else if (_debug) {
         for (int i = 0; i < bread; i++) {
-            _debugserial.printf("%02X ", reply[i]);
+            _debugserial.printf("rx=%02X ", reply[i]);
         }
-        _debugserial.printf(" rx\n");
+        _debugserial.printf("rx end %d\n",bread);
     }
     return bread;
 }
@@ -172,15 +172,17 @@ bool Venerate::newhello()
         _mod = 0;
         int chars = Venerate::cp(send, 1, rx);
         if (chars > 0 && rx[0] == 0x07) {
+            if (_debug) _debugserial.printf("got 07 s=%d\n", s);
             s++;
-            if (s>3)  // was 3
+            if (s>2)  // was 3
                 break;
         }
     }
-    if (s > 3) {
+    if (s > 2) {
         if (_debug) _debugserial.printf("rx hello\n");
         uint8_t send[] = {0x2f, 0x00};
         _mod = 0;
+
         int chars = Venerate::cp(send, 2, rx);
         int sum = rx[0] + rx[1];
         if (sum > 256) sum -= 256;
@@ -192,7 +194,7 @@ bool Venerate::newhello()
             //EEPROM.write(_boxid, _mod);
         }
     }
-    if (s>3) {
+    if (s>2) {
         // just a test memory get
         int y = Venerate::getbyte(ETMEM_knoba);
         if (y < 0) {

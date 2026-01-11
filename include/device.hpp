@@ -17,7 +17,7 @@ class Device {
   virtual const char *getShortName() const = 0;
   virtual ~Device() {}
   virtual void set_callback(device_callback c) {};
-  virtual bool is_device(NimBLEAdvertisedDevice* advertisedDevice);
+  virtual bool is_device(const NimBLEAdvertisedDevice* advertisedDevice);
   
   virtual bool connect_to_device(NimBLEAdvertisedDevice* device) { 
     return false;

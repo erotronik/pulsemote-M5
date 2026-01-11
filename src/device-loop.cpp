@@ -9,7 +9,7 @@
 NimBLEUUID loop_SERVICE_BLEUUID("19b10010-e8f2-537e-4f6c-d104768a1214");
 NimBLEUUID loop_UUID_RX("19b10013-e8f2-537e-4f6c-d104768a1214");
 
-bool device_loop::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
+bool device_loop::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
    return (advertisedDevice->isAdvertisingService(loop_SERVICE_BLEUUID));
 }
 

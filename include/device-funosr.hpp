@@ -17,7 +17,7 @@ class device_funosr : public Device {
   bool connect_to_device(NimBLEAdvertisedDevice* device) override;
   void set_callback(device_callback c) override;
 
-  bool is_device(NimBLEAdvertisedDevice* advertisedDevice) override;
+  bool is_device(const NimBLEAdvertisedDevice* advertisedDevice) override;
 
   void funosr_stroke(int smin, int smax, int duration);
   void funosr_stop(void);

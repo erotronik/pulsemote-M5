@@ -16,7 +16,7 @@ NimBLEUUID ossm_RX("522b443a-4f53-534d-2000-420badbabe69");
 NimBLEUUID ossm_SPEEDKNOB("522b443a-4f53-534d-1010-420badbabe69");
 NimBLEUUID ossm_PATTERNLIST("522b443a-4f53-534d-3000-420badbabe69");
 
-bool device_ossm::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
+bool device_ossm::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
   return (advertisedDevice->isAdvertisingService(ossm_SERVICE_BLEUUID));
 }
 

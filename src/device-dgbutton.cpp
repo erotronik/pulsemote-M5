@@ -10,7 +10,7 @@ NimBLEUUID dgbutton_SERVICE_BLEUUID("180c");
 NimBLEUUID dgbutton_UUID_RX("150b");
 NimBLEUUID dgbutton_UUID_TX("150a");
 
-bool device_dgbutton::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
+bool device_dgbutton::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
    return (!strcmp(advertisedDevice->getName().c_str(), "47L120100"));
 }
 
