@@ -70,10 +70,10 @@ device_bubblebottle::~device_bubblebottle() {
   // disconnect
 }
 
-void device_bubblebottle::ble_bubblebottle_send(String newValue) {
+void device_bubblebottle::ble_bubblebottle_send(const char* newValue) {
   if (is_connected) {
     ESP_LOGI("bubblebottle","Sending %s" ,newValue);
-    device_bubblebottle::uuid_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+    device_bubblebottle::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
   } else 
     ESP_LOGE("bubblebottle","cant send not connected");
 }

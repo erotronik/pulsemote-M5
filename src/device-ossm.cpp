@@ -205,8 +205,8 @@ bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
     ESP_LOGE(getShortName(), "Missing patternlist json");
   }
 
-  String newValue = "false";
-  ossm_speedknob_Characteristic->writeValue(newValue.c_str(), newValue.length());
+  const char* newValue = "false";
+  ossm_speedknob_Characteristic->writeValue(newValue, strlen(newValue));
   ble_ossm_send("go:strokeEngine");
 
   is_connected = true;

@@ -131,9 +131,8 @@ void device_thrustalot::ble_mk_callback(
       } else if (bug[0] == 'A') {
         thrustcb_pos = 1;
         xQueueSend(events, &thrustcb_pos, 1);
-        String x = String(bug + 1);
-        ESP_LOGD("Thrustalot", "%d", x.toInt());
-        thrustcb_count = x.toInt();
+        thrustcb_count = std::atoi(bug+1);
+        ESP_LOGD("Thrustalot", "%d", thrustcb_count);
       } else if (bug[0] == 'S') {
         if (bug[1] != '0') {
           //thrustcb_pos = 0;
@@ -141,9 +140,8 @@ void device_thrustalot::ble_mk_callback(
           thrustcb_left = 0;
         }
       } else if (bug[0] == 'T') {
-        String x = String(bug + 1);
-        ESP_LOGD("Thrustalot", "%d", x.toInt());
-        thrustcb_left = x.toInt();
+        thrustcb_left = std::atoi(bug+1);
+        ESP_LOGD("Thrustalot", "%d", thrustcb_left);
       }
       //ESP_LOGI("thrusthardware","%s",bug);
       j = 0;

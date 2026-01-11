@@ -67,6 +67,7 @@ device_lovense::~device_lovense() {}
 // mode 0 is continuous, mode 1 is randomly pick something, mode 2,3,4 are presets 1,2,3
 
 void device_lovense::setmodespeed(int mode, int speed) {
+  char buf[32];
   if (mode ==1 && speed !=0) {
     int i = rand()%(5+patterns_n-2);
     if (i<5) {
@@ -78,18 +79,20 @@ void device_lovense::setmodespeed(int mode, int speed) {
     ESP_LOGI("lovense","random mode=%d speed=%d",mode,speed);
   }
   if (mode ==0 || speed ==0) {
-    ble_lovense_send("Vibrate:" +String(speed)+ ";");
+    snprintf(buf, sizeof(buf), "Vibrate:%d;", speed);
+    ble_lovense_send(buf);
   } else  {
-    ble_lovense_send("Preset:" + String(mode-1) +";");
-  } 
+    snprintf(buf, sizeof(buf), "Preset:%d;", mode-1);
+    ble_lovense_send(buf);
+  }   
 }
 
-void device_lovense::ble_lovense_send(String newValue) {
+void device_lovense::ble_lovense_send(const char* newValue) {
   if (!is_connected) 
     return;
   xQueueReset(notifyQueue);
   ESP_LOGI("lovense","Sending %s" ,newValue);
-  device_lovense::uuid_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+  device_lovense::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
   NotifyPacket received;
 
   if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
@@ -106,8 +109,8 @@ int device_lovense::ble_lovense_getbattery() {
     return 0;
   int batterylevel = 0;
   xQueueReset(notifyQueue);
-  static const String newValue = "Battery;";
-  device_lovense::uuid_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+  static const char* newValue = "Battery;";
+  device_lovense::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
 
   NotifyPacket received;
 
