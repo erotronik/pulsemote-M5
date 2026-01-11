@@ -1,4 +1,4 @@
-#ifdef BOARD_WAVESHARE_ESP32_S3_TOUCH_LCD_7
+#if BOARD_WAVESHARE_ESP32_S3_TOUCH_LCD_7
 
 #include <esp_display_panel.hpp>
 

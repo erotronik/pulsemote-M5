@@ -204,7 +204,6 @@ void tab_object_buttonbar::set_onmain(int button, bool flag) {
   onmain[buttonmaptoposition[button]] = flag;
 }
 
-
 // leds and buttons are numbered differently
 void tab_object_buttonbar::set_rgb(int button, lv_color_t rgb) {
   pulsemote_pcb_setleds(buttonmaptorgb[button], rgb);

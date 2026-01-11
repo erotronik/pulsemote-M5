@@ -1,7 +1,9 @@
 #include <M5Unified.h>
 #include <lvgl.h>
 
-#include "../include/pulsemote-pcb.hpp"
+#include "pulsemote-pcb.hpp"
+
+#if PULSEMOTE_PCB
 
 #include "Rotary.h"
 #include "rotaryencoders.hpp"
@@ -207,3 +209,8 @@ void pulsemote_pcb_init(void) {
 
   xTaskCreatePinnedToCore(rotaryReaderTask, "io", 2048, nullptr, 20, nullptr, 1); // gui core
 }
+
+#else
+void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb) {};
+void pulsemote_pcb_init(void) {};
+#endif

@@ -1,10 +1,23 @@
-#ifdef M5_BOARD
+#if BOARD_M5CORES3
 
 #include <M5Unified.h>
 #include "lvgl-utils.h"
 
 lv_display_t *display;
 lv_indev_t *indev;
+
+int hardware_get_battery_level() {
+    return M5.Power.getBatteryLevel();
+}
+bool hardware_is_charging() {
+    return M5.Power.isCharging();
+}
+
+void hardware_beep() {
+  M5.Speaker.begin();
+  M5.Speaker.tone(660, 100);
+  M5.Speaker.tone(2000, 1000);
+}
 
 void hardware_tft_loop() {
     M5.update();
