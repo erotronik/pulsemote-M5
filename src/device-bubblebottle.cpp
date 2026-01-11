@@ -19,7 +19,9 @@ bool device_bubblebottle::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
    return false;
 }
 
-void device_bubblebottle::set_callback(device_callback c) { update_callback = c; }
+void device_bubblebottle::set_callback(device_callback c) { 
+  update_callback = c; 
+}
 
 void device_bubblebottle::notify(type_of_change change) {
   if (update_callback) update_callback(change, this);
@@ -77,9 +79,7 @@ void device_bubblebottle::ble_bubblebottle_send(const char* newValue) {
     ESP_LOGE("bubblebottle","cant send not connected");
 }
 
-void device_bubblebottle::ble_mk_callback(
-    BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData,
-    size_t length, bool isNotify) {
+void device_bubblebottle::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   char bug[100];
   uint8_t j = 0;
   for (uint8_t i = 0; i < length; i++) {

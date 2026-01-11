@@ -30,7 +30,9 @@ bool device_mk312::is_device(NimBLEAdvertisedDevice* advertisedDevice) {
   return false;
 }
 
-void device_mk312::set_callback(device_callback c) { update_callback = c; }
+void device_mk312::set_callback(device_callback c) { 
+  update_callback = c; 
+}
 
 void device_mk312::notify(type_of_change change) {
   if (update_callback) update_callback(change, this);

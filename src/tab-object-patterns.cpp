@@ -2,11 +2,7 @@
 
 tab_object_patterns::tab_object_patterns() {};
 
-#include "esp_log.h"
-
-
 void tab_object_patterns::selectpattern(lv_obj_t *parent, const char *patterns[],int patterns_n) {
-  ESP_LOGD("pattern","select called");
   dd = lv_dropdown_create(parent);
   hide();
   lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);

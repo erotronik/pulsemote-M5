@@ -57,8 +57,7 @@ bool ble_get_characteristic(NimBLERemoteService* service, NimBLERemoteCharacteri
     ESP_LOGE("get_char", "Failed to find characteristic UUID: %s", uuid.toString().c_str());
     return false;
   }
-  if (!notifyCallback)
-    return true;
+  if (!notifyCallback) return true;
   // we want notifications
   if (c->canNotify() && c->subscribe(true, notifyCallback, response))
     return true;
@@ -84,7 +83,7 @@ void scan_loop() {
 
   do {
     ESP_LOGI("comms-bt", "Scanning for %ds on core%d", scanTime, xPortGetCoreID());
-    pBLEScan->start(scanTime, false);  // up to one minute
+    pBLEScan->start(scanTime, false);  // up to (30 seconds)
 
     if (found_device && found_bledevice) {
       ESP_LOGI(found_device->getShortName(), "found device");
@@ -123,6 +122,6 @@ void TaskCommsBT(void *pvParameters) {
     scanthread_is_scanning = true;
     scan_loop();
     scanthread_is_scanning = false;
-    vTaskDelay(pdMS_TO_TICKS(1000));  // Scan for X seconds, wait for 1 second
+    vTaskDelay(pdMS_TO_TICKS(2000));  // Scan for X seconds, wait for X second
   }
 }

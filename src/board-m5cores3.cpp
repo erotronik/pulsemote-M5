@@ -3,6 +3,9 @@
 #include <M5Unified.h>
 #include "lvgl-utils.h"
 
+constexpr int32_t SCREENW = 320;
+constexpr int32_t SCREENH = 240;
+
 lv_display_t *display;
 lv_indev_t *indev;
 

@@ -1,6 +1,4 @@
 #define LV_CONF_INCLUDE_SIMPLE
-#include <esp_timer.h>
-#include <lvgl.h>
 #include "lvgl-utils.h"
 #include "tab-splashscreen.hpp"
 #include <tab.hpp>
@@ -66,8 +64,7 @@ void lv_hide_tab(lv_obj_t *page) {
   if (lv_tabview_get_tab_act(tv) == tabid)
     lv_tabview_set_act(tv, 0, LV_ANIM_OFF);
 
-  lv_obj_t *tbar = lv_tabview_get_tab_bar(
-      tv);  // in lvgl 9 they are real buttons not a matrix
+  lv_obj_t *tbar = lv_tabview_get_tab_bar(tv);  // in lvgl 9 they are real buttons not a matrix
   lv_obj_t *cont = lv_tabview_get_content(tv);
   lv_obj_del(lv_obj_get_child(tbar, tabid));
   lv_obj_del(lv_obj_get_child(cont, tabid));

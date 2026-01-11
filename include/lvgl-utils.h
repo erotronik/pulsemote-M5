@@ -3,9 +3,6 @@
 #include <lvgl.h>
 #include <cstdio>
 
-constexpr int32_t SCREENW = 320;
-constexpr int32_t SCREENH = 240;
-
 constexpr int32_t dropdown_height = 40;
 constexpr int32_t dropdown_width = 160;
 
