@@ -9,30 +9,34 @@
 //
 // June 2015
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
-#elif defined(SPARK)
-#include "application.h"
-#endif
-
 #include "Venerate.h"
+#include <Arduino.h>
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "EEPROM.h" // store the last mod byte in case we lose power
-#endif
+//#ifdef ARDUINO
+//#include <Arduino.h>
+//
+//static void log_to_serial(void* ctx, const char* msg) {
+//  auto* s = static_cast<HardwareSerial*>(ctx);
+//  if (!s) return;
+// s->print(msg);
+//}
+//#endif
+//venerate.setdebug(1, log_to_serial, &Serial);
 
-Venerate::Venerate(byte boxid)
+Venerate::Venerate(uint8_t boxid)
 {
     _debug = 0;
     _state = 0;
     _boxid = boxid;
 }
 
+#ifdef HASSTREAM
 void Venerate::begin(Stream &serial)
 {
     _serial = &serial;
     _serial->setTimeout(20UL);
 }
+#endif
 
 void Venerate::begin(cbfunc_t t, cbfunc_r r, cbfunc_f f)
 {
@@ -41,71 +45,67 @@ void Venerate::begin(cbfunc_t t, cbfunc_r r, cbfunc_f f)
     _flushcb = f;
 }
 
-void Venerate::setdebug(Stream &debugserial, byte debug) {
-    _debug = debug;
-    _debugserial = &debugserial;
-}
-
-void Venerate::setmod(byte mod) {
+void Venerate::setmod(uint8_t mod) {
     _mod = mod;
 }
 
-boolean Venerate::isconnected(void) {
+bool Venerate::isconnected(void) {
     return (_state == 1);
 }
 
-// Send a series of bytes to the box and return the result, based
+// Send a series of uint8_ts to the box and return the result, based
 // on the code from et312-perl
 
-int Venerate::cp(byte msg[], byte n, byte reply[]) {
-    byte sum = 0;
-    for (byte i = 0; i < n; i++) {
-        byte c = msg[i];
+int Venerate::cp(uint8_t msg[], uint8_t n, uint8_t reply[]) {
+    uint8_t sum = 0;
+    for (uint8_t i = 0; i < n; i++) {
+        uint8_t c = msg[i];
         sum += c; // overflow expected and ok
         c ^= _mod;
-        if (_debug>1) {
-            Serial.print(c, HEX);
-            Serial.print(" ");
-        }
+        if (_debug)  _debugserial.printf("%02X ", (uint8_t)c);
         if (_txcb) {
-            _txcb((byte)c);
+            _txcb((uint8_t)c);
         } else {
-            _serial->write((byte)c);
+#ifdef HASSTREAM
+            _serial->write((uint8_t)c);
+#endif
         }
     }
     if (n > 1) {
-        if (_debug>1) _debugserial->print((byte)(sum ^ _mod), HEX);
+        if (_debug) _debugserial.printf("%02X", (uint8_t)(sum ^ _mod));
         if (_txcb) {
-            _txcb((byte)sum ^ _mod);
-        } else {        
-            _serial->write((byte)sum ^ _mod);
+            _txcb((uint8_t)sum ^ _mod);
+        } else {  
+#ifdef HASSTREAM      
+            _serial->write((uint8_t)sum ^ _mod);
+#endif
         }
     }
-    if (_debug>1) _debugserial->println(F(" tx"));
+    if (_debug) _debugserial.printf(" tx\n");
     if (_txcb)
         _flushcb();
-    else         
+    else { 
+#ifdef HASSTREAM
         _serial->flush();
-    // In perl we wait for 10+10*1 milliseconds  20ms only!
-#if defined (SPARK)
-    byte bread = _serial->readBytes((char *)reply, maxrxbytes);
-#else
-    byte bread = 0;
-    if (!_txcb) 
-        bread = _serial->readBytes(reply, maxrxbytes);
-    else
-        bread = _rxcb((char *)reply,maxrxbytes);
 #endif
+    }
+    // In perl we wait for 10+10*1 milliseconds  20ms only!
+    uint8_t bread = 0;
+    if (!_txcb) {
+#ifdef HASSTREAM
+        bread = _serial->readBytes(reply, maxrxbytes);
+#endif
+    } else
+        bread = _rxcb((char *)reply,maxrxbytes);
 
     if (bread <1) {
-        if (_debug) _debugserial->println(F("no rx"));
+        if (_debug) _debugserial.printf("no rx\n");
         _state = 0;
-    } else if (_debug>1) {
+    } else if (_debug) {
         for (int i = 0; i < bread; i++) {
-            _debugserial->print(reply[i], HEX);
-            _debugserial->print(F(" "));
+            _debugserial.printf("%02X ", reply[i]);
         }
-        _debugserial->println(F(" rx"));
+        _debugserial.printf(" rx\n");
     }
     return bread;
 }
@@ -113,29 +113,29 @@ int Venerate::cp(byte msg[], byte n, byte reply[]) {
 // Return the byte at the memory address or -1 if error
 
 int Venerate::getbyte(int n) {
-    byte reply[maxrxbytes];
-    byte msg[3];
+    uint8_t reply[maxrxbytes];
+    uint8_t msg[3];
 
     msg[0] = 0x3c;
-    msg[1] = (byte)(n >> 8);
-    msg[2] = (byte)(n & 255);
+    msg[1] = (uint8_t)(n >> 8);
+    msg[2] = (uint8_t)(n & 255);
     int count = Venerate::cp(msg, 3, reply);
     if (count < 3) return -1; // got to be 3 chars
     if (reply[0] != 0x22) return -1; // first is 0x22
-    byte sum = reply[0] + reply[1]; // with valid checksum, allow overflow
+    uint8_t sum = reply[0] + reply[1]; // with valid checksum, allow overflow
     if (sum != reply[2]) return -1;
     return reply[1];
 }
 
 // Send a byte to a memory address, false if error
 
-boolean Venerate::setbyte(int n, int b) {
-    byte reply[maxrxbytes];
-    byte msg[4];
+bool Venerate::setbyte(int n, int b) {
+    uint8_t reply[maxrxbytes];
+    uint8_t msg[4];
 
-    msg[0] = 0x4d;    msg[1] = (byte)(n >> 8);
-    msg[2] = (byte)(n & 255);
-    msg[3] = (byte)(b);
+    msg[0] = 0x4d;    msg[1] = (uint8_t)(n >> 8);
+    msg[2] = (uint8_t)(n & 255);
+    msg[3] = (uint8_t)(b);
     int count = Venerate::cp(msg, 4, reply);
     if (count < 1) return false; // got to be 1 chars
     if (reply[0] != 0x06) return false; // success is a 6
@@ -144,7 +144,7 @@ boolean Venerate::setbyte(int n, int b) {
 
 // hello, hello, good to be back
 
-boolean Venerate::newhello()
+bool Venerate::newhello()
 {
     // Realign packet boundaries for the protocol
     // If another program has accessed the ET-312 before this session, we're
@@ -156,19 +156,19 @@ boolean Venerate::newhello()
     // protocol is synced and we can move on.
 
     if (_state != 0) {
-      if (_debug) _debugserial->println(F("State !0"));
+      if (_debug) _debugserial.printf("State !0\n");
         return Venerate::isconnected();
     }
-    byte rx[maxrxbytes];
+    uint8_t rx[maxrxbytes];
 
-    if (_debug) _debugserial->println(F("tx hello"));
+    if (_debug) _debugserial.printf("tx hello\n");
 
     //    _mod = EEPROM.read(_boxid);
     _mod = 0;
     
     int s = 0;
     for (int i = 0; i < 12; i++) {
-        byte send[] = {0x00};
+        uint8_t send[] = {0x00};
         _mod = 0;
         int chars = Venerate::cp(send, 1, rx);
         if (chars > 0 && rx[0] == 0x07) {
@@ -178,52 +178,46 @@ boolean Venerate::newhello()
         }
     }
     if (s > 3) {
-        if (_debug) _debugserial->println("rx hello");
-        byte send[] = {0x2f, 0x00};
+        if (_debug) _debugserial.printf("rx hello\n");
+        uint8_t send[] = {0x2f, 0x00};
         _mod = 0;
         int chars = Venerate::cp(send, 2, rx);
         int sum = rx[0] + rx[1];
         if (sum > 256) sum -= 256;
         if (chars < 3 || rx[0] != 0x21 || sum != rx[2]) {
-            if (_debug) _debugserial->println(F("no sync"));
+            if (_debug) _debugserial.printf("no sync\n");
         } else {
             _mod = rx[1] ^ 0x55;
-            if (_debug) {
-                _debugserial->print(_mod, HEX);
-                _debugserial->println(F("=mod"));
-            }
-            EEPROM.write(_boxid, _mod);
+            if (_debug) _debugserial.printf("%02X=mod\n", _mod);
+            //EEPROM.write(_boxid, _mod);
         }
     }
     if (s>3) {
-    // just a test memory get
-    int y = Venerate::getbyte(ETMEM_knoba);
-    if (y < 0) {
-        if (_debug) _debugserial->println(F("fail"));
-    } else {
-        if (_debug) {
-            _debugserial->print(y, HEX);
-            _debugserial->println(F("=knoba"));
+        // just a test memory get
+        int y = Venerate::getbyte(ETMEM_knoba);
+        if (y < 0) {
+            if (_debug) _debugserial.printf("fail\n");
+        } else {
+            if (_debug) _debugserial.printf("%02X=knoba\n", y);
+            _state = 1;
         }
-        _state = 1;
-    }
     }
     return Venerate::isconnected();
 }
 
 
-boolean Venerate::helloreadonly()
+bool Venerate::helloreadonly()
 {
-  if (_state != 0) {
-      if (_debug) _debugserial->println(F("State !0"));
+    if (_state != 0) {
+        if (_debug) _debugserial.printf("State !0\n");
         return Venerate::isconnected();
     }
-    byte rx[maxrxbytes];
+    uint8_t rx[maxrxbytes];
 
-    if (_debug) _debugserial->println(F("tx hello"));
+    if (_debug) _debugserial.printf("tx hello\n");
     int s = 0;
     for (int i = 0; i < 10; i++) {
-        byte send[] = {0x00};
+        uint8_t send[] = {0x00};
         _mod = 0;
         int chars = Venerate::cp(send, 1, rx);
         if (chars > 0 && rx[0] == 0x07) {
@@ -233,21 +227,17 @@ boolean Venerate::helloreadonly()
             s = 0;
         }
     }
-
     if (s > 3) {
-        if (_debug) _debugserial->println(F("rx hello"));
+        if (_debug) _debugserial.printf("rx hello\n");
 
-	// just a test memory get
-	int y = Venerate::getbyte(ETMEM_knoba);
-	if (y < 0) {
-            if (_debug) _debugserial->println(F("fail"));
-	} else {
-	  if (_debug) {
-            _debugserial->print(y, HEX);
-            _debugserial->println(F("=knoba"));
-	  }
-	  _state = 1;
-	}
+	    // just a test memory get
+	    int y = Venerate::getbyte(ETMEM_knoba);
+	    if (y < 0) {
+            if (_debug) _debugserial.printf("fail\n");
+	    } else {
+	        if (_debug) _debugserial.printf("%02X=knoba\n", y);
+	        _state = 1;
+	    }
     }
     return Venerate::isconnected();
 }

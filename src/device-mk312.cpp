@@ -7,6 +7,10 @@
 #include <functional>
 #include <map>
 
+static void venerate_logger(void* ctx, const char* msg) {
+  ESP_LOGD("Venerate", "%s", msg);
+}
+
 // This code works with a MK-312BT box that has a bluetooth serial BLE board installed
 // or with an original ET-312B that has a bluetooth serial dongle attached. In both
 // cases the name of the device must be "MK" or have a "312" inside it.
@@ -222,7 +226,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
   BOX.begin(std::bind(&device_mk312::etbox_txcb, this, std::placeholders::_1),
             std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&device_mk312::etbox_flushcb, this));
-  BOX.setdebug(Serial, 2);
+  BOX.setdebug(2, venerate_logger, nullptr);
   BOX.newhello();
   if (!BOX.isconnected()) {
     ESP_LOGE(getShortName(), "couldnt do hello handshake to box");

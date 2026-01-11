@@ -1,13 +1,8 @@
-#ifndef Venerate_h
-#define Venerate_h
-
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
-#elif defined(SPARK)
-#include "application.h"
-#endif
+#pragma once
 
 #include <functional>
+#include <Arduino.h>
+#include "logger.h"
 
 #define maxrxbytes 4
 
@@ -133,35 +128,44 @@
 #define ETMEM_ramptime 0x41F9
 #define ETMEM_knobmaset 0x420d
 
+#ifdef ARDUINOX
+#define HASSTREAM
+#endif
+
 class Venerate
 {
  public:
-    Venerate(byte boxid);
+    Venerate(uint8_t boxid);
     void begin(Stream &serial);
-    using cbfunc_t = std::function<void(byte)>;
+    using cbfunc_t = std::function<void(uint8_t)>;
     using cbfunc_r = std::function<int(char*, int)>;
     using cbfunc_f = std::function<void()>;
     void begin(cbfunc_t t, cbfunc_r r, cbfunc_f f);    
-    void setdebug(Stream &debugserial, byte debug);
-    void setmod(byte mod);
-    boolean isconnected(void);
-    int cp(byte msg[], byte n, byte reply[]);
+
+    void setdebug(uint8_t debug, log_write_fn fn = nullptr, void* ctx = nullptr) {
+      _debug = debug;
+      _debugserial.set(fn, ctx);
+   }
+
+    void setmod(uint8_t mod);
+    bool isconnected(void);
+    int cp(uint8_t msg[], uint8_t n, uint8_t reply[]);
     int getbyte(int n);
-    boolean setbyte(int n, int b);
-    boolean hello();
-    boolean newhello();    
-    boolean helloreadonly();
+    bool setbyte(int n, int b);
+    bool hello();
+    bool newhello();    
+    bool helloreadonly();
  private:
-    byte _boxid;
+    uint8_t _boxid;
+#ifdef HASSTREAM
     Stream* _serial;
-    Stream* _debugserial;
-    byte _debug;
-    byte _mod;
-    byte _state;
+#endif
+    Logger _debugserial;
+    uint8_t _debug = 0;
+    uint8_t _mod;
+    uint8_t _state;
     cbfunc_t _txcb = NULL;
     cbfunc_r _rxcb = NULL;
     cbfunc_f _flushcb = NULL;        
 };
-
-#endif
 
