@@ -1,6 +1,5 @@
 #include "comms-bt.hpp"
 
-#include "hardware-tft.h"
 #include "tab-coyote.hpp"
 #include "tab-mk312.hpp"
 #include "tab-thrustalot.hpp"
@@ -15,6 +14,7 @@
 #include "tab.hpp"
 #include "lvgl-utils.h"
 #include <pulsemote-pcb.hpp>
+#include "board.hpp"
 
 lv_obj_t *tv;
 
@@ -198,7 +198,6 @@ void setup() {
   ESP_LOGD("setup","pcb setup done");  
   setup_tabs();
   ESP_LOGD("setup","tab setup done");
-
 
   printf_log("Version %s\n\n",__DATE__);
   printf_log("Scanning for devices...\n");

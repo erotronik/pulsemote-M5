@@ -26,10 +26,7 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
       for (int i = 0; i < maxbuttons; ++i) {
         if (self->press[i] == hit) { 
           for (const auto& t : tabs) {
-            if (self == t->buttonbar) {
-              int contr = t->buttonbar->all_order[i];
-              t->switch_change(contr, true);
-            }
+            if (self == t->buttonbar) t->switch_change(t->buttonbar->all_order[i], true);
           }
         }
       }
@@ -56,11 +53,7 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
     time_t now = millis();
     int ms = now-lastclickmillis;
     lastclickmillis = now;
-    if (ms<500) {
-      increment = 5;
-    } else {
-      increment = 1;
-    }
+    increment = (ms<500)?5:1;
 
     // find the tab....
     for (const auto& t : tabs) {
