@@ -68,7 +68,7 @@ device_lovense::~device_lovense() {}
 
 void device_lovense::setmodespeed(int mode, int speed) {
   if (mode ==1 && speed !=0) {
-    int i = random(0,5+patterns_n-2);
+    int i = rand()%(5+patterns_n-2);
     if (i<5) {
       mode = 0;
       speed = (i+1)*4;

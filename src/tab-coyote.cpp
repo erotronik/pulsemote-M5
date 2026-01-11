@@ -14,7 +14,6 @@ tab_coyote::tab_coyote() {
     sync = new tab_object_sync();
     modeselect = new tab_object_modes();
     device = nullptr;
-    bool need_refresh =false;
     ison = true;
     level_a_req = 0;
     level_b_req = 0;
@@ -116,11 +115,11 @@ void tab_coyote::encoder_change(int sw, int change) {
   need_refresh = true;
 
   if (sw == tab_object_buttonbar::rotary1) {
-    level_a_req = min(99, max(0, level_a_req + change));
+    level_a_req = std::min(99, std::max(0, level_a_req + change));
     md->get().chan_a().put_power_pc(level_a_req);
   }
   else if (sw == tab_object_buttonbar::rotary2) {
-    level_b_req = min(99, max(0, level_b_req + change));
+    level_b_req = std::min(99, std::max(0, level_b_req + change));
     md->get().chan_b().put_power_pc(level_b_req); 
   }
   else if (sw == tab_object_buttonbar::rotary4) {

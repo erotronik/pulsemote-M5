@@ -111,8 +111,7 @@ bool device_bubblebottle::connect_to_device(NimBLEAdvertisedDevice* device) {
   notify(D_CONNECTING);
   bool res = true;
 
-  ESP_LOGI(getShortName(), "Will try to connect to %s",
-           device->getAddress().toString().c_str());
+  ESP_LOGI(getShortName(), "Will try to connect to %s",device->getAddress().toString().c_str());
 
   if (!bleClient->connect(device)) {
     ESP_LOGE(getShortName(), "Connection failed");

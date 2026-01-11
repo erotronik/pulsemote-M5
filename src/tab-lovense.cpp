@@ -31,7 +31,7 @@ void tab_lovense::encoder_change(int sw, int change) {
     timer->rotary_change(change);
   }
   if (sw == tab_object_buttonbar::rotary1 && main_pattern == 0) {
-    knob_speed = min(20,max(1,knob_speed+change));
+    knob_speed = std::min(20,std::max(1,knob_speed+change));
     if (ison) md->setmodespeed(main_pattern,knob_speed);
   }
   if (sw == tab_object_buttonbar::rotary3) {
@@ -181,7 +181,6 @@ void tab_lovense::loop(bool activetab) {
     need_knob_refresh = true;
   }
   if (activetab && need_knob_refresh) {
-    device_lovense *md = static_cast<device_lovense *>(device);
 
     need_knob_refresh = false;
  

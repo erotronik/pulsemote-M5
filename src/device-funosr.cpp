@@ -74,18 +74,18 @@ device_funosr::~device_funosr() {
 }
 
 
-void device_funosr::ble_funosr_send(String newValue) {
+void device_funosr::ble_funosr_send(const char *newValue) {
   if (is_connected) {
     ESP_LOGI("funosr","Sending %s" ,newValue);
-    device_funosr::uuid_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+    device_funosr::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
   } else 
     ESP_LOGE("funosr","cant send not connected");
 }
 
 void device_funosr::funosr_stroke(int smin, int smax, int duration) {
   char msg[20];
-  smin = min(99,smin);
-  smax = min(99,smax);
+  smin = std::min(99,smin);
+  smax = std::min(99,smax);
   sprintf(msg, "S0%02d%02dI%d\n",smin, smax, duration);
   ble_funosr_send(msg);
 }
@@ -96,7 +96,7 @@ void device_funosr::funosr_stop(void) {
 
 void device_funosr::funosr_goto(int pos, int duration) {
   char msg[20];
-  pos = min(99,pos);
+  pos = std::min(99,pos);
   if (duration !=0)
     sprintf(msg,"L0%02dI%d\n", pos, duration);
   else
@@ -120,8 +120,7 @@ bool device_funosr::connect_to_device(NimBLEAdvertisedDevice* device) {
   notify(D_CONNECTING);
   bool res = true;
 
-  ESP_LOGI(getShortName(), "Will try to connect to %s",
-           device->getAddress().toString().c_str());
+  ESP_LOGI(getShortName(), "Will try to connect to %s",device->getAddress().toString().c_str());
 
   if (!bleClient->connect(device)) {
     ESP_LOGE(getShortName(), "Connection failed");

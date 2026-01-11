@@ -3,6 +3,7 @@
 #include "tab-funosr.hpp"
 #include "tab.hpp"
 #include "lvgl-utils.h"
+#include <cmath>
 
 tab_funosr::tab_funosr() {
   ison = false;
@@ -23,9 +24,9 @@ tab_funosr::~tab_funosr() {}
 void tab_funosr::send_funosr() {
   device_funosr *md = static_cast<device_funosr *>(device);
   if (!md) return;
-  int smax = min(99,100- knob_depth);
-  int smin = min(99,max(0,100 - (knob_depth - knob_stroke)));
-  int duration = (int)(100 * pow((5000.0 / 100.0), (100.0 - knob_speed) / 100.0));
+  int smax = std::min(99,100- knob_depth);
+  int smin = std::min(99,std::max(0,100 - (knob_depth - knob_stroke)));
+  int duration = (int)(100 * std::pow((5000.0 / 100.0), (100.0 - knob_speed) / 100.0));
   // — smaller denominators (like 70.0) make it fall faster; larger flatten it out.
   sprintf(msg,"minmax %d %d %d", smin, smax, duration);
   ESP_LOGD("stroke","sending %s",msg);
@@ -39,13 +40,13 @@ void tab_funosr::send_stop() {
 void tab_funosr::goto_min() {
   device_funosr *md = static_cast<device_funosr *>(device);
   if (!md) return;
-  md->funosr_goto(min(99,max(0,100- (knob_depth - knob_stroke))));
+  md->funosr_goto(std::min(99,std::max(0,100- (knob_depth - knob_stroke))));
 }
 
 void tab_funosr::goto_max() {
   device_funosr *md = static_cast<device_funosr *>(device);
   if (!md) return;
-  md->funosr_goto(min(99,100 - knob_depth));
+  md->funosr_goto(std::min(99,100 - knob_depth));
 }
 
 void tab_funosr::encoder_change(int sw, int change) {
@@ -57,18 +58,18 @@ void tab_funosr::encoder_change(int sw, int change) {
     }
   }
   if (sw == tab_object_buttonbar::rotary1) {
-    knob_speed = min(100,max(0,knob_speed+change*2));
+    knob_speed = std::min(100,std::max(0,knob_speed+change*2));
     if (knob_speed <2) knob_speed = 2;
     if (ison) send_funosr();
   }
   if (sw == tab_object_buttonbar::rotary2) {
-    knob_stroke = min(100,max(0,knob_stroke+change*4));
+    knob_stroke = std::min(100,std::max(0,knob_stroke+change*4));
     if (knob_depth < knob_stroke)
       knob_depth = knob_stroke;
     if (ison) send_funosr();
   }
   if (sw == tab_object_buttonbar::rotary3 ) {
-    knob_depth = min(100,max(0,knob_depth+change*4));
+    knob_depth = std::min(100,std::max(0,knob_depth+change*4));
     if (knob_depth < knob_stroke)
       knob_stroke = knob_depth;
     if (ison) send_funosr();

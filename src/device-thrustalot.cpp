@@ -105,9 +105,14 @@ void device_thrustalot::thrustallthewayout(void) {
   ble_thrustalot_send("!B811X"); // to minimum position!
 
 }
+
+static inline long map_long(long x,long in_min, long in_max, long out_min, long out_max){
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 void device_thrustalot::thrustonetime(int speed) {
   char speeds[20];
-  sprintf(speeds, "!U%03dX", map(speed, 0, 100, 45, 255));
+  sprintf(speeds, "!U%03dX", map_long(speed, 0, 100, 45, 255));
   ble_thrustalot_send(speeds);  
 }
 
@@ -127,7 +132,7 @@ void device_thrustalot::ble_mk_callback(
         thrustcb_pos = 1;
         xQueueSend(events, &thrustcb_pos, 1);
         String x = String(bug + 1);
-        Serial.println(x.toInt());
+        ESP_LOGD("Thrustalot", "%d", x.toInt());
         thrustcb_count = x.toInt();
       } else if (bug[0] == 'S') {
         if (bug[1] != '0') {
@@ -137,7 +142,7 @@ void device_thrustalot::ble_mk_callback(
         }
       } else if (bug[0] == 'T') {
         String x = String(bug + 1);
-        Serial.println(x.toInt());
+        ESP_LOGD("Thrustalot", "%d", x.toInt());
         thrustcb_left = x.toInt();
       }
       //ESP_LOGI("thrusthardware","%s",bug);
@@ -158,8 +163,7 @@ bool device_thrustalot::connect_to_device(NimBLEAdvertisedDevice* device) {
   notify(D_CONNECTING);
   bool res = true;
 
-  ESP_LOGI(getShortName(), "Will try to connect to %s",
-           device->getAddress().toString().c_str());
+  ESP_LOGI(getShortName(), "Will try to connect to %s", device->getAddress().toString().c_str());
 
   if (!bleClient->connect(device)) {
     ESP_LOGE(getShortName(), "Connection failed");

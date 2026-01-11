@@ -29,7 +29,7 @@ class device_funosr : public Device {
 
  private:
 
-  void ble_funosr_send(String newValue);
+  void ble_funosr_send(const char* newValue);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
   friend class DevicefunosrNimBLEClientCallback;

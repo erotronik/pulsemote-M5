@@ -36,7 +36,7 @@ void printf_log(const char *format, ...) {
   va_start(args, format);
   vsnprintf(buf, 255, format, args);
   va_end(args);
-  Serial.print(buf);
+  ESP_LOGD("log","%s",buf);
   if (tabs.size() > 0) {
     Tab *t = tabs.front();
     tab_splashscreen *ts = static_cast<tab_splashscreen *>(t);

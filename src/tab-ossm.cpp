@@ -195,8 +195,6 @@ void tab_ossm::loop(bool activetab) {
     need_knob_refresh = true;
   }
   if (need_knob_refresh) {
-    device_ossm *md = static_cast<device_ossm *>(device);
-
     need_knob_refresh = false;
  
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed);
