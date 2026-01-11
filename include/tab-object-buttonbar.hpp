@@ -37,7 +37,6 @@ class tab_object_buttonbar {
     lv_obj_t *arc[maxbuttons];
     lv_obj_t *press[maxbuttons];
     const int buttonmaptoposition[maxbuttons] = { 1, 0, 3, 4, 2 };
-    const int buttonmaptorgb[maxbuttons] = { 1, 2, 3, 4, 5 };
     bool onmain[maxbuttons] = { false, false, false, false, false };
     bool ison[maxbuttons] = { false, false, false, false, false };
 };

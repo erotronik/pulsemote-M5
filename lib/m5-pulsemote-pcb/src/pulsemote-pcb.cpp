@@ -64,6 +64,7 @@ RotaryEncOverMCP rotaryEncoders[] = {
 // Switch number 1-4 (5 for cherry, single LED), and lv_color_t
 
 void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb) {
+  sw++; // so it's 1...5
   if (sw < 1 || sw > LED_COUNT) return;
 
   taskENTER_CRITICAL(&g_led_mux);

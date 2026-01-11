@@ -9,7 +9,7 @@
 #include <freertos/queue.h>
 #include <freertos/task.h>
 
-// Wifi Comms via coprocessor est-at connected to serial
+// Wifi Comms via coprocessor esp-at connected to serial
 
 HardwareSerial espat_copro_port(1);
 bool wifi_connected = false;

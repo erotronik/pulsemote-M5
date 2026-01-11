@@ -206,11 +206,11 @@ void tab_object_buttonbar::set_onmain(int button, bool flag) {
 
 // leds and buttons are numbered differently
 void tab_object_buttonbar::set_rgb(int button, lv_color_t rgb) {
-  pulsemote_pcb_setleds(buttonmaptorgb[button], rgb);
+  pulsemote_pcb_setleds(button, rgb);
 }
 
 void tab_object_buttonbar::set_rgb_all(lv_color_t rgb) {
   for (int button : {tab_object_buttonbar::rotary1, tab_object_buttonbar::rotary2, tab_object_buttonbar::rotary3, tab_object_buttonbar::rotary4, tab_object_buttonbar::switch1}) {
-    pulsemote_pcb_setleds(buttonmaptorgb[button], rgb);
+    pulsemote_pcb_setleds(button, rgb);
   }
 }
