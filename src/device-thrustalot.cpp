@@ -82,10 +82,10 @@ device_thrustalot::~device_thrustalot() {
 }
 
 
-void device_thrustalot::ble_thrustalot_send(String newValue) {
+void device_thrustalot::ble_thrustalot_send(const char* newValue) {
   if (is_connected) {
     ESP_LOGI("Thrustalot","Sending %s" ,newValue);
-    device_thrustalot::uuid_tx_Characteristic->writeValue(newValue.c_str(), newValue.length());
+    device_thrustalot::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
   } else 
     ESP_LOGE("Thrustalot","cant send not connected");
 }

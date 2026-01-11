@@ -36,7 +36,7 @@ class device_thrustalot : public Device {
   int thrustcb_count;
   int thrustcb_left;
 
-  void ble_thrustalot_send(String newValue);
+  void ble_thrustalot_send(const char* newValue);
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
   friend class DeviceThrustalotNimBLEClientCallback;
