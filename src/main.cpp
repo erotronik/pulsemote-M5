@@ -205,3 +205,9 @@ void setup() {
   xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 1);
   xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 20, nullptr, 2, nullptr, 0); // ble networking is on core0
 }
+
+#ifndef ARDUINO
+extern "C" void app_main() {
+    setup();
+}
+#endif

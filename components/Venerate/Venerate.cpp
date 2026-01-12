@@ -10,7 +10,6 @@
 // June 2015
 
 #include "Venerate.h"
-#include <Arduino.h>
 
 //#ifdef ARDUINO
 //#include <Arduino.h>
@@ -30,7 +29,7 @@ Venerate::Venerate(uint8_t boxid)
     _boxid = boxid;
 }
 
-#ifdef HASSTREAM
+#ifdef HASSTREAM_X
 void Venerate::begin(Stream &serial)
 {
     _serial = &serial;

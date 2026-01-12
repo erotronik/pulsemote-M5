@@ -2,7 +2,7 @@
 
 #include <lvgl.h>   // for lv_color_t
 #include <stdint.h>
-#include <queue.h>
+#include <freertos/queue.h>
 
 void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb);
 void pulsemote_pcb_init(void);

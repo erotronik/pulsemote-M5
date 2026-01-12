@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <Arduino.h>
 #include "logger.h"
 
 #define maxrxbytes 4
@@ -136,7 +135,9 @@ class Venerate
 {
  public:
     Venerate(uint8_t boxid);
+    #ifdef HASSTREAM_X
     void begin(Stream &serial);
+    #endif
     using cbfunc_t = std::function<void(uint8_t)>;
     using cbfunc_r = std::function<int(char*, int)>;
     using cbfunc_f = std::function<void()>;
