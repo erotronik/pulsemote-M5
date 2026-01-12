@@ -62,9 +62,10 @@ device_loop::device_loop() {
 }
 
 device_loop::~device_loop() {
-  // bleClient->deleteServices(); // deletes all services, which should delete
-  // all characteristics NimBLEDevice::deleteClient(bleClient); // will also
-  // disconnect
+  if (bleClient) {
+    NimBLEDevice::deleteClient(bleClient);
+    bleClient = nullptr;
+  }
 }
 
 int device_loop::get_reading() {
@@ -99,17 +100,17 @@ bool device_loop::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= ble_get_service(loopService, bleClient, loop_SERVICE_BLEUUID);
-  if (res == false) {
+  res = ble_get_service(loopService, bleClient, loop_SERVICE_BLEUUID);
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-  res &= ble_get_characteristic(loopService, uuid_rx_Characteristic, loop_UUID_RX,
+  res = ble_get_characteristic(loopService, uuid_rx_Characteristic, loop_UUID_RX,
       std::bind(&device_loop::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");
     bleClient->disconnect();
     return false;

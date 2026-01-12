@@ -75,9 +75,10 @@ class DeviceMK312NimBLEClientCallback : public NimBLEClientCallbacks {
 device_mk312::device_mk312() {}
 
 device_mk312::~device_mk312() {
-  // bleClient->deleteServices(); // deletes all services, which should delete
-  // all characteristics NimBLEDevice::deleteClient(bleClient); // will also
-  // disconnect
+  if (bleClient) {
+    NimBLEDevice::deleteClient(bleClient);
+    bleClient = nullptr;
+  }
 }
 
 static void venerate_logger(void* ctx, const char* msg) {
@@ -215,17 +216,16 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
   }
   ESP_LOGI(getShortName(), "Connection established");
   
-  res &= ble_get_service(mk312Service, bleClient, MK312_SERVICE_BLEUUID);
-  if (res == false) {
+  res = ble_get_service(mk312Service, bleClient, MK312_SERVICE_BLEUUID);
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-  res &= ble_get_characteristic(mk312Service, uuid_rxtx_Characteristic, MK312_UUID_RXTX,
+  res = ble_get_characteristic(mk312Service, uuid_rxtx_Characteristic, MK312_UUID_RXTX,
       std::bind(&device_mk312::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
-
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing characteristic");
     bleClient->disconnect();
     return false;

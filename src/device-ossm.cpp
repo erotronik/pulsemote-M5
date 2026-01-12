@@ -93,7 +93,12 @@ class DeviceossmNimBLEClientCallback : public NimBLEClientCallbacks {
 
 device_ossm::device_ossm() {}
 
-device_ossm::~device_ossm() {}
+device_ossm::~device_ossm() {
+  if (bleClient) {
+    NimBLEDevice::deleteClient(bleClient);
+    bleClient = nullptr;
+  }
+}
 
 void device_ossm::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
   if (!isNotify || !pData || length == 0) return;
@@ -161,14 +166,14 @@ bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
   }
   ESP_LOGI(getShortName(), "Connection established");
 
-  res &= ble_get_service(ossmService, bleClient, ossm_SERVICE_BLEUUID);
+  res = ble_get_service(ossmService, bleClient, ossm_SERVICE_BLEUUID);
   if (!res) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-  res &= ble_get_characteristic(ossmService, ossm_rx_Characteristic, ossm_RX,
+  res = ble_get_characteristic(ossmService, ossm_rx_Characteristic, ossm_RX,
       std::bind(&device_ossm::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
   if (!res) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");
@@ -176,21 +181,21 @@ bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
 
-  res &= ble_get_characteristic(ossmService, ossm_tx_Characteristic, ossm_TX, nullptr);
+  res = ble_get_characteristic(ossmService, ossm_tx_Characteristic, ossm_TX, nullptr);
   if (!res) {
     ESP_LOGE(getShortName(), "Missing tx characteristic");
     bleClient->disconnect();
     return false;
   }
 
-  res &= ble_get_characteristic(ossmService, ossm_speedknob_Characteristic, ossm_SPEEDKNOB, nullptr);
+  res = ble_get_characteristic(ossmService, ossm_speedknob_Characteristic, ossm_SPEEDKNOB, nullptr);
   if (!res) {
     ESP_LOGE(getShortName(), "Missing speedknob characteristic");
     bleClient->disconnect();
     return false;
   }
 
-  res &= ble_get_characteristic(ossmService, ossm_patternlist_Characteristic, ossm_PATTERNLIST, nullptr);
+  res = ble_get_characteristic(ossmService, ossm_patternlist_Characteristic, ossm_PATTERNLIST, nullptr);
   if (!res) {
     ESP_LOGE(getShortName(), "Missing patternlist characteristic");
     bleClient->disconnect();

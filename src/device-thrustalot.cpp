@@ -77,9 +77,10 @@ device_thrustalot::device_thrustalot() {
 }
 
 device_thrustalot::~device_thrustalot() {
-  // bleClient->deleteServices(); // deletes all services, which should delete
-  // all characteristics NimBLEDevice::deleteClient(bleClient); // will also
-  // disconnect
+  if (bleClient) {
+    NimBLEDevice::deleteClient(bleClient);
+    bleClient = nullptr;
+  }
 }
 
 static inline int map_int(int x,int in_min, int in_max, int out_min, int out_max){

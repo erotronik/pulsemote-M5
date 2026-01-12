@@ -74,7 +74,7 @@ void scan_comms_init(void) {
   pBLEScan->setScanCallbacks(new PulsemoteAdvertisedDeviceCallbacks());
   pBLEScan->setActiveScan(true); // active scan uses more power, but get results faster
   pBLEScan->setInterval(512);
-  pBLEScan->setWindow(32); // less or equal setInterval value
+  pBLEScan->setWindow(64); // less or equal setInterval value
   ESP_LOGI("comms-bt", "Started ble scanning task");
 }
 

@@ -66,9 +66,10 @@ device_bubblebottle::device_bubblebottle() {
 }
 
 device_bubblebottle::~device_bubblebottle() {
-  // bleClient->deleteServices(); // deletes all services, which should delete
-  // all characteristics NimBLEDevice::deleteClient(bleClient); // will also
-  // disconnect
+  if (bleClient) {
+    NimBLEDevice::deleteClient(bleClient);
+    bleClient = nullptr;
+  }
 }
 
 void device_bubblebottle::ble_bubblebottle_send(const char* newValue) {
@@ -117,14 +118,14 @@ bool device_bubblebottle::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= ble_get_service(bubblebottleService, bleClient, BUBBLEBOTTLE_SERVICE_BLEUUID);
+  res = ble_get_service(bubblebottleService, bleClient, BUBBLEBOTTLE_SERVICE_BLEUUID);
   if (res == false) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-  res &= ble_get_characteristic(bubblebottleService, uuid_rx_Characteristic, BUBBLEBOTTLE_UUID_RX,
+  res = ble_get_characteristic(bubblebottleService, uuid_rx_Characteristic, BUBBLEBOTTLE_UUID_RX,
       std::bind(&device_bubblebottle::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
   if (res == false) {
@@ -134,7 +135,7 @@ bool device_bubblebottle::connect_to_device(NimBLEAdvertisedDevice* device) {
   }
   // don't really need to transmit to it, so don't bother with the tx characteristic
   #if 0
-  res &= getCharacteristic(
+  res = getCharacteristic(
       bubblebottleService, uuid_tx_Characteristic, BUBBLEBOTTLE_UUID_TX, nullptr);
 
   if (res == false) {

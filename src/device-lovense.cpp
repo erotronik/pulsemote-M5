@@ -61,7 +61,12 @@ class DevicelovenseNimBLEClientCallback : public NimBLEClientCallbacks {
 
 device_lovense::device_lovense() {}
 
-device_lovense::~device_lovense() {}
+device_lovense::~device_lovense() {
+  if (bleClient) {
+    NimBLEDevice::deleteClient(bleClient);
+    bleClient = nullptr;
+  }
+}
 
 // mode 0 is continuous, mode 1 is randomly pick something, mode 2,3,4 are presets 1,2,3
 
@@ -153,24 +158,23 @@ bool device_lovense::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= ble_get_service(lovenseService, bleClient, lovense_SERVICE_BLEUUID);
-  if (res == false) {
+  res = ble_get_service(lovenseService, bleClient, lovense_SERVICE_BLEUUID);
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
 
-  res &= ble_get_characteristic(lovenseService, uuid_rx_Characteristic, lovense_UUID_RX,
+  res = ble_get_characteristic(lovenseService, uuid_rx_Characteristic, lovense_UUID_RX,
       std::bind(&device_lovense::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
-
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");
     bleClient->disconnect();
     return false;
   }
-  res &= ble_get_characteristic(lovenseService, uuid_tx_Characteristic, lovense_UUID_TX, nullptr);
+  res = ble_get_characteristic(lovenseService, uuid_tx_Characteristic, lovense_UUID_TX, nullptr);
 
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing tx characteristic");
     bleClient->disconnect();
     return false;

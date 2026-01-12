@@ -59,9 +59,10 @@ device_dgbutton::device_dgbutton() {
 }
 
 device_dgbutton::~device_dgbutton() {
-  // bleClient->deleteServices(); // deletes all services, which should delete
-  // all characteristics NimBLEDevice::deleteClient(bleClient); // will also
-  // disconnect
+  if (bleClient) {
+    NimBLEDevice::deleteClient(bleClient);
+    bleClient = nullptr;
+  }
 }
 
 void device_dgbutton::ble_mk_callback(
@@ -124,26 +125,26 @@ bool device_dgbutton::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
-  res &= ble_get_service(dgbuttonService, bleClient, dgbutton_SERVICE_BLEUUID);
-  if (res == false) {
+  res = ble_get_service(dgbuttonService, bleClient, dgbutton_SERVICE_BLEUUID);
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing service");
     bleClient->disconnect();
     return false;
   }
   state = dgbutton_state::WFHELLO;
 
-  res &= ble_get_characteristic( dgbuttonService, tx_Characteristic, dgbutton_UUID_TX, nullptr);
+  res = ble_get_characteristic( dgbuttonService, tx_Characteristic, dgbutton_UUID_TX, nullptr);
 
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing tx characteristic");
     bleClient->disconnect();
     return false;
   }
 
-  res &= ble_get_characteristic(dgbuttonService, rx_Characteristic, dgbutton_UUID_RX,
+  res = ble_get_characteristic(dgbuttonService, rx_Characteristic, dgbutton_UUID_RX,
       std::bind(&device_dgbutton::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), true);
 
-  if (res == false) {
+  if (!res) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");
     bleClient->disconnect();
     return false;
