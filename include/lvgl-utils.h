@@ -20,4 +20,13 @@ void lv_init_pulsemote(void);
 
 #if defined(ARDUINO)
 #include <Arduino.h>
+#else
+// ESP-IDF compatibility: provide millis() wrapper
+#include <esp_timer.h>
+
+// Arduino compatibility wrapper for ESP-IDF
+// Returns milliseconds since boot (wraps after ~49 days like Arduino)
+inline unsigned long millis() {
+    return (unsigned long)(esp_timer_get_time() / 1000ULL);
+}
 #endif
