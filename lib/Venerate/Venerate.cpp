@@ -174,11 +174,11 @@ bool Venerate::newhello()
         if (chars > 0 && rx[0] == 0x07) {
             if (_debug) _debugserial.printf("got 07 s=%d\n", s);
             s++;
-            if (s>2)  // was 3
+            if (s>3)  // was 3
                 break;
         }
     }
-    if (s > 2) {
+    if (s > 3) {
         if (_debug) _debugserial.printf("rx hello\n");
         uint8_t send[] = {0x2f, 0x00};
         _mod = 0;
@@ -188,13 +188,14 @@ bool Venerate::newhello()
         if (sum > 256) sum -= 256;
         if (chars < 3 || rx[0] != 0x21 || sum != rx[2]) {
             if (_debug) _debugserial.printf("no sync\n");
+                s = 0;
         } else {
             _mod = rx[1] ^ 0x55;
             if (_debug) _debugserial.printf("%02X=mod\n", _mod);
             //EEPROM.write(_boxid, _mod);
         }
     }
-    if (s>2) {
+    if (s>3) {
         // just a test memory get
         int y = Venerate::getbyte(ETMEM_knoba);
         if (y < 0) {

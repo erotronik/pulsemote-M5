@@ -6,10 +6,6 @@
 #include <device.hpp>
 #include <functional>
 
-static void venerate_logger(void* ctx, const char* msg) {
-  ESP_LOGD("Venerate", "%s", msg);
-}
-
 // This code works with a MK-312BT box that has a bluetooth serial BLE board installed
 // or with an original ET-312B that has a bluetooth serial dongle attached. In both
 // cases the name of the device must be "MK" or have a "312" inside it.
@@ -45,6 +41,10 @@ void device_mk312::connected_callback() {
 void device_mk312::disconnected_callback(int reason) {
   is_connected = false;
   ESP_LOGI(getShortName(), "Client onDisconnect reason: %d", reason);
+  if (notifyStream) {
+    vStreamBufferDelete(notifyStream);
+    notifyStream = nullptr;
+  }
   notify(D_DISCONNECTED);
 }
 
@@ -80,9 +80,20 @@ device_mk312::~device_mk312() {
   // disconnect
 }
 
+static void venerate_logger(void* ctx, const char* msg) {
+  ESP_LOGD("Venerate", "%s", msg);
+}
+
 void device_mk312::etbox_flushcb(void) {
   ESP_LOGD("mk312","bt write %d bytes core%d",mktx_n, xPortGetCoreID());
-  device_mk312::uuid_rxtx_Characteristic->writeValue(mktx, mktx_n);
+
+  // response=false is needed for Nimble 2
+  //
+  // Note that Many BLE UART firmwares (especially the cheap serial bridges) are much happier when you use 
+  // write-without-response for the TX path, and they can behave oddly if you do write-with-response on the 
+  // same RX/TX characteristic. We need this otherwise it fails with the MK312.
+
+  device_mk312::uuid_rxtx_Characteristic->writeValue(mktx, mktx_n,false);
   mktx_n = 0;
 }
 
@@ -92,21 +103,9 @@ void device_mk312::etbox_txcb(uint8_t c) {
 }
 
 int device_mk312::etbox_rxcb(char* p, int x) {
-  NotifyPacket r;
-  int written = 0;
-
-  if (xQueueReceive(notifyQueue, &r, pdMS_TO_TICKS(200)) != pdTRUE) return 0;
-
-  int n = (r.length < x) ? r.length : x;
-  memcpy(p, r.data, n);
-  written += n;
-
-  while (written < x && xQueueReceive(notifyQueue, &r, pdMS_TO_TICKS(20)) == pdTRUE) {
-    n = (r.length < (x - written)) ? r.length : (x - written);
-    memcpy(p + written, r.data, n);
-    written += n;
-  }
-  return written;
+  if (!notifyStream || !p || x <= 0) return 0;
+  size_t n = xStreamBufferReceive(notifyStream, p, (size_t)x, pdMS_TO_TICKS(200));
+  return (int)n;
 }
 
 bool device_mk312::connected() {
@@ -179,23 +178,27 @@ void device_mk312::etbox_setpanellock(bool x) {
 void device_mk312::ble_mk_callback(
     BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData,
     size_t length, bool isNotify) {
-  ESP_LOGD("mk312","ble callback from core%d",xPortGetCoreID());
-  NotifyPacket packet;
-  packet.length = length > NOTIFY_MAX_DATA ? NOTIFY_MAX_DATA : length;
-  memcpy(packet.data, pData, packet.length);
+  ESP_LOGD(getShortName(), "ble callback %d bytes from core%d",length, xPortGetCoreID());
+  if (!isNotify || !notifyStream || !pData || length == 0) return;
 
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  xQueueSendFromISR(notifyQueue, &packet, &xHigherPriorityTaskWoken);
-
-  if (xHigherPriorityTaskWoken) {
-    portYIELD_FROM_ISR();
+  size_t pushed = xStreamBufferSend(notifyStream, pData, length, 0);
+  if (pushed != length) {
+    ESP_LOGW(getShortName(), "notifyStream full: dropped %u bytes", (unsigned)(length - pushed));
   }
 }
 
 bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
-  notifyQueue = xQueueCreate(NOTIFY_QUEUE_LEN, sizeof(NotifyPacket));
-
   ESP_LOGI(getShortName(), "Connecting core%d", xPortGetCoreID());
+
+  if (notifyStream) {
+    vStreamBufferDelete(notifyStream);
+    notifyStream = nullptr;
+  }
+  notifyStream = xStreamBufferCreate(NOTIFY_STREAM_SIZE, 1 /* trigger level */);
+  if (!notifyStream) {
+    ESP_LOGE(getShortName(), "Failed to create notifyStream");
+    return false;
+  }
 
   if (!bleClient) {
     bleClient = NimBLEDevice::createClient();
@@ -233,7 +236,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
   BOX.begin(std::bind(&device_mk312::etbox_txcb, this, std::placeholders::_1),
             std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&device_mk312::etbox_flushcb, this));
-  BOX.setdebug(2, venerate_logger, nullptr);
+  BOX.setdebug(0, venerate_logger, nullptr); // logging every byte is useful for debugging, set to 2
   vTaskDelay(pdMS_TO_TICKS(100));
   BOX.newhello();
   if (!BOX.isconnected()) {
@@ -256,7 +259,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
     notify(D_DISCONNECTED);
     return false;
   }
-  ESP_LOGI(getShortName(), "%s KNOBA=%d", getShortName(), y);
+  ESP_LOGI(getShortName(), "test read, KNOBA=%d", y);
   notify(D_CONNECTED);
   return true;
 }

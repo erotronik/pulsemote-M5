@@ -3,6 +3,7 @@
 #include <NimBLEDevice.h>
 #include <Venerate.h>
 #include <device.hpp>
+#include <freertos/stream_buffer.h>
 
 class device_mk312_NimBLEClientCallback;
 class device_mk312;
@@ -57,6 +58,9 @@ class device_mk312 : public Device {
     ETMODE_phase2, ETMODE_phase2, ETMODE_phase2, ETMODE_phase2
   };
 
+  StreamBufferHandle_t notifyStream = nullptr;
+  static constexpr size_t NOTIFY_STREAM_SIZE = 128;
+
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic,
                        uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;
@@ -77,15 +81,4 @@ class device_mk312 : public Device {
   static const int mktx_maxlen = 20;  // For sending via bluetooth max is 20 bytes
   uint8_t mktx[mktx_maxlen];
   uint8_t mktx_n = 0;
-
-  static const int NOTIFY_QUEUE_LEN =5; 
-  static const int NOTIFY_MAX_DATA = 64;
-
-  QueueHandle_t notifyQueue;
-
-  struct NotifyPacket {
-    size_t length;
-    uint8_t data[NOTIFY_MAX_DATA];
-  };
-
 };
