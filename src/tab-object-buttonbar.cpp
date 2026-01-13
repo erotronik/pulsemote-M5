@@ -82,16 +82,20 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
   lv_obj_set_height(container, LV_SIZE_CONTENT);
   lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
 
-
 #ifdef BOARD_WAVESHARE_ESP32_S3_TOUCH_LCD_7
   const int arc_size = 100; // todo this better
   const int arc_gap = 74; // 100*5+75*4 = 796
+  const int arc_label_gap = 20;
+#else 
+#ifdef BOARD_M5TAB5
+  const int arc_size = 140;
+  const int arc_gap = 144;
   const int arc_label_gap = 20;
 #else
   const int arc_size = 60;
   const int arc_gap = 4; //((320-62*5)/4+62)
   const int arc_label_gap = 6;
-
+#endif
 #endif
   lv_obj_set_style_pad_top(container, 19+arc_label_gap, 0);     // <-- add headroom
 
