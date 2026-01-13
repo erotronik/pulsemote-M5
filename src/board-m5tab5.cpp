@@ -3,14 +3,15 @@
 #include <M5Unified.h>
 #include "lvgl-utils.h"
 
-constexpr int32_t SCREENH = 1280;
-constexpr int32_t SCREENW = 720;
+constexpr int32_t SCREENW = 1280;
+constexpr int32_t SCREENH = 720;
 
 lv_display_t *display;
 lv_indev_t *indev;
 
 int hardware_get_battery_level() {
-    return M5.Power.getBatteryLevel();
+  if (M5.Power.getBatteryLevel() == 0 && M5.Power.isCharging()) return 100; // no batter
+  return M5.Power.getBatteryLevel();
 }
 bool hardware_is_charging() {
     return M5.Power.isCharging();
@@ -27,11 +28,11 @@ void hardware_tft_loop() {
 }
 
 void hardware_tft_init() {
-  ESP_LOGE("main", "M5.begin()");
+  ESP_LOGD("main", "M5.begin()");
   M5.begin();
 
-  M5.Display.setSwapBytes(true);
   M5.Display.setRotation(3);
+  M5.Display.setSwapBytes(true);
 
   ESP_LOGD("main", "lv_init()");
   lv_init();
@@ -61,6 +62,7 @@ void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_m
   uint32_t w = (area->x2 - area->x1 + 1);
   uint32_t h = (area->y2 - area->y1 + 1);
 
+  //lv_draw_sw_rgb565_swap(px_map, w * h);
   M5.Display.pushImageDMA<uint16_t>(area->x1, area->y1, w, h, (uint16_t *)px_map);
   lv_disp_flush_ready(disp);
 }

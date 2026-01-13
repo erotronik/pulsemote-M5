@@ -49,13 +49,12 @@ class device_coyote : public Device {
     return "Off";
   };
 
-  void set_callback(device_callback c) override {
-    coyote.set_callback(std::bind(&device_coyote::coyote_change_handler, this, std::placeholders::_1));
-  };
-
   bool connect_to_device(NimBLEAdvertisedDevice* device) override {
     return coyote.connect_to_device(device);
   };
+
+  void change_handler(type_of_change x) override {
+  }
 
   void coyote_change_handler(coyote_type_of_change t) {  // not enough states for a map
     type_of_change ct = D_NONE;
@@ -65,6 +64,10 @@ class device_coyote : public Device {
     if (t == C_CONNECTED) ct = D_CONNECTED;
     // we also get other change events, but don't need to do anything special with them
     device_change_handler(ct, this);
+  };
+
+  void set_callback(device_callback c) override {
+    coyote.set_callback(std::bind(&device_coyote::coyote_change_handler, this, std::placeholders::_1));
   };
 
   Device* clone() const override {
