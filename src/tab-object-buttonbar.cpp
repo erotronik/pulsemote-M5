@@ -2,15 +2,16 @@
 #include "tab-object-buttonbar.hpp"
 #include "tab.hpp"
 #include <pulsemote-pcb.hpp>
+#include <cmath>
 
 // We don't want the default handler for the arcs as you can jump to
 // 100 without much effort, instead follow clicks around the arc
 
-static float wrap_deg(float a) {
-    a = fmodf(a, 360.0f);
-    if (a < 0.0f) a += 360.0f;
-    return a;
-}
+//static float wrap_deg(float a) {
+//    a = std::fmod(a, 360.0f);
+//    if (a < 0.0f) a += 360.0f;
+//    return a;
+//}
 
 void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
     tab_object_buttonbar * self = static_cast<tab_object_buttonbar *>(lv_event_get_user_data(e));
@@ -45,10 +46,10 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
     lv_obj_get_coords(obj, &coords);
 
     lv_coord_t cx = coords.x1 + lv_area_get_width(&coords)  / 2;
-    lv_coord_t cy = coords.y1 + lv_area_get_height(&coords) / 2;
+    //lv_coord_t cy = coords.y1 + lv_area_get_height(&coords) / 2;
 
     float dx = (float)p.x - (float)cx;
-    float dy = (float)p.y - (float)cy;
+    //float dy = (float)p.y - (float)cy;
 
     time_t now = millis();
     int ms = now-lastclickmillis;
@@ -149,7 +150,7 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
 }
 
 void tab_object_buttonbar::set_click_text(int button, const char *text) {
-  if (text == "" ) {
+  if (!text || text[0] == '\0') {
   lv_obj_add_flag(press[buttonmaptoposition[button]], LV_OBJ_FLAG_HIDDEN);
   } else {
     lv_obj_clear_flag(press[buttonmaptoposition[button]], LV_OBJ_FLAG_HIDDEN);

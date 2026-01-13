@@ -126,7 +126,7 @@ uint8_t device_mk312::etbox_getbyte(uint16_t address) {
 void device_mk312::set_mode(int p) {
   int q = p + ETMODE_waves;
   if (p == etmodes_potluck) 
-    q = potluck[random(0,potluck_n)];
+    q = potluck[rand()%potluck_n];
   ESP_LOGD("set_mode","set mode %d",q);
   etbox_setbyte(ETMEM_modesplit, q );
   etbox_setbyte(ETMEM_runcommand, ETCOMMAND_SELECTNEWMODE);

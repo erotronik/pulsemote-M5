@@ -33,20 +33,20 @@ void tab_ossm::encoder_change(int sw, int change) {
       rand_timer->rotary_change(change);
       timer->rotary_change(change);
     } else if (main_pattern !=0) {
-      knob_sensation = min(100,max(0,knob_sensation+change*4));
+      knob_sensation = std::min(100,std::max(0,knob_sensation+change*4));
       md->set_sensation(knob_sensation);      
     }
   }
   if (sw == tab_object_buttonbar::rotary1) {
-    knob_speed = min(100,max(0,knob_speed+change*2));
+    knob_speed = std::min(100,std::max(0,knob_speed+change*2));
     if (ison) md->set_speed(knob_speed);
   }
   if (sw == tab_object_buttonbar::rotary2) {
-    knob_stroke = min(100,max(0,knob_stroke+change*4));
+    knob_stroke = std::min(100,std::max(0,knob_stroke+change*4));
     md->set_stroke(knob_stroke);
   }
   if (sw == tab_object_buttonbar::rotary3 ) {
-    knob_depth = min(100,max(0,knob_depth+change*4));
+    knob_depth = std::min(100,std::max(0,knob_depth+change*4));
     md->set_depth(knob_depth);
   }
   need_knob_refresh = true;

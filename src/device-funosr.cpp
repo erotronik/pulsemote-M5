@@ -85,9 +85,10 @@ void device_funosr::ble_funosr_send(const char *newValue) {
 
 void device_funosr::funosr_stroke(int smin, int smax, int duration) {
   char msg[20];
-  smin = std::min(99,smin);
-  smax = std::min(99,smax);
-  sprintf(msg, "S0%02d%02dI%d\n",smin, smax, duration);
+  smin = std::max(0, std::min(smin, 99));
+  smax = std::max(0, std::min(smax, 99));
+  duration = std::max(0, std::min(duration, 999999));
+  snprintf(msg, sizeof(msg), "S0%02d%02dI%d\n",smin, smax, duration);
   ble_funosr_send(msg);
 }
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <WiFi.h>
+//#include <WiFi.h>
 #include "tab.hpp"
 #include "device.hpp"
 #include "lvgl-utils.h"
 #include "config.h"
 
-#include <PubSubClient.h>
+// #include <PubSubClient.h>
 
 class tab_mqtt;
 

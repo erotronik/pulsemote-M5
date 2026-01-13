@@ -17,6 +17,9 @@
 
 // Wifi Comms via coprocessor esp-at connected to serial
 
+QueueHandle_t mqttsubhandle;
+
+#ifdef HASWIFICOPRO
 HardwareSerial espat_copro_port(1);
 bool wifi_connected = false;
 SemaphoreHandle_t atBusy;
@@ -27,7 +30,6 @@ static const int RESPONSE_ERROR = (1 << 1);
 int cstate = 0;
 unsigned long cstate_timeout;
 
-QueueHandle_t mqttsubhandle;
 QueueHandle_t mqttsenthandle;
 
 static inline bool streq(const char* a, const char* b) {
@@ -365,3 +367,11 @@ void wifi_setup() {
   wifi_connected = false;
   xTaskCreatePinnedToCore(wifi_task, "wifi", 1024 * 12, NULL, 1, nullptr, 0); // run wifi also on core0
 }
+
+#else
+void wifi_setup() {   mqttsubhandle  = xQueueCreate(10, sizeof(mqttsenditem));}
+bool wifi_loop() { return false; }
+bool is_wifi_connected() { return false; }
+void mqttsend(const char *topic, const char *message) {}
+void mqttsubscribe(const char *topic) {}
+#endif

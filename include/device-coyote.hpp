@@ -50,14 +50,14 @@ class device_coyote : public Device {
   };
 
   void set_callback(device_callback c) override {
-    coyote.set_callback(std::bind(&device_coyote::change_handler, this, std::placeholders::_1));
+    coyote.set_callback(std::bind(&device_coyote::coyote_change_handler, this, std::placeholders::_1));
   };
 
   bool connect_to_device(NimBLEAdvertisedDevice* device) override {
     return coyote.connect_to_device(device);
   };
 
-  void change_handler(coyote_type_of_change t) {  // not enough states for a map
+  void coyote_change_handler(coyote_type_of_change t) {  // not enough states for a map
     type_of_change ct = D_NONE;
     if (t == C_NONE) ct = D_NONE;
     if (t == C_CONNECTING) ct = D_CONNECTING;

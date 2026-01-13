@@ -1,4 +1,4 @@
-#define LV_CONF_INCLUDE_SIMPLE
+//#define LV_CONF_INCLUDE_SIMPLE
 #include "lvgl-utils.h"
 #include "tab-splashscreen.hpp"
 #include <tab.hpp>

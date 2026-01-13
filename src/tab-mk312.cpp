@@ -22,12 +22,12 @@ tab_mk312::~tab_mk312() {}
 void tab_mk312::encoder_change(int sw, int change) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
   if (sw == tab_object_buttonbar::rotary2 && lockpanel) {
-    level_b = min(99, max(0, level_b + change));
+    level_b = std::min(99, std::max(0, level_b + change));
     md->etbox_setlevelb(level_b);
     need_knob_refresh = true;
   }
   if (sw == tab_object_buttonbar::rotary1 && lockpanel) {
-    level_a = min(99, max(0, level_a + change));
+    level_a = std::min(99, std::max(0, level_a + change));
     md->etbox_setlevela(level_a);
     need_knob_refresh = true;
   }
@@ -116,9 +116,9 @@ void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
   if (syncstatus == SYNC_BUTTONPRESS && lockpanel) {
     last_level_button_press_a = level_a;
     last_level_button_press_b = level_b;
-    level_a = min(99, max(0, level_a + (int)random(5,11)));
+    level_a = std::min(99, std::max(0, level_a + 5+rand()%(11-5)));
     md->etbox_setlevela(level_a);
-    level_b = min(99, max(0, level_b + (int)random(5,11)));
+    level_b = std::min(99, std::max(0, level_b + 5+rand()%(11-5)));
     md->etbox_setlevelb(level_b);
     need_knob_refresh = true;
   }

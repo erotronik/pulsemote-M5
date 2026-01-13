@@ -36,5 +36,7 @@ idf_component_register(
          "tab-splashscreen.cpp"
          "tab-thrustalot.cpp"
     INCLUDE_DIRS "../include"
-    REQUIRES esp-nimble-cpp lvgl m5-pulsemote-pcb coyostim venerate rotary driver esp_timer
+    REQUIRES esp-nimble-cpp lvgl m5-pulsemote-pcb CoyoStim Venerate Rotary-master driver esp_timer ArduinoJson
 )
+
+target_compile_definitions(${COMPONENT_LIB} PRIVATE BOARD_M5TAB5 BOARD_HAS_PSRAM)

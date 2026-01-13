@@ -18,7 +18,7 @@ tab_splashscreen::tab_splashscreen() {
 tab_splashscreen::~tab_splashscreen(){};
 
 void tab_splashscreen::updateicons() {
-  int level = max(0,min(4,hardware_get_battery_level() / 20));
+  int level = std::max(0,std::min(4,hardware_get_battery_level() / 20));
 
   char iconb[128] ="";
   for (const auto& t : tabs) {
