@@ -34,7 +34,7 @@ void RotaryEncoderChanged(bool clockwise, int id) {
 void handlebuttonpushes() {
   event_t received_event;
   uint8_t count = 4;  // a few callbacks allowed per loop, arbitary
-  while (count > 0 && xQueueReceive(event_queue, &received_event, 0)) {
+  while (count > 0 && event_queue && xQueueReceive(event_queue, &received_event, 0)) {
     // find what device tab is active as physical buttons must only work on active tab
     lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
     for (const auto& t : tabs) {

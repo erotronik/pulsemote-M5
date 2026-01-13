@@ -15,20 +15,16 @@ class Device {
  public:
   virtual DeviceType getType() const = 0;
   virtual const char *getShortName() const = 0;
-  virtual ~Device() {}
-  virtual void set_callback(device_callback c) {};
+  virtual ~Device();
+  virtual void set_callback(device_callback c);
   virtual bool is_device(const NimBLEAdvertisedDevice* advertisedDevice);
   
-  virtual bool connect_to_device(NimBLEAdvertisedDevice* device) { 
-    return false;
-  };
+  virtual bool connect_to_device(NimBLEAdvertisedDevice* device);
 
   virtual Device* clone() const = 0;
 
-  virtual void change_handler(type_of_change t) {
-    device_change_handler(t, this);
-  };
+  virtual void change_handler(type_of_change t);
 
-  virtual bool get_isconnected() { return is_connected; }
+  virtual bool get_isconnected();
   bool is_connected;
 };

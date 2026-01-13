@@ -8,6 +8,7 @@ idf_component_register(
          "board-m5cores3.cpp"
          "board-m5tab5.cpp"
          "board-waveshare7.cpp"
+         "device.cpp"
          "device-bubblebottle.cpp"
          "device-dgbutton.cpp"
          "device-funosr.cpp"
@@ -39,4 +40,8 @@ idf_component_register(
     REQUIRES esp-nimble-cpp lvgl m5-pulsemote-pcb CoyoStim Venerate Rotary-master driver esp_timer ArduinoJson
 )
 
-target_compile_definitions(${COMPONENT_LIB} PRIVATE BOARD_M5TAB5 BOARD_HAS_PSRAM)
+if(CONFIG_BOARD_M5TAB5)
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE BOARD_M5TAB5 BOARD_HAS_PSRAM)
+elseif(CONFIG_BOARD_M5CORES3)
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE BOARD_M5CORES3 PULSEMOTE_PCB)
+endif()

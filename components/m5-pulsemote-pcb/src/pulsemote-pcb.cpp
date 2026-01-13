@@ -214,4 +214,5 @@ void pulsemote_pcb_init(void) {
 #else
 void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb) {};
 void pulsemote_pcb_init(void) {};
+QueueHandle_t event_queue = nullptr;
 #endif
