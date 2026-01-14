@@ -24,12 +24,22 @@ extern SemaphoreHandle_t lvgl_mutex;
 
 struct TabLock {
     SemaphoreHandle_t _sem;
-    TabLock(SemaphoreHandle_t sem) : _sem(sem) {
-        if (_sem) xSemaphoreTakeRecursive(_sem, portMAX_DELAY);
+    bool _locked = false;
+    TabLock(SemaphoreHandle_t sem, TickType_t timeout = portMAX_DELAY) : _sem(sem) {
+        if (_sem) {
+            // If the scheduler is suspended, we MUST NOT block.
+            if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED) {
+                timeout = 0;
+            }
+            if (xSemaphoreTakeRecursive(_sem, timeout) == pdTRUE) {
+                _locked = true;
+            }
+        }
     }
     ~TabLock() {
-        if (_sem) xSemaphoreGiveRecursive(_sem);
+        if (_locked && _sem) xSemaphoreGiveRecursive(_sem);
     }
+    operator bool() const { return _locked; }
 };
 class Tab {
  public:
@@ -73,13 +83,13 @@ class Tab {
   // Send sync data from our tab to all the others
   virtual void send_sync_data(sync_data syncstatus) {
     if (syncstatus == SYNC_OFF || syncstatus == SYNC_ALLOFF) cyclecount++;
-    if (tabs_mutex && xSemaphoreTakeRecursive(tabs_mutex, portMAX_DELAY) == pdTRUE) {
+    TabLock lock(tabs_mutex);
+    if (lock) {
       for (const auto& item : tabs) {
         if (item != this) {
           item->gotsyncdata(this,syncstatus);
         }
       }
-      xSemaphoreGiveRecursive(tabs_mutex);
     }
   };
 

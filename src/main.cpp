@@ -22,6 +22,13 @@ std::list<Tab*> tabs;
 SemaphoreHandle_t tabs_mutex = NULL;
 SemaphoreHandle_t lvgl_mutex = NULL;
 
+struct device_event_t {
+  type_of_change t;
+  Device *d;
+};
+QueueHandle_t device_event_queue = NULL;
+
+
 uint8_t lastencodervalue[numencoders] = {128, 128, 128, 128};
 uint8_t encodervalue[numencoders] = {128, 128, 128, 128};
 
@@ -120,40 +127,56 @@ void setup_tabs(void) {
 // it's a callback so don't do any actual GUI stuff here, just set up structures
 
 void device_change_handler(type_of_change t, Device *d) {
-  ESP_LOGD("main", "change handler task called from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
+  device_event_t event = {t, d};
+  if (device_event_queue) {
+    xQueueSend(device_event_queue, &event, 0);
+  }
+}
 
-  {
-    TabLock lock(tabs_mutex);
-    for (const auto& tt : tabs) {
-      if (d && tt->device == d) { // found an existing tab that matches the device instance
-        ESP_LOGD("main","matched an existing tab %s",tt->gettabname());
-        tt->last_change = t;
-        return;
+void process_device_events() {
+  device_event_t event;
+  while (device_event_queue && xQueueReceive(device_event_queue, &event, 0)) {
+    type_of_change t = event.t;
+    Device *d = event.d;
+    
+    ESP_LOGD("main", "processing device event %d from task %s", (int)t, pcTaskGetName(xTaskGetCurrentTaskHandle()));
+
+    bool found = false;
+    {
+      TabLock lock(tabs_mutex);
+      for (const auto& tt : tabs) {
+        if (d && tt->device == d) {
+          ESP_LOGD("main", "matched an existing tab %s", tt->gettabname());
+          tt->last_change = t;
+          found = true;
+          break;
+        }
       }
     }
-  }
-  if (t == D_DISCONNECTED) return;
+    
+    if (found || t == D_DISCONNECTED) continue;
 
-  ESP_LOGD("main", "a new device has appeared");
-  Tab *ta = nullptr;
-  switch (d->getType()) {
-    case DeviceType::device_mk312:        ta = new tab_mk312(); break;
-    case DeviceType::device_coyote:       ta = new tab_coyote(); break;
-    case DeviceType::device_funosr:       ta = new tab_funosr(); break;
-    case DeviceType::device_lovense:      ta = new tab_lovense(); break;
-    case DeviceType::device_ossm:         ta = new tab_ossm(); break;
-    case DeviceType::device_bubblebottle: ta = new tab_bubblebottle(); break;
-    case DeviceType::device_dgbutton:     ta = new tab_dgbutton(); break;
-    case DeviceType::device_loop:         ta = new tab_loop(); break;
-    default:                              return;
-  }
-  ta->type = d->getType();
-  ta->device = d;
-  ta->last_change = t;
-  ta->needssetup = true;
-  {
-    TabLock lock(tabs_mutex);
-    tabs.emplace_back(ta);
+    ESP_LOGD("main", "a new device has appeared");
+    Tab *ta = nullptr;
+    switch (d->getType()) {
+      case DeviceType::device_mk312:        ta = new tab_mk312(); break;
+      case DeviceType::device_coyote:       ta = new tab_coyote(); break;
+      case DeviceType::device_funosr:       ta = new tab_funosr(); break;
+      case DeviceType::device_lovense:      ta = new tab_lovense(); break;
+      case DeviceType::device_ossm:         ta = new tab_ossm(); break;
+      case DeviceType::device_bubblebottle: ta = new tab_bubblebottle(); break;
+      case DeviceType::device_dgbutton:     ta = new tab_dgbutton(); break;
+      case DeviceType::device_loop:         ta = new tab_loop(); break;
+      default:                              continue;
+    }
+    ta->type = d->getType();
+    ta->device = d;
+    ta->last_change = t;
+    ta->needssetup = true;
+    {
+      TabLock lock(tabs_mutex);
+      tabs.emplace_back(ta);
+    }
   }
 }
 
@@ -202,6 +225,7 @@ void main_loop() {
     TabLock l_lock(lvgl_mutex);
     lv_task_handler();
   }
+  process_device_events();
   handlehardwarecallbacks();
   handlebuttonpushes();
   handlerotaryencoders();
@@ -224,6 +248,7 @@ void loop() {}; // We use FreeRTOS tasks instead
 void setup() {
   tabs_mutex = xSemaphoreCreateRecursiveMutex();
   lvgl_mutex = xSemaphoreCreateRecursiveMutex();
+  device_event_queue = xQueueCreate(16, sizeof(device_event_t));
 
   hardware_tft_init();
   ESP_LOGD("setup","display setup done");

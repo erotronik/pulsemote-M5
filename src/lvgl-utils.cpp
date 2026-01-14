@@ -36,13 +36,17 @@ void printf_log(const char *format, ...) {
   va_end(args);
   ESP_LOGD("log","%s",buf);
   
-  TabLock lock(tabs_mutex);
-  if (!tabs.empty()) {
+  // Try to update the splashscreen log, but skip if we can't get the lock immediately.
+  // This prevents crashes if called from timer callbacks or during contention.
+  TabLock lock(tabs_mutex, 0); 
+  if (lock && !tabs.empty()) {
     Tab *t = tabs.front();
     tab_splashscreen *ts = static_cast<tab_splashscreen *>(t);
     if (ts && ts->lv_debug_window) {
-      TabLock l_lock(lvgl_mutex);
-      lv_textarea_add_text(ts->lv_debug_window, buf);
+      TabLock l_lock(lvgl_mutex, 0);
+      if (l_lock) {
+        lv_textarea_add_text(ts->lv_debug_window, buf);
+      }
     }
   }
 }

@@ -138,8 +138,8 @@ void tab_coyote::focus_change(bool focus) {
 void tab_coyote::loop(bool active) {
   auto md = static_cast<device_coyote*>(device);
   if (!md) return;
-  if (!md->is_connected) return;
-  ESP_LOGE("coyote", "loop");
+  //if (!md->is_connected) return;
+  // ESP_LOGE("coyote", "loop");
 
   if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
 

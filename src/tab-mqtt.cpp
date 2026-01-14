@@ -119,7 +119,7 @@ void tab_mqtt::gotsyncdata(Tab *t, sync_data status) {
     mqttsend(topic,"hello");
   if (status == SYNC_BYE) 
     mqttsend(topic,"bye");  
-  ESP_LOGD("mqtt","sent message");
+  // ESP_LOGD("mqtt","sent message");
 }
 
 // Add a device menu
