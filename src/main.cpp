@@ -100,9 +100,9 @@ void setup_tabs(void) {
     tv = lv_tabview_create(lv_screen_active());
   }
   lv_obj_set_scrollbar_mode(lv_tabview_get_content(tv), LV_SCROLLBAR_MODE_OFF); // uses bottom few pixels and not needed 
-  lv_obj_set_style_text_font(lv_tabview_get_tab_bar(tv), &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_font(lv_tabview_get_tab_bar(tv), LV_FONT_GET(14), LV_PART_MAIN);
   lv_obj_add_event_cb(tv, tabview_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-  lv_tabview_set_tab_bar_size(tv, 34);
+  lv_tabview_set_tab_bar_size(tv, LV_SCALE(34));
 
   Tab *sp = new tab_splashscreen();
   sp->setup();

@@ -5,10 +5,10 @@ tab_object_patterns::tab_object_patterns() {};
 void tab_object_patterns::selectpattern(lv_obj_t *parent, const char *patterns[],int patterns_n) {
   dd = lv_dropdown_create(parent);
   hide();
-  lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
-  lv_obj_set_style_text_font(lv_dropdown_get_list(dd), &lv_font_montserrat_16, LV_PART_MAIN);
+  lv_obj_set_style_text_font(dd, LV_FONT_GET(16), LV_PART_MAIN);
+  lv_obj_set_style_text_font(lv_dropdown_get_list(dd), LV_FONT_GET(16), LV_PART_MAIN);
   lv_obj_set_align(dd, LV_ALIGN_TOP_LEFT);
-  lv_obj_set_size(dd, LV_PCT(100), dropdown_height);  // match the timer box width
+  lv_obj_set_size(dd, LV_PCT(100), LV_SCALE(dropdown_height));  // match the timer box width
 
   lv_dropdown_clear_options(dd);  // start clean
 

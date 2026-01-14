@@ -377,8 +377,13 @@
 #define LV_FONT_MONTSERRAT_8  0
 #define LV_FONT_MONTSERRAT_10 0
 #define LV_FONT_MONTSERRAT_12 0
+#ifndef BOARD_M5TAB5
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_16 1
+#else
+#define LV_FONT_MONTSERRAT_14 0
+#define LV_FONT_MONTSERRAT_16 0
+#endif
 #define LV_FONT_MONTSERRAT_18 0
 #define LV_FONT_MONTSERRAT_20 0
 #define LV_FONT_MONTSERRAT_22 0
@@ -386,15 +391,27 @@
 #define LV_FONT_MONTSERRAT_26 0
 #define LV_FONT_MONTSERRAT_28 0
 #define LV_FONT_MONTSERRAT_30 0
+#ifdef BOARD_M5TAB5
+#define LV_FONT_MONTSERRAT_32 1
+#else
 #define LV_FONT_MONTSERRAT_32 0
+#endif
 #define LV_FONT_MONTSERRAT_34 0
 #define LV_FONT_MONTSERRAT_36 0
 #define LV_FONT_MONTSERRAT_38 0
+#ifdef BOARD_M5TAB5
+#define LV_FONT_MONTSERRAT_40 1
+#else
 #define LV_FONT_MONTSERRAT_40 0
+#endif
 #define LV_FONT_MONTSERRAT_42 0
 #define LV_FONT_MONTSERRAT_44 0
 #define LV_FONT_MONTSERRAT_46 0
+#ifdef BOARD_M5TAB5
+#define LV_FONT_MONTSERRAT_48 1
+#else
 #define LV_FONT_MONTSERRAT_48 0
+#endif
 
 /*Demonstrate special features*/
 #define LV_FONT_MONTSERRAT_28_COMPRESSED 0  /*bpp = 3*/
@@ -411,7 +428,11 @@
 #define LV_FONT_CUSTOM_DECLARE
 
 /*Always set a default font*/
+#ifdef BOARD_M5TAB5
+#define LV_FONT_DEFAULT &lv_font_montserrat_32
+#else
 #define LV_FONT_DEFAULT &lv_font_montserrat_14
+#endif
 
 /*Enable handling large font and/or fonts with a lot of characters.
  *The limit depends on the font size, font face and bpp.
@@ -419,7 +440,7 @@
 #define LV_FONT_FMT_TXT_LARGE 0
 
 /*Enables/disables support for compressed fonts.*/
-#define LV_USE_FONT_COMPRESSED 0
+#define LV_USE_FONT_COMPRESSED 1
 
 /*Enable drawing placeholders when glyph dsc is not found*/
 #define LV_USE_FONT_PLACEHOLDER 1

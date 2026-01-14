@@ -82,28 +82,51 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
   lv_obj_set_height(container, LV_SIZE_CONTENT);
   lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
 
-#ifdef BOARD_WAVESHARE_ESP32_S3_TOUCH_LCD_7
-  const int arc_size = 100; // todo this better
-  const int arc_gap = 74; // 100*5+75*4 = 796
-  const int arc_label_gap = 20;
-#else 
-#ifdef BOARD_M5TAB5
-  const int arc_size = 140;
-  const int arc_gap = 144;
-  const int arc_label_gap = 20;
-#else
-  const int arc_size = 60;
-  const int arc_gap = 4; //((320-62*5)/4+62)
-  const int arc_label_gap = 6;
-#endif
-#endif
-  lv_obj_set_style_pad_top(container, 19+arc_label_gap, 0);     // <-- add headroom
+  // Enable Flex layout for equal spacing
+  lv_obj_set_layout(container, LV_LAYOUT_FLEX);
+  lv_obj_set_flex_flow(container, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END);
+
+  const int arc_size = LV_SCALE(60);
+  const int arc_label_gap = LV_SCALE(6);
+  lv_obj_set_style_pad_top(container, LV_SCALE(19)+arc_label_gap, 0);     // <-- add headroom
 
   for (int i = 0; i < maxbuttons; i++) {
-    arc[i] = lv_arc_create(container);
+    // Wrapper for each button unit to keep arc and badge together in the flex flow
+    lv_obj_t *wrapper = lv_obj_create(container);
+    lv_obj_remove_style_all(wrapper);
+    lv_obj_set_size(wrapper, arc_size, LV_SIZE_CONTENT);
+    lv_obj_clear_flag(wrapper, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_layout(wrapper, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(wrapper, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(wrapper, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_gap(wrapper, arc_label_gap, 0);
+
+    // --- Badge ABOVE the arc ---
+    press[i] = lv_obj_create(wrapper);
+    lv_obj_add_flag(press[i], LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_style_all(press[i]);
+    lv_obj_set_size(press[i], arc_size, LV_SIZE_CONTENT);
+    lv_obj_clear_flag(press[i], LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(press[i], LV_SCALE(8), 0);
+    lv_obj_set_style_bg_opa(press[i], LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(press[i], lv_palette_darken(LV_PALETTE_BLUE, 3), 0);
+    lv_obj_set_style_pad_hor(press[i], LV_SCALE(4), 0);
+    lv_obj_set_style_pad_ver(press[i], LV_SCALE(2), 0);
+    lv_obj_set_style_border_width(press[i], 0, 0);
+    lv_obj_add_event_cb(press[i], arc_event_cb, LV_EVENT_CLICKED, this);
+    lv_obj_add_flag(press[i], LV_OBJ_FLAG_CLICKABLE);
+
+    // Label inside the badge
+    lv_obj_t *badge_label = lv_label_create(press[i]);
+    lv_label_set_text(badge_label, "");
+    lv_label_set_long_mode(badge_label, LV_LABEL_LONG_CLIP);
+    lv_obj_set_style_text_color(badge_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(badge_label, LV_FONT_GET(14), 0);
+    lv_obj_center(badge_label);
+
+    arc[i] = lv_arc_create(wrapper);
     lv_obj_set_size(arc[i], arc_size, arc_size);  
-    lv_obj_set_align(arc[i], LV_ALIGN_BOTTOM_LEFT);
-    lv_obj_set_x(arc[i], ((arc_size+arc_gap)* i)); 
     lv_arc_set_rotation(arc[i], 270);
     lv_arc_set_bg_angles(arc[i], 0, 360);
     lv_arc_set_value(arc[i], 0);
@@ -113,6 +136,7 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
     lv_obj_t *xarclabel = lv_label_create(arc[i]);
     lv_label_set_text(xarclabel, "");
     lv_obj_set_style_text_align(xarclabel, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_font(xarclabel, LV_FONT_GET(14), 0);
     lv_obj_center(xarclabel);
 
     // hitbox overlay as a child of the arc
@@ -122,34 +146,6 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
     lv_obj_center(hit);
     lv_obj_add_flag(hit, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(hit, arc_event_cb, LV_EVENT_CLICKED, this);
-
-    // --- Badge ABOVE the arc (compact, won't cover the circle) ---
-    press[i] = lv_obj_create(container);
-    lv_obj_add_flag(press[i], LV_OBJ_FLAG_HIDDEN);
-    lv_obj_remove_style_all(press[i]);                           // start clean
-    lv_obj_set_size(press[i], LV_SIZE_CONTENT, LV_SIZE_CONTENT); // <- key: autosize to content
-    lv_obj_clear_flag(press[i], LV_OBJ_FLAG_SCROLLABLE);         // no internal scroll
-    lv_obj_set_style_radius(press[i], 8, 0);
-    lv_obj_set_style_bg_opa(press[i], LV_OPA_COVER, 0);
-    lv_obj_set_style_bg_color(press[i], lv_palette_darken(LV_PALETTE_BLUE, 3), 0);
-    lv_obj_set_style_pad_hor(press[i], 6, 0);
-    lv_obj_set_width(press[i],arc_size);
-    lv_obj_set_style_pad_ver(press[i], 2, 0);
-    lv_obj_set_style_border_width(press[i], 0, 0);
-    lv_obj_add_event_cb(press[i], arc_event_cb, LV_EVENT_CLICKED, this);
-    lv_obj_add_flag(press[i], LV_OBJ_FLAG_CLICKABLE);
-
-    // Label inside the badge
-    lv_obj_t *badge_label = lv_label_create(press[i]);
-    lv_label_set_text(badge_label, "");
-    lv_label_set_long_mode(badge_label, LV_LABEL_LONG_CLIP);  // don't wrap "te te te ..."
-    lv_obj_set_style_text_color(badge_label, lv_color_white(), 0);
-    lv_obj_center(badge_label);
-
-    // Place the badge just above the arc
-    lv_obj_align_to(press[i], arc[i], LV_ALIGN_OUT_TOP_MID, 0, -arc_label_gap);
-
-    //lv_obj_add_event_cb(arc[i], mk312_arc_event_handler, LV_EVENT_ALL, this);
   }
 }
 

@@ -232,8 +232,8 @@ void tab_lovense::tab_create_status(lv_obj_t *tv2) {
   tab_status = lv_obj_create(tv2);
 
   lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, 150, 64);
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
+  lv_obj_set_size(tab_status, LV_SCALE(150), LV_SCALE(64));
+  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
   lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 
   lv_obj_t *labelx = lv_label_create(tab_status);
@@ -247,13 +247,13 @@ void tab_lovense::tab_create_status(lv_obj_t *tv2) {
 
 void tab_lovense::tab_create_battery(lv_obj_t *tv2) {
   tab_battery = lv_obj_create(tv2);
-  lv_obj_set_size(tab_battery, 150, 24);
-  lv_obj_align(tab_battery, LV_ALIGN_TOP_LEFT, 4, 64+12);
+  lv_obj_set_size(tab_battery, LV_SCALE(150), LV_SCALE(24));
+  lv_obj_align(tab_battery, LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(64+12));
   lv_obj_t *labelx = lv_label_create(tab_battery);
   lv_label_set_text(labelx, "");
-  lv_obj_set_style_text_font(labelx, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_set_style_text_font(labelx, LV_FONT_GET(14), LV_PART_MAIN);
   lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_pad_ver(tab_battery, 3, LV_PART_MAIN);
+  lv_obj_set_style_pad_ver(tab_battery, LV_SCALE(3), LV_PART_MAIN);
   lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
   lv_obj_set_scrollbar_mode(tab_battery, LV_SCROLLBAR_MODE_OFF);
 }

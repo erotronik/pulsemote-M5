@@ -7,16 +7,47 @@ lv_style_t lvpulsemote_style_status;
 lv_style_t lvpulsemote_style_tab;
 lv_style_t lvpulsemote_style_checked;
 
+float _lv_scale = 1.0f;
+
+const lv_font_t* lv_font_get_scaled(uint32_t size) {
+    uint32_t scaled_size = (uint32_t)(size * _lv_scale);
+    
+#ifdef BOARD_M5TAB5
+    if (scaled_size >= 48) return &lv_font_montserrat_42;
+    if (scaled_size >= 40) return &lv_font_montserrat_34;
+    if (scaled_size >= 32) return &lv_font_montserrat_28;
+    return &lv_font_montserrat_28; // Absolute minimum for high-res
+#else
+    if (scaled_size >= 24) return &lv_font_montserrat_24;
+    if (scaled_size >= 16) return &lv_font_montserrat_16;
+    return &lv_font_montserrat_14;
+#endif
+}
+
 void lv_init_pulsemote(void) {
+  // Determine scale based on screen width
+  // We डिजाइन for 320px on small screens, but on high-res screens (like Tab5 1280px)
+  // we scale by 2x instead of 4x to give more real estate and avoid "huge" UI.
+  lv_display_t * disp = lv_display_get_default();
+  if (disp) {
+      uint32_t width = lv_display_get_horizontal_resolution(disp);
+      if (width > 480) {
+          _lv_scale = (float)width / 640.0f; // 1280 -> 2.0
+      } else {
+          _lv_scale = 1.0f; // 320 -> 1.0
+      }
+  }
+  ESP_LOGI("lvgl", "UI Scale factor: %.2f", _lv_scale);
+
   lv_style_init(&lvpulsemote_style_status);
   lv_style_set_bg_color(&lvpulsemote_style_status, lv_color_hex(0xFF0000));
-  lv_style_set_pad_ver(&lvpulsemote_style_status, 3);
-  lv_style_set_text_font(&lvpulsemote_style_status, &lv_font_montserrat_24);
+  lv_style_set_pad_ver(&lvpulsemote_style_status, LV_SCALE(3));
+  lv_style_set_text_font(&lvpulsemote_style_status, LV_FONT_GET(24));
   lv_style_set_text_align(&lvpulsemote_style_status, LV_TEXT_ALIGN_CENTER);
 
   lv_style_init(&lvpulsemote_style_tab);
   lv_style_set_pad_all(&lvpulsemote_style_tab, 0);
-  lv_style_set_pad_top(&lvpulsemote_style_tab, 10);
+  lv_style_set_pad_top(&lvpulsemote_style_tab, LV_SCALE(10));
   lv_style_set_bg_opa(&lvpulsemote_style_tab, LV_OPA_COVER);
   lv_style_set_bg_color(&lvpulsemote_style_tab, lv_color_hex(0x000000));
 

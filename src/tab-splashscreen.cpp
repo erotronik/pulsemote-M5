@@ -131,7 +131,7 @@ void tab_splashscreen::setup(void) {
   lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
 
   lv_obj_set_style_pad_all(page, 0, 0);
-  lv_obj_set_style_pad_top(page, 4, 0);
+  lv_obj_set_style_pad_top(page, LV_SCALE(4), 0);
 
   lv_obj_t *dbg_wrap = lv_obj_create(page);
   lv_obj_set_width(dbg_wrap, LV_PCT(100));
@@ -145,8 +145,8 @@ void tab_splashscreen::setup(void) {
   lv_textarea_add_text(lv_debug_window, "");
   lv_textarea_set_cursor_click_pos(lv_debug_window, false);
   lv_obj_set_size(lv_debug_window, LV_PCT(100), LV_PCT(100));
-  lv_obj_align(lv_debug_window, LV_ALIGN_TOP_MID, 0, 14); // don't align with icons
-  lv_obj_set_style_text_font(lv_debug_window, &lv_font_montserrat_14, LV_PART_MAIN);
+  lv_obj_align(lv_debug_window, LV_ALIGN_TOP_MID, 0, LV_SCALE(14)); // don't align with icons
+  lv_obj_set_style_text_font(lv_debug_window, LV_FONT_GET(14), LV_PART_MAIN);
   lv_obj_clear_flag(lv_debug_window, LV_OBJ_FLAG_CLICK_FOCUSABLE);
 
   lv_obj_t *icons_bg = lv_obj_create(dbg_wrap);
@@ -154,14 +154,14 @@ void tab_splashscreen::setup(void) {
   lv_obj_set_size(icons_bg, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   lv_obj_set_style_bg_color(icons_bg, lv_palette_main(LV_PALETTE_BLUE), 0);
   lv_obj_set_style_bg_opa(icons_bg, LV_OPA_40, 0); 
-  lv_obj_set_style_radius(icons_bg, 6, 0);
-  lv_obj_set_style_pad_all(icons_bg, 4, 0); 
-  lv_obj_align(icons_bg, LV_ALIGN_TOP_RIGHT, -0, 2);
+  lv_obj_set_style_radius(icons_bg, LV_SCALE(6), 0);
+  lv_obj_set_style_pad_all(icons_bg, LV_SCALE(4), 0); 
+  lv_obj_align(icons_bg, LV_ALIGN_TOP_RIGHT, -0, LV_SCALE(2));
   lv_obj_clear_flag(icons_bg, LV_OBJ_FLAG_CLICKABLE); // no flashing cursor
 
   labelicons = lv_label_create(icons_bg);
   lv_label_set_text(labelicons, ""); 
-  lv_obj_set_style_text_font(labelicons, &lv_font_montserrat_24, 0);
+  lv_obj_set_style_text_font(labelicons, LV_FONT_GET(24), 0);
   lv_obj_set_style_text_color(labelicons, lv_palette_main(LV_PALETTE_BLUE), 0);
   lv_obj_center(labelicons);
   lv_obj_move_foreground(icons_bg);

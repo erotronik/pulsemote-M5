@@ -106,8 +106,8 @@ void tab_loop::tab_create_status(void) {
   tab_status = lv_obj_create(page);
 
   lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, 64, 46);
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
+  lv_obj_set_size(tab_status, LV_SCALE(64), LV_SCALE(46));
+  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
   lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 
   lv_obj_t *labelx = lv_label_create(tab_status);
@@ -124,11 +124,11 @@ void tab_loop::loop_tab_create() {
   lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
 
   chart = lv_chart_create(page);
-  lv_obj_align(chart, LV_ALIGN_TOP_RIGHT, -4, 0);
+  lv_obj_align(chart, LV_ALIGN_TOP_RIGHT, LV_SCALE(-4), 0);
   lv_chart_set_type(chart,LV_CHART_TYPE_LINE);
   lv_chart_set_point_count(chart, LOOP_DATA_POINTS);
   graph_data = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_PRIMARY_Y);
-  lv_obj_set_size(chart, 240, 120);
+  lv_obj_set_size(chart, LV_SCALE(240), LV_SCALE(120));
   lv_chart_set_div_line_count(chart, 10, 90);
   lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_CIRCULAR);
   lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, 1024); // will autoscale later

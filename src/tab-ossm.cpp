@@ -255,8 +255,8 @@ void tab_ossm::tab_create_status(lv_obj_t *tv2) {
   tab_status = lv_obj_create(tv2);
 
   lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, 150, 64);
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 4, 0);
+  lv_obj_set_size(tab_status, LV_SCALE(150), LV_SCALE(64));
+  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
   lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 
   lv_obj_t *labelx = lv_label_create(tab_status);
@@ -280,7 +280,7 @@ void tab_ossm::tab_create() {
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
 
   tab_create_status(page);
-  segbar_create(page,&mybar,150,12);
+  segbar_create(page,&mybar,LV_SCALE(150),LV_SCALE(12));
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);
@@ -309,7 +309,7 @@ void tab_ossm::segbar_create(lv_obj_t *parent, segbar_t *bar, int w, int h) {
   lv_obj_set_style_radius(bar->base, 0, LV_PART_MAIN);
   lv_obj_set_style_border_width(bar->base, 0, LV_PART_MAIN);
   lv_obj_remove_flag(bar->base, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_align(bar->base, LV_ALIGN_TOP_LEFT, 4, 72);
+  lv_obj_align(bar->base, LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(72));
 
   // red segment (child)
   bar->seg = lv_obj_create(bar->base);

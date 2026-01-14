@@ -213,7 +213,7 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
 
     // Create a list
     lv_obj_t * list = lv_list_create(popup_add_device_modal);
-    lv_obj_set_height(list, 100); // todo better dynamic
+    lv_obj_set_height(list, LV_SCALE(100)); // todo better dynamic
     lv_obj_set_width(list, LV_PCT(100));
 
 #ifdef CONFIG_WIFI_SSID
@@ -229,12 +229,12 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     lv_obj_set_height(btn_container, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(btn_container, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(btn_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_top(btn_container, 5, 0);
+    lv_obj_set_style_pad_top(btn_container, LV_SCALE(5), 0);
 
     // Create OK button
     lv_obj_t * ok_btn = lv_btn_create(btn_container);
-    lv_obj_set_size(ok_btn, 100, 40);
-    lv_obj_align(ok_btn, LV_ALIGN_BOTTOM_LEFT, 10, 0);
+    lv_obj_set_size(ok_btn, LV_SCALE(100), LV_SCALE(40));
+    lv_obj_align(ok_btn, LV_ALIGN_BOTTOM_LEFT, LV_SCALE(10), 0);
     lv_obj_add_event_cb(ok_btn, popup_add_device_ok_event_cb, LV_EVENT_CLICKED, this);
 
     lv_obj_t * ok_label = lv_label_create(ok_btn);
@@ -243,8 +243,8 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
 
     // Create Close (X) button
     lv_obj_t * close_btn = lv_btn_create(btn_container);
-    lv_obj_set_size(close_btn, 100, 40);
-    lv_obj_align(close_btn, LV_ALIGN_BOTTOM_RIGHT, -10, 0);
+    lv_obj_set_size(close_btn, LV_SCALE(100), LV_SCALE(40));
+    lv_obj_align(close_btn, LV_ALIGN_BOTTOM_RIGHT, LV_SCALE(-10), 0);
     lv_obj_add_event_cb(close_btn, popup_add_device_close_event_cb, LV_EVENT_CLICKED, this);
 
     lv_obj_t * close_label = lv_label_create(close_btn);

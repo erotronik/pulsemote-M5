@@ -10,6 +10,11 @@ extern lv_style_t lvpulsemote_style_status;
 extern lv_style_t lvpulsemote_style_tab;
 extern lv_style_t lvpulsemote_style_checked;
 
+extern float _lv_scale;
+#define LV_SCALE(x) ((int32_t)((x) * _lv_scale))
+const lv_font_t* lv_font_get_scaled(uint32_t size);
+#define LV_FONT_GET(size) lv_font_get_scaled(size)
+
 int lv_get_tabview_idx_from_page(lv_obj_t *l, lv_obj_t *page);
 void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area,uint8_t *px_map);
 uint32_t lvgl_tick_function(void);

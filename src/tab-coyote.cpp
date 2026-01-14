@@ -243,8 +243,8 @@ void tab_coyote::tab_create_status(lv_obj_t *tv2) {
   tab_status = lv_obj_create(tv2);
 
   lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, 160-8-8, 96);
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, 8, 0);
+  lv_obj_set_size(tab_status, LV_SCALE(160-8-8), LV_SCALE(96));
+  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(8), 0);
   lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
 
   lv_obj_t *labelx = lv_label_create(tab_status);

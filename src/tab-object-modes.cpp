@@ -4,10 +4,10 @@ tab_object_modes::tab_object_modes() {};
 
 void tab_object_modes::createdropdown(lv_obj_t *parent, const char *options) {
   dd = lv_dropdown_create(parent);
-  lv_obj_set_style_text_font(dd, &lv_font_montserrat_16, LV_PART_MAIN);
-  lv_obj_set_style_text_font(lv_dropdown_get_list(dd), &lv_font_montserrat_16, LV_PART_MAIN);
+  lv_obj_set_style_text_font(dd, LV_FONT_GET(16), LV_PART_MAIN);
+  lv_obj_set_style_text_font(lv_dropdown_get_list(dd), LV_FONT_GET(16), LV_PART_MAIN);
   lv_obj_set_align(dd, LV_ALIGN_TOP_RIGHT);
-  lv_obj_set_size(dd, dropdown_width, dropdown_height);  // match the timer box width
+  lv_obj_set_size(dd, LV_SCALE(dropdown_width), LV_SCALE(dropdown_height));  // match the timer box width
   lv_dropdown_set_options(dd, options);
 }
 

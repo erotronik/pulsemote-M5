@@ -104,7 +104,7 @@ static lv_obj_t *make_grid_btn(lv_obj_t *parent, lv_align_t align, int value, vo
     lv_obj_t *btn = lv_button_create(parent);
     lv_obj_set_style_bg_color(btn, lv_color_hex(0x000044), LV_PART_MAIN);
     lv_obj_add_event_cb(btn, cb, LV_EVENT_ALL, t);
-    lv_obj_set_size(btn, 55, 30);
+    lv_obj_set_size(btn, LV_SCALE(55), LV_SCALE(30));
     lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
     lv_obj_set_user_data(btn, user_data);
     lv_obj_add_style(btn, &lvpulsemote_style_checked, LV_STATE_CHECKED);
@@ -112,15 +112,16 @@ static lv_obj_t *make_grid_btn(lv_obj_t *parent, lv_align_t align, int value, vo
 
     lv_obj_t *label = lv_label_create(btn);
     lv_label_set_text_fmt(label, "%d", value);
+    lv_obj_set_style_text_font(label, LV_FONT_GET(14), 0);
     lv_obj_center(label);
     return btn;
 }
 
 void tab_object_timer::view(lv_obj_t *tv2) {
   lv_obj_t *timerc = lv_obj_create(tv2);
-  lv_obj_align(timerc, LV_ALIGN_TOP_RIGHT, 0, dropdown_height+6);
-  lv_obj_set_style_pad_all(timerc, 3, LV_PART_MAIN);
-  lv_obj_set_size(timerc, dropdown_width, 76);
+  lv_obj_align(timerc, LV_ALIGN_TOP_RIGHT, 0, LV_SCALE(dropdown_height+6));
+  lv_obj_set_style_pad_all(timerc, LV_SCALE(3), LV_PART_MAIN);
+  lv_obj_set_size(timerc, LV_SCALE(dropdown_width), LV_SCALE(76));
 
   active_btn = NULL;
   container = timerc;
@@ -139,15 +140,17 @@ void tab_object_timer::view(lv_obj_t *tv2) {
     (void)make_grid_btn(timerc, LV_ALIGN_BOTTOM_RIGHT, value[3], &ids[3], this, event_handler);
 
     lv_obj_t *t1 = lv_label_create(timerc);
-    lv_obj_align(t1, LV_ALIGN_TOP_MID, 0, 6);
+    lv_obj_align(t1, LV_ALIGN_TOP_MID, 0, LV_SCALE(6));
     lv_label_set_text(t1, "On");
-    lv_obj_set_size(t1, 70, 30);
+    lv_obj_set_size(t1, LV_SCALE(70), LV_SCALE(30));
     lv_obj_set_style_text_align(t1, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_font(t1, LV_FONT_GET(14), 0);
 
     lv_obj_t *t2 = lv_label_create(timerc);
-    lv_obj_align(t2, LV_ALIGN_BOTTOM_MID, 0, -6);
+    lv_obj_align(t2, LV_ALIGN_BOTTOM_MID, 0, LV_SCALE(-6));
     lv_label_set_text(t2, "Off");
     lv_obj_set_style_text_align(t2, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_font(t2, LV_FONT_GET(14), 0);
   } else {
     // lv_obj_set_size(timerc, dropdown_width, 76);
 
