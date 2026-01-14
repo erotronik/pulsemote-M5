@@ -18,10 +18,10 @@ bool hardware_is_charging() {
 }
 
 void hardware_beep() {
-  M5.Speaker.begin();
-  M5.Speaker.tone(660, 100);
   M5.Speaker.tone(2000, 1000);
 }
+
+
 
 void hardware_tft_loop() {
     M5.update();
@@ -30,6 +30,8 @@ void hardware_tft_loop() {
 void hardware_tft_init() {
   ESP_LOGD("main", "M5.begin()");
   M5.begin();
+  M5.Speaker.begin();
+
 
   M5.Display.setRotation(3);
   M5.Display.setSwapBytes(true);

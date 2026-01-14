@@ -23,7 +23,7 @@ void tab_dgbutton::loop(bool activetab) {
     if (state == device_dgbutton::dgbutton_event::RELEASE) {
       send_sync_data(SYNC_BUTTONRELEASE);
     }
-    if (0 && state == device_dgbutton::dgbutton_event::HELD) {
+    if (state == device_dgbutton::dgbutton_event::HELD) {
       printf_log("DG Button Pushed\n");
       send_sync_data(SYNC_ALLOFF);
       hardware_beep();

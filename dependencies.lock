@@ -1,0 +1,167 @@
+dependencies:
+  bblanchon/ArduinoJson:
+    component_hash: 
+      b1c2f0b0bc26969af19809cee80b220fb882481d59cc75f8e79ebceecdc69f06
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 7.4.2
+  espressif/eppp_link:
+    component_hash: 
+      9472e6825f4bb71eca2b39cf1bc92659c1ac60bfd7416560ad033a7dd8641b17
+    dependencies:
+    - name: espressif/esp_serial_slave_link
+      registry_url: https://components.espressif.com
+      require: private
+      version: ^1.1.0
+    - name: idf
+      require: private
+      version: '>=5.2'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.1.4
+  espressif/esp_hosted:
+    component_hash: 
+      f17471b7f596a520004415e607092a1ef41b280f79aee2fd11fb6f84a408155e
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.3'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 2.9.3
+  espressif/esp_serial_slave_link:
+    component_hash: 
+      ac1776806de0a6e371c84e87898bb983e19ce62aa7f1e2e5c4a3b0234a575d2c
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.1.2
+  espressif/esp_wifi_remote:
+    component_hash: 
+      94d453bb6aa79ebbe909d6e6525107353880c8a0c8b5d8f86103c83dae055362
+    dependencies:
+    - name: espressif/esp_hosted
+      registry_url: https://components.espressif.com
+      require: private
+      rules:
+      - if: target in [esp32h2, esp32p4]
+      version: '>=0.0.6'
+    - name: espressif/wifi_remote_over_eppp
+      registry_url: https://components.espressif.com
+      require: private
+      version: '>=0.1'
+    - name: idf
+      require: private
+      version: '>=5.3'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.2.4
+  espressif/mqtt:
+    component_hash: 
+      ffdad5659706b4dc14bc63f8eb73ef765efa015bf7e9adf71c813d52a2dc9342
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.3'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.0.0
+  espressif/wifi_remote_over_eppp:
+    component_hash: 
+      e1b4c485ed5afe36615b9b555dfdcbe4be33898dc3732b5bedf235bba45bd286
+    dependencies:
+    - name: espressif/eppp_link
+      registry_url: https://components.espressif.com
+      require: private
+      version: '>=0.1'
+    - name: idf
+      require: private
+      version: '>=5.3'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 0.3.0
+  h2zero/esp-nimble-cpp:
+    component_hash: 
+      ecdcabe83333948495103f9d62e4ecb651bff866fce123d00bfc106baa383e54
+    dependencies:
+    - name: espressif/esp_hosted
+      registry_url: https://components.espressif.com
+      require: private
+      rules:
+      - if: target in [esp32p4]
+      version: '*'
+    - name: espressif/esp_wifi_remote
+      registry_url: https://components.espressif.com
+      require: private
+      rules:
+      - if: target in [esp32p4]
+      version: '>=0.5.3'
+    - name: idf
+      require: private
+      rules:
+      - if: target in [esp32p4]
+      version: '>=5.3.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 2.3.4
+  idf:
+    source:
+      type: idf
+    version: 5.5.2
+  lvgl/lvgl:
+    component_hash: 
+      dc69a0fac2fae311b2ff181a4d2428f4fdb4520cd5ef26d1adf9b217d32635f6
+    dependencies: []
+    source:
+      git: https://github.com/lvgl/lvgl.git
+      path: .
+      type: git
+    version: dfd4edab9e92467895678824513bb89e90f3d3d5
+  m5stack/M5GFX:
+    component_hash: 
+      df3fe3bf49544145f068080e7678b9e0582e8d6a9fb3dc6a510039a0ca3b98c8
+    dependencies: []
+    source:
+      git: https://github.com/m5stack/M5GFX
+      path: .
+      type: git
+    version: 03565ccc96cb0b73c8b157f5ec3fbde439b034ad
+  m5stack/M5Unified:
+    component_hash: 
+      36275fd880d379bc7208306563540362aa16d1feafff908415aff88127eae195
+    dependencies: []
+    source:
+      git: https://github.com/m5stack/M5Unified.git
+      path: .
+      type: git
+    version: 80922a5e3e81b216bbe93f2eb3bfbc9add0f2af4
+  m5stack/m5gfx:
+    component_hash: 
+      4c420c89ae7bfe33231dab80b784f4508591279b2a3a935ac849dddb1942d0d5
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 0.2.17
+direct_dependencies:
+- bblanchon/ArduinoJson
+- espressif/mqtt
+- h2zero/esp-nimble-cpp
+- lvgl/lvgl
+- m5stack/M5GFX
+- m5stack/M5Unified
+manifest_hash: c948408c4613b7d1196d37bf92e031a633ff70d5d8c1c88365758bf4e2cb0820
+target: esp32p4
+version: 2.0.0

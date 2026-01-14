@@ -17,9 +17,8 @@ bool hardware_is_charging() {
 }
 
 void hardware_beep() {
-  M5.Speaker.begin();
-  M5.Speaker.tone(660, 100);
   M5.Speaker.tone(2000, 1000);
+
 }
 
 void hardware_tft_loop() {
@@ -28,6 +27,7 @@ void hardware_tft_loop() {
 
 void hardware_tft_init() {
   M5.begin();
+  M5.Speaker.begin();
   lv_init();
   lv_tick_set_cb(lvgl_tick_function);
   display = lv_display_create(SCREENW, SCREENH);
