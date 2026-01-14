@@ -89,13 +89,14 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
 
   const int arc_size = LV_SCALE(60);
   const int arc_label_gap = LV_SCALE(6);
-  lv_obj_set_style_pad_top(container, LV_SCALE(19)+arc_label_gap, 0);     // <-- add headroom
+  const int wrapper_h = arc_size + LV_SCALE(25) + arc_label_gap;
+  lv_obj_set_style_pad_top(container, arc_label_gap, 0); 
 
   for (int i = 0; i < maxbuttons; i++) {
-    // Wrapper for each button unit to keep arc and badge together in the flex flow
+    // Wrapper provides a hit-testable area for both badge and arc in a stable layout
     lv_obj_t *wrapper = lv_obj_create(container);
     lv_obj_remove_style_all(wrapper);
-    lv_obj_set_size(wrapper, arc_size, LV_SIZE_CONTENT);
+    lv_obj_set_size(wrapper, arc_size, wrapper_h);
     lv_obj_clear_flag(wrapper, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_layout(wrapper, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(wrapper, LV_FLEX_FLOW_COLUMN);
@@ -126,7 +127,7 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
     lv_obj_center(badge_label);
 
     arc[i] = lv_arc_create(wrapper);
-    lv_obj_set_size(arc[i], arc_size, arc_size);  
+    lv_obj_set_size(arc[i], arc_size, arc_size);
     lv_arc_set_rotation(arc[i], 270);
     lv_arc_set_bg_angles(arc[i], 0, 360);
     lv_arc_set_value(arc[i], 0);
