@@ -111,7 +111,8 @@ void scan_loop() {
       adv = nullptr;
 
       // If we successfully connected (or you want to continue regardless), rescan
-      repeatscan = (dev != nullptr);   // or just `true` if you always want to rescan
+      // repeatscan = (dev != nullptr);   // or just `true` if you always want to rescan
+      repeatscan = false;
       // If you keep `dev`, make sure you have a plan to delete it later.
     } else {
       // If one is set and the other isn't, that's a race/logic bug worth logging

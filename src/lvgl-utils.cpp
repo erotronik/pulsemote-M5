@@ -29,17 +29,21 @@ void lv_init_pulsemote(void) {
 // Log to serial, and if the splashscreen is there, also to the debug window of the splashscreen
 
 void printf_log(const char *format, ...) {
-  static char buf[256];
+  char buf[256];
   va_list args;
   va_start(args, format);
-  vsnprintf(buf, 255, format, args);
+  vsnprintf(buf, sizeof(buf), format, args);
   va_end(args);
   ESP_LOGD("log","%s",buf);
-  if (tabs.size() > 0) {
+  
+  TabLock lock(tabs_mutex);
+  if (!tabs.empty()) {
     Tab *t = tabs.front();
     tab_splashscreen *ts = static_cast<tab_splashscreen *>(t);
-    if (ts)
+    if (ts && ts->lv_debug_window) {
+      TabLock l_lock(lvgl_mutex);
       lv_textarea_add_text(ts->lv_debug_window, buf);
+    }
   }
 }
 

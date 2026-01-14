@@ -2,7 +2,8 @@
 
 #include <lvgl.h>
 #include <list>
-
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include "device.hpp"
 #include "tab-object-buttonbar.hpp"
 #include "tab-object-timer.hpp"
@@ -18,7 +19,18 @@ extern lv_obj_t *tv;
 class Tab;
 
 extern std::list<Tab *> tabs;
+extern SemaphoreHandle_t tabs_mutex;
+extern SemaphoreHandle_t lvgl_mutex;
 
+struct TabLock {
+    SemaphoreHandle_t _sem;
+    TabLock(SemaphoreHandle_t sem) : _sem(sem) {
+        if (_sem) xSemaphoreTakeRecursive(_sem, portMAX_DELAY);
+    }
+    ~TabLock() {
+        if (_sem) xSemaphoreGiveRecursive(_sem);
+    }
+};
 class Tab {
  public:
   enum sync_data {
@@ -61,10 +73,13 @@ class Tab {
   // Send sync data from our tab to all the others
   virtual void send_sync_data(sync_data syncstatus) {
     if (syncstatus == SYNC_OFF || syncstatus == SYNC_ALLOFF) cyclecount++;
-    for (const auto& item : tabs) {
-      if (item != this) {
-        item->gotsyncdata(this,syncstatus);
+    if (tabs_mutex && xSemaphoreTakeRecursive(tabs_mutex, portMAX_DELAY) == pdTRUE) {
+      for (const auto& item : tabs) {
+        if (item != this) {
+          item->gotsyncdata(this,syncstatus);
+        }
       }
+      xSemaphoreGiveRecursive(tabs_mutex);
     }
   };
 

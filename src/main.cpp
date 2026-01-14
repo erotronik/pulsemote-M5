@@ -19,6 +19,8 @@
 lv_obj_t *tv;
 
 std::list<Tab*> tabs;
+SemaphoreHandle_t tabs_mutex = NULL;
+SemaphoreHandle_t lvgl_mutex = NULL;
 
 uint8_t lastencodervalue[numencoders] = {128, 128, 128, 128};
 uint8_t encodervalue[numencoders] = {128, 128, 128, 128};
@@ -34,8 +36,10 @@ void RotaryEncoderChanged(bool clockwise, int id) {
 void handlebuttonpushes() {
   event_t received_event;
   uint8_t count = 4;  // a few callbacks allowed per loop, arbitary
+  TabLock lock(tabs_mutex);
   while (count > 0 && event_queue && xQueueReceive(event_queue, &received_event, 0)) {
     // find what device tab is active as physical buttons must only work on active tab
+    TabLock l_lock(lvgl_mutex);
     lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
     for (const auto& t : tabs) {
       if (activepage == t->page) 
@@ -54,6 +58,8 @@ void handlerotaryencoders() {
     if (change != 0) {
       lastencodervalue[i] = encodervalue[i] = 128;
       // find what device tab is active as encoders must only work on active tab
+      TabLock lock(tabs_mutex);
+      TabLock l_lock(lvgl_mutex);
       lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
       for (const auto& t : tabs) {
         if (activepage == t->page)
@@ -69,6 +75,8 @@ void handlerotaryencoders() {
 
 void tabview_event_cb(lv_event_t *event) {
     ESP_LOGD("main", "tabview cb %s on %d: current tab %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), lv_tabview_get_tab_act(tv));
+    TabLock lock(tabs_mutex);
+    TabLock l_lock(lvgl_mutex);
     lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
     for (const auto& t : tabs) {
       if (activepage == t->page)
@@ -80,7 +88,10 @@ void tabview_event_cb(lv_event_t *event) {
 // welcome screen (splashscreen)
 
 void setup_tabs(void) {
-  tv = lv_tabview_create(lv_screen_active());
+  {
+    TabLock l_lock(lvgl_mutex);
+    tv = lv_tabview_create(lv_screen_active());
+  }
   lv_obj_set_scrollbar_mode(lv_tabview_get_content(tv), LV_SCROLLBAR_MODE_OFF); // uses bottom few pixels and not needed 
   lv_obj_set_style_text_font(lv_tabview_get_tab_bar(tv), &lv_font_montserrat_14, LV_PART_MAIN);
   lv_obj_add_event_cb(tv, tabview_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
@@ -88,12 +99,18 @@ void setup_tabs(void) {
 
   Tab *sp = new tab_splashscreen();
   sp->setup();
-  tabs.emplace_back(sp);
+  {
+    TabLock lock(tabs_mutex);
+    tabs.emplace_back(sp);
+  }
 
 #ifdef CONFIG_WIFI_SSID
   Tab *mq = new tab_mqtt();
   mq->setup();
-  tabs.emplace_back(mq);
+  {
+    TabLock lock(tabs_mutex);
+    tabs.emplace_back(mq);
+  }
 #endif
 }
 
@@ -105,11 +122,14 @@ void setup_tabs(void) {
 void device_change_handler(type_of_change t, Device *d) {
   ESP_LOGD("main", "change handler task called from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
-  for (const auto& tt : tabs) {
-    if (d && tt->device == d) { // found an existing tab that matches the device instance
-      ESP_LOGD("main","matched an existing tab %s",tt->gettabname());
-      tt->last_change = t;
-      return;
+  {
+    TabLock lock(tabs_mutex);
+    for (const auto& tt : tabs) {
+      if (d && tt->device == d) { // found an existing tab that matches the device instance
+        ESP_LOGD("main","matched an existing tab %s",tt->gettabname());
+        tt->last_change = t;
+        return;
+      }
     }
   }
   if (t == D_DISCONNECTED) return;
@@ -131,14 +151,18 @@ void device_change_handler(type_of_change t, Device *d) {
   ta->device = d;
   ta->last_change = t;
   ta->needssetup = true;
-  tabs.emplace_back(ta);
+  {
+    TabLock lock(tabs_mutex);
+    tabs.emplace_back(ta);
+  }
 }
 
 // Handle any tabs that have changed status, this includes
 // cleaning up and removing a tab if it's gone away
 
 void handlehardwarecallbacks() {
-  for (auto st = tabs.begin(); st != tabs.end(); ++st) {
+  TabLock lock(tabs_mutex);
+  for (auto st = tabs.begin(); st != tabs.end(); ++ st) {
     Tab *t = *st;
     if (t->needssetup) {
       t->setup();
@@ -149,6 +173,7 @@ void handlehardwarecallbacks() {
       if (!t->hardware_changed()) {
         // false means the device has gone away, get rid of the tab
         ESP_LOGI("main","removing tab %s", t->gettabname());
+        TabLock l_lock(lvgl_mutex);
         lv_hide_tab(t->page);
         st = tabs.erase(st);
         return;
@@ -161,6 +186,8 @@ void handlehardwarecallbacks() {
 // Call the loop() function for each of the tabs, note if the tab is active (currently visible)
 
 void handletabloops(void) {
+  TabLock lock(tabs_mutex);
+  TabLock l_lock(lvgl_mutex);
   lv_obj_t *activetab = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
   for (const auto& t : tabs) {
     t->loop((activetab == t->page));
@@ -171,7 +198,10 @@ void handletabloops(void) {
 
 void main_loop() {
   hardware_tft_loop();
-  lv_task_handler();
+  {
+    TabLock l_lock(lvgl_mutex);
+    lv_task_handler();
+  }
   handlehardwarecallbacks();
   handlebuttonpushes();
   handlerotaryencoders();
@@ -192,6 +222,9 @@ void loop() {}; // We use FreeRTOS tasks instead
 // Usual setup start
 
 void setup() {
+  tabs_mutex = xSemaphoreCreateRecursiveMutex();
+  lvgl_mutex = xSemaphoreCreateRecursiveMutex();
+
   hardware_tft_init();
   ESP_LOGD("setup","display setup done");
   pulsemote_pcb_init();
