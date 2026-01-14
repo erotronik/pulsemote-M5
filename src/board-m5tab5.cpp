@@ -43,9 +43,9 @@ void hardware_tft_init() {
   ESP_LOGD("main", "lv_display_set_flush_cb()");
   lv_display_set_flush_cb(display, lvgl_display_flush);
   ESP_LOGD("main","allocate buffers");
-  const uint32_t buf_pixels = M5.Display.width() * 20;
-  static lv_color_t *buf1 = (lv_color_t*) heap_caps_malloc(buf_pixels * sizeof(lv_color_t),MALLOC_CAP_8BIT);
-  static lv_color_t *buf2 = (lv_color_t*) heap_caps_malloc(buf_pixels * sizeof(lv_color_t),MALLOC_CAP_8BIT);
+  const uint32_t buf_pixels = M5.Display.width() * 80;
+  static lv_color_t *buf1 = (lv_color_t*) heap_caps_malloc(buf_pixels * sizeof(lv_color_t), MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
+  static lv_color_t *buf2 = (lv_color_t*) heap_caps_malloc(buf_pixels * sizeof(lv_color_t), MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
   ESP_LOGD("main", "lv_display_set_buffers()");
   lv_display_set_buffers(display, buf1, buf2, buf_pixels * sizeof(lv_color_t), LV_DISPLAY_RENDER_MODE_PARTIAL);
   ESP_LOGD("main", "lv_indev_create()");

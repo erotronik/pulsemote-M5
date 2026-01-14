@@ -43,7 +43,9 @@ void tab_splashscreen::loop(bool activetab) {
     batterycheckmillis = millis();
   }
   if (needs_refresh && activetab) {
+    #if HASWIFICOPRO
     buttonbar->set_text(tab_object_buttonbar::switch1, "Add\nDevice");
+    #endif
 
     found_count = 0;
  
@@ -91,7 +93,9 @@ void tab_splashscreen::popup_add_wifi_device() {
 void tab_splashscreen::switch_change(int sw, bool value) {
   ESP_LOGI("splashscreen", "new callback button %d %s", sw, value ? "push" : "release");
   if (sw == tab_object_buttonbar::switch1 && value) {
+    #if HASWIFICOPRO
     popup_add_wifi_device();
+    #endif
   }
   for (size_t i = 0; i < found_count; ++i) {
     if (sw == buttonbar->rotary_order[i]) {
@@ -134,6 +138,8 @@ void tab_splashscreen::setup(void) {
   lv_obj_set_style_pad_top(page, LV_SCALE(4), 0);
 
   lv_obj_t *dbg_wrap = lv_obj_create(page);
+  lv_obj_set_layout(page, LV_LAYOUT_FLEX);
+  lv_obj_set_flex_flow(page, LV_FLEX_FLOW_COLUMN);
   lv_obj_set_width(dbg_wrap, LV_PCT(100));
   lv_obj_set_flex_grow(dbg_wrap, 1);
   lv_obj_set_style_pad_all(dbg_wrap, 0, 0);
