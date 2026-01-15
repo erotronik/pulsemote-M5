@@ -38,6 +38,7 @@ void tab_mk312::encoder_change(int sw, int change) {
   }
   if (sw == tab_object_buttonbar::rotary3) {
     if (!patternselect->visible()) {
+      ESP_LOGE("mk312","rotary3 show patternselect %d", wanted_mode);
       patternselect->show(wanted_mode);
     }
     patternselect->rotary_change(change);
@@ -99,6 +100,7 @@ void tab_mk312::switch_change(int sw, bool value) {
   }
   if (sw == tab_object_buttonbar::rotary3 && value) {
     if (!patternselect->visible()) {
+      ESP_LOGE("mk312","switch show patternselect %d", wanted_mode);
       patternselect->show(wanted_mode);
     } else {
       wanted_mode = patternselect->hide();
