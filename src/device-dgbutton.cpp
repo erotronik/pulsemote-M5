@@ -122,6 +122,8 @@ bool device_dgbutton::connect_to_device(NimBLEAdvertisedDevice* device) {
 
   if (!bleClient->connect(device)) {
     ESP_LOGE(getShortName(), "Connection failed");
+    bleClient->disconnect();
+    bleClient = nullptr;
     return false;
   }
   ESP_LOGI(getShortName(), "Connection established");
