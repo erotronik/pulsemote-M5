@@ -38,6 +38,7 @@ idf_component_register(
          "tab-thrustalot.cpp"
     INCLUDE_DIRS "../include"
     REQUIRES esp-nimble-cpp lvgl m5-pulsemote-pcb CoyoStim Venerate Rotary-master driver esp_timer ArduinoJson
+    PRIV_REQUIRES espressif__esp_hosted
     )
 
 if(CONFIG_BOARD_M5TAB5)
