@@ -10,6 +10,8 @@ This currently uses the platformio system
 
 This currently uses esp-idf system.
 
+idf.py --set-target esp32p4
+idf.py menuconfig (check out the pulsemote board section)
 idf.py -p /dev/ttyACM0 build flash monitor
 
 ## If you want more than 3 Bluetooth devices at the same time
