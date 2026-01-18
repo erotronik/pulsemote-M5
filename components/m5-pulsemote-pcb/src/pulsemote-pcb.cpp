@@ -3,7 +3,7 @@
 
 #include "pulsemote-pcb.hpp"
 
-#if PULSEMOTE_PCB
+#if CONFIG_PULSEMOTE_PCB
 
 #include "Rotary.h"
 #include "rotaryencoders.hpp"

@@ -1,8 +1,8 @@
-#if BOARD_M5TAB5
-
-#include <M5Unified.h>
 #include "lvgl-utils.h"
 
+#if CONFIG_BOARD_M5TAB5
+
+#include <M5Unified.h>
 constexpr int32_t SCREENW = 1280;
 constexpr int32_t SCREENH = 720;
 

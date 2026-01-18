@@ -12,7 +12,7 @@ float _lv_scale = 1.0f;
 const lv_font_t* lv_font_get_scaled(uint32_t size) {
     uint32_t scaled_size = (uint32_t)(size * _lv_scale);
     
-#ifdef BOARD_M5TAB5
+#ifdef CONFIG_BOARD_M5TAB5
     if (scaled_size >= 48) return &lv_font_montserrat_42;
     if (scaled_size >= 40) return &lv_font_montserrat_34;
     if (scaled_size >= 32) return &lv_font_montserrat_28;
