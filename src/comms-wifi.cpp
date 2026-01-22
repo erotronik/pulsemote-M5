@@ -369,11 +369,17 @@ void wifi_setup() {
 }
 
 #else
+#if NOTWORKING
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include "nvs_flash.h"
+
+bool wifi_connected = false;
+unsigned long cstate_timeout;
+
+QueueHandle_t mqttsenthandle;
 
 static EventGroupHandle_t s_wifi_event_group;
 static constexpr int WIFI_CONNECTED_BIT = BIT0;
@@ -403,10 +409,10 @@ static void wifi_event_handler(void*,
   }
 }
 
-void wifi_setup() {   mqttsubhandle  = xQueueCreate(10, sizeof(mqttsenditem));
+void wifi_task(void* pvParameters) {
+  (void)pvParameters;
+  ESP_LOGI("wifi ","starting up");
 
-  return;
-  
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
     ESP_ERROR_CHECK(nvs_flash_erase());
@@ -426,9 +432,9 @@ void wifi_setup() {   mqttsubhandle  = xQueueCreate(10, sizeof(mqttsenditem));
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, nullptr));
 
   wifi_config_t wifi_config{};
-  strncpy(reinterpret_cast<char*>(wifi_config.sta.ssid), "X", sizeof(wifi_config.sta.ssid));
-  strncpy(reinterpret_cast<char*>(wifi_config.sta.password), "X", sizeof(wifi_config.sta.password));
-  wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK; // adjust if needed
+  strncpy(reinterpret_cast<char*>(wifi_config.sta.ssid), CONFIG_WIFI_SSID, sizeof(wifi_config.sta.ssid));
+  strncpy(reinterpret_cast<char*>(wifi_config.sta.password), CONFIG_WIFI_PASSWORD, sizeof(wifi_config.sta.password));
+  wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
 
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
@@ -441,8 +447,25 @@ void wifi_setup() {   mqttsubhandle  = xQueueCreate(10, sizeof(mqttsenditem));
       pdFALSE,
       pdMS_TO_TICKS(15000));
 }
+
+void wifi_setup() {   
+  mqttsenthandle = xQueueCreate(10, sizeof(mqttsenditem));
+  mqttsubhandle  = xQueueCreate(10, sizeof(mqttsenditem));
+  //wifi_task(nullptr);
+  wifi_connected = false;xTaskCreatePinnedToCore(wifi_task, "wifi", 1024 * 12, NULL, 1, nullptr, 1); // run wifi also on core0
+}
+
+bool wifi_loop() { return false; }
+bool is_wifi_connected() { return wifi_connected; }
+
+void mqttsend(const char *topic, const char *message) {}
+void mqttsubscribe(const char *topic) {}
+
+#else
+void wifi_setup() { mqttsubhandle  = xQueueCreate(10, sizeof(mqttsenditem));}
 bool wifi_loop() { return false; }
 bool is_wifi_connected() { return false; }
 void mqttsend(const char *topic, const char *message) {}
 void mqttsubscribe(const char *topic) {}
+#endif
 #endif

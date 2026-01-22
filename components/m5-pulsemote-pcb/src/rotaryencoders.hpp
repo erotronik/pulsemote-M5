@@ -34,8 +34,8 @@ public:
 
     /* On an interrupt, can be called with the value of the GPIOAB register (or INTCAP) */
     void feedInput(uint16_t gpioAB) {
-        uint8_t pinValA = bitRead(gpioAB, pinA);
-        uint8_t pinValB = bitRead(gpioAB, pinB);
+        uint8_t pinValA = (gpioAB >> pinA) &1;
+        uint8_t pinValB = (gpioAB >> pinB) &1;
         uint8_t event = rot.process(pinValA, pinValB);
         if(event == DIR_CW || event == DIR_CCW) {
             //clock wise or counter-clock wise
