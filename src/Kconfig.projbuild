@@ -20,5 +20,11 @@ config PULSEMOTE_PCB
     help
         If you have the Pulsemote-M5 PCB attached
 
+config HASWIFICOPRO
+    bool "Has a espat coprocessor for wifi"
+    default y if BOARD_M5CORESS3
+    help
+        If you have a esp32c6 connected for wifi via esp-at
+
 endmenu
 

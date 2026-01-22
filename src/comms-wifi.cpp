@@ -19,8 +19,15 @@
 
 QueueHandle_t mqttsubhandle;
 
-#ifdef HASWIFICOPRO
+#ifdef CONFIG_HASWIFICOPRO
+#ifdef ARDUINO
 HardwareSerial espat_copro_port(1);
+#else
+#include "driver/uart.h"
+static const uart_port_t ESPAT_UART = UART_NUM_1;
+static const int ESPAT_RX_BUF = 2048;   // ring buffer size (tune if needed)
+static const int ESPAT_TX_BUF = 0;      // 0 = no TX ring buffer (direct writ
+#endif
 bool wifi_connected = false;
 SemaphoreHandle_t atBusy;
 EventGroupHandle_t responseFlags;
@@ -31,6 +38,25 @@ int cstate = 0;
 unsigned long cstate_timeout;
 
 QueueHandle_t mqttsenthandle;
+
+#ifndef ARDUINO
+static esp_err_t espat_uart_init(void) {
+    const uart_config_t cfg = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity    = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+
+    ESP_ERROR_CHECK(uart_driver_install(ESPAT_UART, ESPAT_RX_BUF, ESPAT_TX_BUF, 0, NULL, 0));
+    ESP_ERROR_CHECK(uart_param_config(ESPAT_UART, &cfg));
+    ESP_ERROR_CHECK(uart_set_pin(ESPAT_UART, /*tx*/ 17, /*rx*/ 18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+    return ESP_OK;
+}
+#endif
+
 
 static inline bool streq(const char* a, const char* b) {
   return std::strcmp(a, b) == 0;
@@ -198,6 +224,7 @@ static void espat_handleLine(const char* line) {
   }
 }
 
+#ifdef ARDUINO
 static void espat_processSerialInput() {
   static char espat_buffer[512];
   static size_t espat_len = 0;
@@ -209,7 +236,7 @@ static void espat_processSerialInput() {
     if (c == '\n') {
       if (espat_len > 0) {
         espat_buffer[espat_len] = '\0';
-        ESP_LOGD("espat", "rx=%s", espat_buffer);
+        ESP_LOGI("espat", "rx=%s", espat_buffer);
         espat_handleLine(espat_buffer);
         espat_len = 0;
       }
@@ -223,15 +250,61 @@ static void espat_processSerialInput() {
     }
   }
 }
+#else
+static void espat_processSerialInput(void) {
+    static char espat_buffer[512];
+    static size_t espat_len = 0;
+
+    size_t avail = 0;
+    if (uart_get_buffered_data_len(ESPAT_UART, &avail) != ESP_OK || avail == 0) {
+        return;
+    }
+
+    uint8_t tmp[128];
+    while (avail > 0) {
+        const int to_read = (avail > sizeof(tmp)) ? sizeof(tmp) : (int)avail;
+        const int n = uart_read_bytes(ESPAT_UART, tmp, to_read, 0 /* no wait */);
+        if (n <= 0) break;
+
+        for (int i = 0; i < n; i++) {
+            char c = (char)tmp[i];
+            if (c == '\r') continue;
+
+            if (c == '\n') {
+                if (espat_len > 0) {
+                    espat_buffer[espat_len] = '\0';
+                    ESP_LOGI("espat", "rx=%s", espat_buffer);
+                    espat_handleLine(espat_buffer);
+                    espat_len = 0;
+                }
+            } else {
+                if (espat_len < sizeof(espat_buffer) - 1) {
+                    espat_buffer[espat_len++] = c;
+                } else {
+                    // overflow: drop line
+                    espat_len = 0;
+                }
+            }
+        }
+
+        uart_get_buffered_data_len(ESPAT_UART, &avail);
+    }
+}
+#endif
 
 static bool espat_sendATCommand(const char* cmd, uint32_t timeout = 6000) {
   if (xSemaphoreTake(atBusy, portMAX_DELAY) != pdTRUE) return false;
 
   xEventGroupClearBits(responseFlags, RESPONSE_OK | RESPONSE_ERROR);
-  ESP_LOGD("espat", "txwait=%s", cmd);
+  ESP_LOGI("espat", "txwait=%s", cmd);
 
+#if ARDUINO
   espat_copro_port.print(cmd);
   espat_copro_port.print("\r\n");
+#else
+  uart_write_bytes(ESPAT_UART, cmd, (int)strlen(cmd));
+  uart_write_bytes(ESPAT_UART, "\r\n", 2);
+#endif
 
   const unsigned long start = millis();
   while (millis() - start < timeout) {
@@ -258,9 +331,14 @@ static bool espat_sendATCommand(const char* cmd, uint32_t timeout = 6000) {
 }
 
 static void espat_sendAT(const char* cmd) {
-  ESP_LOGD("espat", "tx=%s", cmd);
+  ESP_LOGI("espat", "tx=%s", cmd);
+#if ARDUINO
   espat_copro_port.print(cmd);
   espat_copro_port.print("\r\n");
+#else
+  uart_write_bytes(ESPAT_UART, cmd, (int)strlen(cmd));
+  uart_write_bytes(ESPAT_UART, "\r\n", 2);
+#endif
 }
 
 void wifi_task(void* pvParameters) {
@@ -275,7 +353,11 @@ void wifi_task(void* pvParameters) {
   responseFlags = xEventGroupCreate();
 
   // cores3 pc_tx (g17) pc_rx (g18); bus_pc_rx/tx
+#ifdef ARDUINO
   espat_copro_port.begin(115200, SERIAL_8N1, 18, 17);
+#else
+  espat_uart_init();
+#endif
   vTaskDelay(500 / portTICK_PERIOD_MS);
 
   while (true) {

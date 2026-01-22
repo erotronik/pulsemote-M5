@@ -43,7 +43,7 @@ void tab_splashscreen::loop(bool activetab) {
     batterycheckmillis = millis();
   }
   if (needs_refresh && activetab) {
-    #if HASWIFICOPRO
+    #if CONFIG_HASWIFICOPRO
     buttonbar->set_text(tab_object_buttonbar::switch1, "Add\nDevice");
     #endif
 
@@ -93,7 +93,7 @@ void tab_splashscreen::popup_add_wifi_device() {
 void tab_splashscreen::switch_change(int sw, bool value) {
   ESP_LOGI("splashscreen", "new callback button %d %s", sw, value ? "push" : "release");
   if (sw == tab_object_buttonbar::switch1 && value) {
-    #if HASWIFICOPRO
+    #if CONFIG_HASWIFICOPRO
     popup_add_wifi_device();
     #endif
   }

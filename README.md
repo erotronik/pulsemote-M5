@@ -4,7 +4,11 @@ A remote control using the M5-Remote for various e-Stim and other devices
 
 ## Building for the M5Stack CoreS3
 
-This currently uses the platformio system
+This currently uses the platformio system or esp-idf.  For esp-idf
+
+idf.py --set-target esp32s3
+idf.py menuconfig (check out the pulsemote board section)
+idf.py -p /dev/ttyACM0 build flash monitor
 
 ## Building for the M5Stack Tab5
 
