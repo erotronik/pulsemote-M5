@@ -18,10 +18,7 @@ extern QueueHandle_t event_queue;
 #if defined(ARDUINO)
 #include <Arduino.h>
 #else
-// ESP-IDF compatibility: provide millis() wrapper
 #include <esp_timer.h>
-
-unsigned long millis(void);
 #define HIGH 1
 #define CHANGE 1 // not used
 #endif

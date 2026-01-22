@@ -24,6 +24,11 @@ static constexpr uint32_t NOTIF_MCP = 1u << 1;
 
 void RotaryEncoderChanged(bool clockwise, int id);
 
+static inline uint32_t millis32()
+{
+    return (uint32_t)(esp_timer_get_time() / 1000ULL);
+}
+
 // MCP23017 is port expander on I2C x021 and INT on pin 6/7 (different if not
 // CoreS3)
 //
@@ -89,7 +94,7 @@ void handlemcpinterrupt() {
     rotaryEncoders[i].feedInput(data);
   }
   // check for button change
-  unsigned long now = millis();
+  unsigned long now = millis32();
   for (uint8_t i = 0; i < numbuttons; i++) {
     if (now - lastbuttondebounce[i] > 150) {  // debounce time
       uint8_t result = (data >> buttonpins[i]) & 1;

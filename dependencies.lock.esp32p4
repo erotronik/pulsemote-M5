@@ -163,5 +163,5 @@ direct_dependencies:
 - m5stack/M5GFX
 - m5stack/M5Unified
 manifest_hash: c948408c4613b7d1196d37bf92e031a633ff70d5d8c1c88365758bf4e2cb0820
-target: esp32s3
+target: esp32p4
 version: 2.0.0

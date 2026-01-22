@@ -17,7 +17,7 @@ public:
 
   // Equivalent to MODE1_AUTOINCR (+optional ALLCALL) and MODE2_INVERT
   bool begin(bool invert_outputs) {
-    ESP_LOGE("PCA9685", "PCA9685 Begin bus=%p addr=0x%02x", bus, addr);
+    ESP_LOGI("PCA9685", "PCA9685 Begin bus=%p addr=0x%02x", bus, addr);
     // MODE1: AI=1 (auto-increment)
     uint8_t mode1 = (1u << 5);
     if (!bus->writeRegister8(addr, MODE1, mode1, freq)) return false;
