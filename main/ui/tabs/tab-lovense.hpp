@@ -2,6 +2,7 @@
 
 #include "lvgl-utils.h"
 #include "tab.hpp"
+#include "tab-object-status.hpp"
 
 class tab_lovense : public Tab {
  public:
@@ -29,11 +30,10 @@ class tab_lovense : public Tab {
   bool need_refresh = false;
 
  private:
-  lv_obj_t *tab_status;
+  tab_object_status *status;
   lv_obj_t *tab_battery;
   int thrustcount = 0;
   void tab_create(void);
-  void tab_create_status(lv_obj_t *tv2);
   void tab_create_battery(lv_obj_t *tv2);
   bool need_knob_refresh = false;
   bool ison;

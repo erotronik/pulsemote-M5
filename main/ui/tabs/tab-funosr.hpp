@@ -2,6 +2,7 @@
 
 #include "lvgl-utils.h"
 #include "tab.hpp"
+#include "tab-object-status.hpp"
 
 class tab_funosr : public Tab {
  public:
@@ -25,10 +26,9 @@ class tab_funosr : public Tab {
   bool need_refresh = false;
 
  private:
-  lv_obj_t *tab_status;
+  tab_object_status *status;
   int main_pattern = 0;
   void tab_create(void);
-  void tab_create_status(lv_obj_t *tv2);
   bool need_knob_refresh = false;
   bool ison;
   int knob_speed, knob_stroke, knob_depth;

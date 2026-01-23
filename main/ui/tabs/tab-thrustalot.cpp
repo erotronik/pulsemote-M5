@@ -15,6 +15,7 @@ tab_thrustalot::tab_thrustalot() {
   modeselect = new tab_object_modes();
   page = nullptr;
   old_last_change = last_change = D_NONE;
+  status = nullptr;
   device = nullptr;
   knob_speed = 40;
   knob_tempo = 1;
@@ -167,14 +168,14 @@ void tab_thrustalot::loop(bool activetab) {
              pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
     device_thrustalot *md = static_cast<device_thrustalot *>(device);
-    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
+    status->set_active(ison);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s: %s\n%d",
+      status->set_text_fmt("%s: %s\n%d",
                              ison?"On":"Off",md->getpostext(), seconds);
     } else {
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s: %s",
+      status->set_text_fmt("%s: %s",
                         ison?"On":"Off",md->getpostext());
     }
     need_refresh = false;
@@ -230,22 +231,6 @@ void tab_thrustalot::focus_change(bool focus) {
   buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
 }
 
-void tab_thrustalot::tab_create_status() {
-  tab_status = lv_obj_create(page);
-
-  lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, LV_SCALE(150), LV_SCALE(64));
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
-  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
-
-  lv_obj_t *labelx = lv_label_create(tab_status);
-  lv_label_set_text(labelx, "-");
-  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-
-  lv_obj_t *extra_label = lv_label_create(tab_status);
-  lv_label_set_text(extra_label, "");
-  lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-}
 
 void tab_thrustalot::tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
@@ -256,7 +241,9 @@ void tab_thrustalot::tab_create() {
 
   buttonbar = new tab_object_buttonbar(page);
 
-  tab_create_status();
+  status = new tab_object_status(page, 150, 64);
+  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
+
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);

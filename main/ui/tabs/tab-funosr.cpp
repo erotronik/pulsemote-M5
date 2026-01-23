@@ -14,6 +14,7 @@ tab_funosr::tab_funosr() {
   modeselect = new tab_object_modes();
   page = nullptr;
   old_last_change = last_change = D_NONE;
+  status = nullptr;
   device = nullptr;
   knob_speed = 2;
   knob_stroke = 20;
@@ -195,13 +196,13 @@ void tab_funosr::loop(bool activetab) {
   if (activetab && need_refresh) {
     ESP_LOGD("funosr", "refresh active tab from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
-    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
+    status->set_active(ison);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%.10s\n%s: %d", "Stroke", ison?"On":"Off", seconds);
+      status->set_text_fmt("%.10s\n%s: %d", "Stroke", ison?"On":"Off", seconds);
     } else {
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%.10s\n%s", "Stroke", ison?"On":"Off");
+      status->set_text_fmt("%.10s\n%s", "Stroke", ison?"On":"Off");
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -259,22 +260,6 @@ void tab_funosr::focus_change(bool focus) {
   if (buttonbar) buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
 }
 
-void tab_funosr::tab_create_status(lv_obj_t *tv2) {
-  tab_status = lv_obj_create(tv2);
-
-  lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, LV_SCALE(150), LV_SCALE(64));
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
-  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
-
-  lv_obj_t *labelx = lv_label_create(tab_status);
-  lv_label_set_text(labelx, "-");
-  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-
-  lv_obj_t *extra_label = lv_label_create(tab_status);
-  lv_label_set_text(extra_label, "");
-  lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-}
 
 void tab_funosr::tab_create() {
   ESP_LOGD("funosr","tab_create");
@@ -289,7 +274,9 @@ void tab_funosr::tab_create() {
   buttonbar = new tab_object_buttonbar(page);
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
 
-  tab_create_status(page);
+  status = new tab_object_status(page, 150, 64);
+  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
+
   segbar_create(page,&mybar,LV_SCALE(150),LV_SCALE(12));
   rand_timer->view(page);
   timer->view(page);

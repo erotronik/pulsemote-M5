@@ -3,6 +3,7 @@
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "device-coyote.hpp"
+#include "tab-object-status.hpp"
 
 class tab_coyote: public Tab {
     public:
@@ -29,9 +30,8 @@ class tab_coyote: public Tab {
     private:
         static void coyote_mode_change_cb(lv_event_t *event);
         void coyote_tab_create(void);
-        lv_obj_t *tab_status;
+        tab_object_status *status;
         time_t last_refresh = 0;
-        void tab_create_status(lv_obj_t *tv2);
         bool ison;
         coyote_mode mode_a;
         coyote_mode mode_b;

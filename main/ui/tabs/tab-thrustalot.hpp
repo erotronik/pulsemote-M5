@@ -2,6 +2,7 @@
 
 #include "lvgl-utils.h"
 #include "tab.hpp"
+#include "tab-object-status.hpp"
 
 class tab_thrustalot : public Tab {
  public:
@@ -28,10 +29,9 @@ class tab_thrustalot : public Tab {
   bool need_refresh = false;
 
  private:
-  lv_obj_t *tab_status;
+  tab_object_status *status;
   int thrustcount = 0;
   void tab_create(void);
-  void tab_create_status(void);
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;

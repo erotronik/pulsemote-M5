@@ -13,6 +13,7 @@ tab_coyote::tab_coyote() {
     rand_timer = new tab_object_timer(true);
     sync = new tab_object_sync();
     modeselect = new tab_object_modes();
+    status = nullptr;
     device = nullptr;
     ison = true;
     level_a_req = 0;
@@ -202,13 +203,12 @@ void tab_coyote::loop(bool active) {
       mode_a = md->get().chan_a().get_mode();
       mode_b = md->get().chan_b().get_mode();
     } 
-    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
-
+    status->set_active(ison);
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "A: %s\nB: %s\n%d", md->getModeName(ison?mode_a:M_NONE), md->getModeName(ison?mode_b:M_NONE), seconds);
+      status->set_text_fmt("A: %s\nB: %s\n%d", md->getModeName(ison?mode_a:M_NONE), md->getModeName(ison?mode_b:M_NONE), seconds);
     } else {                              
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "A: %s\nB: %s",md->getModeName(ison?mode_a:M_NONE), md->getModeName(ison?mode_b:M_NONE));
+      status->set_text_fmt("A: %s\nB: %s",md->getModeName(ison?mode_a:M_NONE), md->getModeName(ison?mode_b:M_NONE));
     }
     if (main_mode == MODE_MANUAL) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
@@ -239,22 +239,6 @@ void tab_coyote::coyote_mode_change_cb(lv_event_t *event) {
   ctab->sync->show((ctab->main_mode == tab_coyote::MODE_SYNC));
 }
 
-void tab_coyote::tab_create_status(lv_obj_t *tv2) {
-  tab_status = lv_obj_create(tv2);
-
-  lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, LV_SCALE(160-8-8), LV_SCALE(96));
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(8), 0);
-  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
-
-  lv_obj_t *labelx = lv_label_create(tab_status);
-  lv_label_set_text(labelx, "-");
-  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-  
-  lv_obj_t *extra_label = lv_label_create(tab_status);
-  lv_label_set_text(extra_label, "");
-  lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-}
 
 void tab_coyote::coyote_tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
@@ -267,7 +251,9 @@ void tab_coyote::coyote_tab_create() {
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
   buttonbar->set_onmain(tab_object_buttonbar::rotary2, true);
 
-  tab_create_status(page);
+  status = new tab_object_status(page, 160-8-8, 96);
+  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(8), 0);
+
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);

@@ -17,6 +17,7 @@ tab_mqtt_leds::tab_mqtt_leds(char *n, char *t) {
   modeselect = new tab_object_modes();
   page = nullptr;
   old_last_change = last_change = D_NONE;
+  status = nullptr;
   device = nullptr;
   huesend = 0;
 }
@@ -184,13 +185,13 @@ void tab_mqtt_leds::loop(bool activetab) {
     ESP_LOGD("mqtt_leds", "refresh active tab from %s on %d",
              pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
-    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
+    status->set_active(ison);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s %d\n%d", ison?"On":"Off", preset, seconds);
+      status->set_text_fmt("%s %d\n%d", ison?"On":"Off", preset, seconds);
     } else {
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s %d", ison?"On":"Off", preset);
+      status->set_text_fmt("%s %d", ison?"On":"Off", preset);
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -247,22 +248,6 @@ void tab_mqtt_leds::focus_change(bool focus) {
   buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
 }
 
-void tab_mqtt_leds::tab_create_status(lv_obj_t *tv2) {
-  tab_status = lv_obj_create(tv2);
-
-  lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, LV_SCALE(108), LV_SCALE(64));
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
-  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
-
-  lv_obj_t *labelx = lv_label_create(tab_status);
-  lv_label_set_text(labelx, "-");
-  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-
-  lv_obj_t *extra_label = lv_label_create(tab_status);
-  lv_label_set_text(extra_label, "");
-  lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-}
 
 void tab_mqtt_leds::tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
@@ -272,7 +257,8 @@ void tab_mqtt_leds::tab_create() {
   lv_obj_add_event_cb(modeselect->getdropdownobject(), mqtt_leds_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
   buttonbar = new tab_object_buttonbar(page);
-  tab_create_status(page);
+  status = new tab_object_status(page, 108, 64);
+  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);

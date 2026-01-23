@@ -15,6 +15,7 @@ tab_lovense::tab_lovense() {
   modeselect = new tab_object_modes();
   page = nullptr;
   old_last_change = last_change = D_NONE;
+  status = nullptr;
   device = nullptr;
   knob_speed = 10; // 50%
   main_pattern = 0; // continuous
@@ -166,16 +167,16 @@ void tab_lovense::loop(bool activetab) {
              pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
 
     device_lovense *md = static_cast<device_lovense *>(device);
-    lv_obj_set_style_bg_color(tab_status, lv_color_hex(ison?COLOUR_GREEN:COLOUR_RED), LV_PART_MAIN);
+    status->set_active(ison);
 
     if (battery_pc>0)
       lv_label_set_text_fmt(lv_obj_get_child(tab_battery, 0), "battery %d%%", battery_pc);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = (timermillis - millis()) / 1000;
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%s: %d", md->patterns[main_pattern], ison?"On":"Off", seconds);
+      status->set_text_fmt("%s\n%s: %d", md->patterns[main_pattern], ison?"On":"Off", seconds);
     } else {
-      lv_label_set_text_fmt(lv_obj_get_child(tab_status, 0), "%s\n%s", md->patterns[main_pattern], ison?"On":"Off");
+      status->set_text_fmt("%s\n%s", md->patterns[main_pattern], ison?"On":"Off");
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -228,22 +229,6 @@ void tab_lovense::focus_change(bool focus) {
   buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
 }
 
-void tab_lovense::tab_create_status(lv_obj_t *tv2) {
-  tab_status = lv_obj_create(tv2);
-
-  lv_obj_add_style(tab_status, &lvpulsemote_style_status, LV_PART_MAIN);
-  lv_obj_set_size(tab_status, LV_SCALE(150), LV_SCALE(64));
-  lv_obj_align(tab_status, LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
-  lv_obj_set_scrollbar_mode(tab_status, LV_SCROLLBAR_MODE_OFF);
-
-  lv_obj_t *labelx = lv_label_create(tab_status);
-  lv_label_set_text(labelx, "-");
-  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-
-  lv_obj_t *extra_label = lv_label_create(tab_status);
-  lv_label_set_text(extra_label, "");
-  lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, 0);
-}
 
 void tab_lovense::tab_create_battery(lv_obj_t *tv2) {
   tab_battery = lv_obj_create(tv2);
@@ -267,7 +252,8 @@ void tab_lovense::tab_create() {
   lv_obj_add_event_cb(modeselect->getdropdownobject(), lovense_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
 
   buttonbar = new tab_object_buttonbar(page);
-  tab_create_status(page);
+  status = new tab_object_status(page, 150, 64);
+  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
   tab_create_battery(page);
   rand_timer->view(page);
   timer->view(page);

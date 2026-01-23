@@ -5,6 +5,7 @@
 #include "tab-object-patterns.hpp"
 #include "lvgl-utils.h"
 #include "tab.hpp"
+#include "tab-object-status.hpp"
 
 class tab_mk312 : public Tab {
  public:
@@ -33,9 +34,8 @@ class tab_mk312 : public Tab {
 
   
  private:
-  lv_obj_t *tab_status;
+  tab_object_status *status;
   void tab_create(void);
-  void tab_create_status(lv_obj_t *tv2);
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;

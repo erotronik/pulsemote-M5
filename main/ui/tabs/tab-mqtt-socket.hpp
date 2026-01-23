@@ -2,6 +2,7 @@
 
 #include "lvgl-utils.h"
 #include "tab.hpp"
+#include "tab-object-status.hpp"
 
 class tab_mqtt_socket : public Tab {
  public:
@@ -35,9 +36,8 @@ class tab_mqtt_socket : public Tab {
  private:
   char mqtt_topic[100] = "";
   char mqtt_topic_name[20] = "";
-  lv_obj_t *tab_status;
+  tab_object_status *status;
   void tab_create(void);
-  void tab_create_status(lv_obj_t *tv2);
   bool need_knob_refresh = false;
   uint8_t preset = 0;
   bool ison;
