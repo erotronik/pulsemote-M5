@@ -3,6 +3,7 @@
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "tab-object-status.hpp"
+#include "tab-object-segbar.hpp"
 
 class tab_ossm : public Tab {
  public:
@@ -39,14 +40,5 @@ class tab_ossm : public Tab {
   int timermillis = 0;
   unsigned long tempotimer = 0;
 
-  typedef struct {
-    lv_obj_t *base;   // green background
-    lv_obj_t *seg;    // red segment
-    int width;        // total width in px (100 here)
-    int height;       // total height in px (5 here)
-  } segbar_t;
-
-  segbar_t mybar;
-  void segbar_create(lv_obj_t *parent, segbar_t *bar, int x, int y);
-  void segbar_set(segbar_t *bar, int x, int y);
+  tab_object_segbar *segbar;
 };

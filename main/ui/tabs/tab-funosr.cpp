@@ -15,6 +15,7 @@ tab_funosr::tab_funosr() {
   page = nullptr;
   old_last_change = last_change = D_NONE;
   status = nullptr;
+  segbar = nullptr;
   device = nullptr;
   knob_speed = 2;
   knob_stroke = 20;
@@ -224,7 +225,7 @@ void tab_funosr::loop(bool activetab) {
     buttonbar->set_value(tab_object_buttonbar::rotary3,knob_depth);
     if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary3, lv_color_hsv_to_rgb(120, 100, knob_depth));
 
-    if (activetab) segbar_set(&mybar, knob_depth-knob_stroke, knob_depth);
+    if (activetab) segbar->set_range(knob_depth - knob_stroke, knob_depth);
     buttonbar->set_click_text(tab_object_buttonbar::rotary3,"Go In");
     buttonbar->set_click_text(tab_object_buttonbar::rotary2,"Go Out");
 
@@ -277,7 +278,8 @@ void tab_funosr::tab_create() {
   status = new tab_object_status(page, 150, 64);
   status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
 
-  segbar_create(page,&mybar,LV_SCALE(150),LV_SCALE(12));
+  segbar = new tab_object_segbar(page, LV_SCALE(150), LV_SCALE(12));
+  segbar->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(72));
   rand_timer->view(page);
   timer->view(page);
   sync->view(page);
@@ -285,49 +287,6 @@ void tab_funosr::tab_create() {
   lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
-static inline void clamp_and_order(int *x, int *y, int minv, int maxv) {
-  if (*x < minv) *x = minv;
-  if (*x > maxv) *x = maxv;
-  if (*y < minv) *y = minv;
-  if (*y > maxv) *y = maxv;
-  if (*y < *x) { int tmp = *x; *x = *y; *y = tmp; }
-}
-
-void tab_funosr::segbar_create(lv_obj_t *parent, segbar_t *bar, int w, int h) {
-  bar->width  = w;
-  bar->height = h;
-
-  // green base
-  bar->base = lv_obj_create(parent);
-  lv_obj_remove_style_all(bar->base);                  
-  lv_obj_set_size(bar->base, bar->width, bar->height);
-  lv_obj_set_style_bg_color(bar->base, lv_color_hex(COLOUR_GREEN), LV_PART_MAIN);
-  lv_obj_set_style_bg_opa(bar->base, LV_OPA_COVER, LV_PART_MAIN);
-  lv_obj_set_style_radius(bar->base, 0, LV_PART_MAIN);
-  lv_obj_set_style_border_width(bar->base, 0, LV_PART_MAIN);
-  lv_obj_remove_flag(bar->base, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_align(bar->base, LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(72));
-
-  // red segment (child)
-  bar->seg = lv_obj_create(bar->base);
-  lv_obj_remove_style_all(bar->seg);
-  lv_obj_set_style_bg_color(bar->seg, lv_color_hex(COLOUR_RED), LV_PART_MAIN);
-  lv_obj_set_style_bg_opa(bar->seg, LV_OPA_COVER, LV_PART_MAIN);
-  lv_obj_set_style_radius(bar->seg, 0, LV_PART_MAIN);
-  lv_obj_set_style_border_width(bar->seg, 0, LV_PART_MAIN);
-  lv_obj_remove_flag(bar->seg, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(bar->seg, LV_OBJ_FLAG_FLOATING);        // stay on top / ignore layouts
-  segbar_set(bar, 0, 0);
-}
-
-void tab_funosr::segbar_set(segbar_t *bar, int x, int y) {
-  int xs = x * bar->width /100, ys = y * bar->width/100;
-  clamp_and_order(&xs, &ys, 0, bar->width);
-  int w = ys - xs;
-  if (w < 0) w = 0;
-  lv_obj_set_pos(bar->seg, xs, 0);
-  lv_obj_set_size(bar->seg, w, bar->height);
-}
 
 // return false if we removed ourselves from the connected devices list
 bool tab_funosr::hardware_changed(void) {
