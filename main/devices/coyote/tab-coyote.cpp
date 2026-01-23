@@ -1,6 +1,4 @@
-#include <memory>
 #include "device-coyote.hpp"
-#include "lvgl-utils.h"
 #include "tab-coyote.hpp"
 #include "../../ui/tab.hpp"
 #include "../../core/lvgl-utils.h"

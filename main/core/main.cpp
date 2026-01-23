@@ -28,7 +28,6 @@ struct device_event_t {
 };
 QueueHandle_t device_event_queue = NULL;
 
-
 uint8_t lastencodervalue[numencoders] = {128, 128, 128, 128};
 uint8_t encodervalue[numencoders] = {128, 128, 128, 128};
 
