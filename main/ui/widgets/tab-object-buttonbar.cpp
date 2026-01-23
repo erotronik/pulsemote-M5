@@ -89,8 +89,11 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
 
   const int arc_size = LV_SCALE(60);
   const int arc_label_gap = LV_SCALE(6);
-  const int wrapper_h = arc_size + LV_SCALE(25) + arc_label_gap;
+  const int wrapper_h = arc_size + LV_SCALE(20) + arc_label_gap;
   lv_obj_set_style_pad_top(container, arc_label_gap, 0); 
+
+  lv_obj_set_style_pad_all(container, 0, 0);
+  lv_obj_set_style_margin_all(container, 0, 0);
 
   for (int i = 0; i < maxbuttons; i++) {
     // Wrapper provides a hit-testable area for both badge and arc in a stable layout

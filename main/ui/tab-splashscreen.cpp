@@ -146,7 +146,8 @@ void tab_splashscreen::setup(void) {
   lv_obj_set_style_bg_opa(dbg_wrap, LV_OPA_TRANSP, 0);
   lv_obj_set_style_border_width(dbg_wrap, 0, 0);
   lv_obj_clear_flag(dbg_wrap, LV_OBJ_FLAG_SCROLLABLE);
-
+  lv_obj_set_style_margin_all(dbg_wrap, 0, 0);
+  
   lv_debug_window = lv_textarea_create(dbg_wrap);
   lv_textarea_add_text(lv_debug_window, "");
   lv_textarea_set_cursor_click_pos(lv_debug_window, false);
@@ -173,9 +174,7 @@ void tab_splashscreen::setup(void) {
   lv_obj_move_foreground(icons_bg);
 
   buttonbar = new tab_object_buttonbar(page);
-  lv_obj_set_style_pad_all(buttonbar->container, 0, 0);
-  lv_obj_set_style_margin_all(buttonbar->container, 0, 0);
-  lv_obj_set_width(buttonbar->container, LV_PCT(100));
+
   needs_refresh = true;
 
 }
