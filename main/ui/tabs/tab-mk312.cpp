@@ -6,7 +6,6 @@
 tab_mk312::tab_mk312() {
   ison = true; // default power on mode is on
   lockpanel = false; // lockpanel means we lock out the front A/B level knobs and control the levels from software
-  main_mode = MODE_MANUAL;
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
@@ -23,7 +22,6 @@ tab_mk312::tab_mk312() {
           send_sync_data(SYNC_OFF);
       }
   });
-  status = nullptr;
   page = nullptr;
   old_last_change = last_change = D_NONE;
   device = nullptr;

@@ -8,7 +8,6 @@
 tab_ossm::tab_ossm() {
   ison = false;
   lockpanel = false;
-  main_mode = MODE_MANUAL;
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
@@ -26,7 +25,6 @@ tab_ossm::tab_ossm() {
   });
   page = nullptr;
   old_last_change = last_change = D_NONE;
-  status = nullptr;
   segbar = nullptr;
   device = nullptr;
   knob_speed = 0;

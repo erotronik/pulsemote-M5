@@ -1,12 +1,7 @@
 #pragma once
 
-#include "tab-object-timer.hpp"
-#include "tab-object-sync.hpp"
-#include "tab-object-patterns.hpp"
 #include "lvgl-utils.h"
 #include "tab.hpp"
-#include "tab-object-status.hpp"
-#include "tab-object-modetimer.hpp"
 
 class tab_mk312 : public Tab {
  public:
@@ -20,18 +15,7 @@ class tab_mk312 : public Tab {
   void gotsyncdata(Tab *t, sync_data status) override;
   int wanted_mode = 0;
 
-  enum main_modes {
-    MODE_MANUAL = 0,
-    MODE_TIMER,
-    MODE_RANDOM,
-    MODE_SYNC
-  };
   const char *mk312_main_modes_c = "Manual\nTimer\nRandom\nSync";
-
-  main_modes main_mode;
-  bool need_refresh = false;
-  tab_object_status *status;
-  tab_object_modetimer *modetimer;
 
 
 

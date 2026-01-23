@@ -10,6 +10,8 @@
 #include "tab-object-sync.hpp"
 #include "tab-object-modes.hpp"
 #include "tab-object-patterns.hpp"
+#include "tab-object-status.hpp"
+#include "tab-object-modetimer.hpp"
 
 #define COLOUR_RED 0x882211
 #define COLOUR_GREEN 0x118822
@@ -45,6 +47,13 @@ class Tab {
  public:
   enum sync_data {
     SYNC_START =0, SYNC_ON, SYNC_OFF, SYNC_BYE, SYNC_ALLOFF, SYNC_BUTTONPRESS, SYNC_BUTTONRELEASE
+  };
+    
+  enum main_modes {
+    MODE_MANUAL = 0,
+    MODE_TIMER,
+    MODE_RANDOM,
+    MODE_SYNC
   };
 
   // Called when a physical push switch is pushed or released
@@ -100,6 +109,12 @@ class Tab {
   Device *device;
   tab_object_buttonbar *buttonbar = nullptr;
   bool needssetup = false;
+  bool need_refresh = false;
+  bool need_knob_refresh = false;
+
+  main_modes main_mode = MODE_MANUAL;
+  tab_object_status *status = nullptr;
+  tab_object_modetimer *modetimer = nullptr;
 
   tab_object_modes *modeselect;
   tab_object_sync *sync;

@@ -2,8 +2,6 @@
 
 #include "lvgl-utils.h"
 #include "tab.hpp"
-#include "tab-object-status.hpp"
-#include "tab-object-modetimer.hpp"
 
 class tab_lovense : public Tab {
  public:
@@ -16,21 +14,11 @@ class tab_lovense : public Tab {
   bool hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
 
-  enum main_modes {
-    MODE_MANUAL = 0,
-    MODE_TIMER,
-    MODE_RANDOM,
-    MODE_SYNC
-  };
   const char *lovense_main_modes_c = "Manual\nTimer\nRandom\nSync";
 
   int getcyclecount(void) override { return thrustcount; };
 
-  main_modes main_mode;
   int main_pattern = 0;
-  bool need_refresh = false;
-  tab_object_status *status;
-  tab_object_modetimer *modetimer;
 
  private:
   lv_obj_t *tab_battery;

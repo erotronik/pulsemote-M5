@@ -21,7 +21,6 @@ tab_mqtt_leds::tab_mqtt_leds(char *n, char *t) {
   strncpy(mqtt_topic, t, sizeof(mqtt_topic)-1);
   strncpy(mqtt_topic_name, n, sizeof(mqtt_topic_name)-1);
   ison = false;
-  main_mode = MODE_MANUAL;
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
@@ -38,7 +37,6 @@ tab_mqtt_leds::tab_mqtt_leds(char *n, char *t) {
   });
   page = nullptr;
   old_last_change = last_change = D_NONE;
-  status = nullptr;
   device = nullptr;
   huesend = 0;
 }

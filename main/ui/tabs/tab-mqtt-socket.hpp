@@ -2,8 +2,6 @@
 
 #include "lvgl-utils.h"
 #include "tab.hpp"
-#include "tab-object-status.hpp"
-#include "tab-object-modetimer.hpp"
 
 class tab_mqtt_socket : public Tab {
  public:
@@ -22,19 +20,7 @@ class tab_mqtt_socket : public Tab {
 
   const char* gettabname(void) override { return mqtt_topic_name;};
 
-  enum main_modes {
-    MODE_MANUAL = 0,
-    MODE_TIMER,
-    MODE_RANDOM,
-    MODE_SYNC
-  };
   const char *mqtt_socket_main_modes_c =  "Manual\nTimer\nRandom\nSync";
-
-
-  main_modes main_mode;
-  bool need_refresh = false;
-  tab_object_status *status;
-  tab_object_modetimer *modetimer;
 
  private:
   char mqtt_topic[100] = "";

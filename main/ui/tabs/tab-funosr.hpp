@@ -2,9 +2,7 @@
 
 #include "lvgl-utils.h"
 #include "tab.hpp"
-#include "tab-object-status.hpp"
 #include "tab-object-segbar.hpp"
-#include "tab-object-modetimer.hpp"
 
 class tab_funosr : public Tab {
  public:
@@ -17,17 +15,7 @@ class tab_funosr : public Tab {
   bool hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
 
-  enum main_modes {
-    MODE_MANUAL = 0,
-    MODE_TIMER,
-    MODE_RANDOM,
-    MODE_SYNC
-  };
   const char *funosr_main_modes_c = "Manual\nTimer\nRandom\nSync";
-  main_modes main_mode;
-  bool need_refresh = false;
-  tab_object_status *status;
-  tab_object_modetimer *modetimer;
   tab_object_segbar *segbar;
 
  private:
