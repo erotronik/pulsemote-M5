@@ -12,6 +12,17 @@ tab_mk312::tab_mk312() {
   sync = new tab_object_sync();
   modeselect = new tab_object_modes();
   patternselect = new tab_object_patterns();
+  modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
+      device_mk312 *md = static_cast<device_mk312 *>(device);
+      ison = active_on;
+      if (active_on) {
+          md->etbox_on(wanted_mode);
+          send_sync_data(SYNC_ON);
+      } else {
+          md->etbox_off();
+          send_sync_data(SYNC_OFF);
+      }
+  });
   status = nullptr;
   page = nullptr;
   old_last_change = last_change = D_NONE;
@@ -83,6 +94,7 @@ void tab_mk312::switch_change(int sw, bool value) {
   if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && value) {  // Stop
     device_mk312 *md = static_cast<device_mk312*>(device);   
     main_mode = MODE_MANUAL;
+    modetimer->set_is_on(false);
     modeselect->reset();
     ison = false;
     md->etbox_off();
@@ -156,35 +168,8 @@ void tab_mk312::loop(bool activetab) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
   if (!md) return;
 
-  if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-    if (timermillis < millis()) {
+  if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
-      if (ison == 0) {
-        ison = 1;
-        md->etbox_on(wanted_mode);
-        send_sync_data(SYNC_ON);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeon() * 1000;
-        else
-          timermillis = millis() + timer->gettimeon() * 1000;
-      } else {
-        ison = 0;
-        md->etbox_off();
-        send_sync_data(SYNC_OFF);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeoff() * 1000;
-        else
-          timermillis = millis() + timer->gettimeoff() * 1000;
-      }
-    }
-    if (activetab) {
-      int seconds = (timermillis - millis()) / 1000;
-      static int last_seconds;
-      if (seconds != last_seconds) {
-        need_refresh = true;
-        last_seconds = seconds;
-      }
-    }
   }
 
   if (ison && md->connected() && wanted_mode != -1 && wanted_mode != md->get_last_mode()) {
@@ -197,7 +182,7 @@ void tab_mk312::loop(bool activetab) {
 
     status->set_active(ison);
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      int seconds = (timermillis - millis()) / 1000;
+      int seconds = modetimer->get_remaining_seconds();
       status->set_text_fmt("%s\n%d", md->etmodes[(ison||wanted_mode==-1)?md->get_last_mode():wanted_mode], seconds);
     } else {
       status->set_text(md->etmodes[(ison||wanted_mode==-1)?md->get_last_mode():wanted_mode]);
@@ -251,6 +236,9 @@ void mk312_mode_change_cb(lv_event_t *event) {
   mk312_tab->main_mode = static_cast<tab_mk312::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("mk312", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), mk312_tab->main_mode);
   mk312_tab->need_refresh = true;
+  if (mk312_tab->main_mode == tab_mk312::MODE_RANDOM || mk312_tab->main_mode == tab_mk312::MODE_TIMER) {
+      mk312_tab->modetimer->start();
+  }
   mk312_tab->rand_timer->show((mk312_tab->main_mode == tab_mk312::MODE_RANDOM));
   mk312_tab->timer->show((mk312_tab->main_mode == tab_mk312::MODE_TIMER));
   mk312_tab->sync->show((mk312_tab->main_mode == tab_mk312::MODE_SYNC));

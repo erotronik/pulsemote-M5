@@ -12,6 +12,16 @@ tab_funosr::tab_funosr() {
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
   modeselect = new tab_object_modes();
+  modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
+      ison = active_on;
+      if (active_on) {
+          send_funosr();
+          send_sync_data(SYNC_ON);
+      } else {
+          send_stop();
+          send_sync_data(SYNC_OFF);
+      }
+  });
   page = nullptr;
   old_last_change = last_change = D_NONE;
   status = nullptr;
@@ -132,6 +142,7 @@ void tab_funosr::switch_change(int sw, bool value) {
       send_sync_data(SYNC_OFF);
     }
     main_mode = MODE_MANUAL;
+    modetimer->set_is_on(false);
     modeselect->reset();
   }
 }
@@ -163,35 +174,8 @@ void tab_funosr::gotsyncdata(Tab *t, sync_data syncstatus) {
 
 void tab_funosr::loop(bool activetab) {
 
-  if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-    if (timermillis < millis()) {
+  if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
-      if (!ison) {
-        ison = true;
-        send_funosr();
-        send_sync_data(SYNC_ON);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeon() * 1000;
-        else
-          timermillis = millis() + timer->gettimeon() * 1000;
-      } else {
-        ison = false;
-        send_stop();
-        send_sync_data(SYNC_OFF);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeoff() * 1000;
-        else
-          timermillis = millis() + timer->gettimeoff() * 1000;
-      }
-    }
-    if (activetab) {
-      int seconds = (timermillis - millis()) / 1000;
-      static int last_seconds;
-      if (seconds != last_seconds) {
-        need_refresh = true;
-        last_seconds = seconds;
-      }
-    }
   }
 
   if (activetab && need_refresh) {
@@ -200,7 +184,7 @@ void tab_funosr::loop(bool activetab) {
     status->set_active(ison);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      int seconds = (timermillis - millis()) / 1000;
+      int seconds = modetimer->get_remaining_seconds();
       status->set_text_fmt("%.10s\n%s: %d", "Stroke", ison?"On":"Off", seconds);
     } else {
       status->set_text_fmt("%.10s\n%s", "Stroke", ison?"On":"Off");
@@ -250,6 +234,9 @@ void funosr_mode_change_cb(lv_event_t *event) {
   funosr_tab->main_mode = static_cast<tab_funosr::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("funosr", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), funosr_tab->main_mode);
   funosr_tab->need_refresh = true;
+  if (funosr_tab->main_mode == tab_funosr::MODE_RANDOM || funosr_tab->main_mode == tab_funosr::MODE_TIMER) {
+      funosr_tab->modetimer->start();
+  }
   funosr_tab->rand_timer->show((funosr_tab->main_mode == tab_funosr::MODE_RANDOM));
   funosr_tab->timer->show((funosr_tab->main_mode == tab_funosr::MODE_TIMER));
   funosr_tab->sync->show((funosr_tab->main_mode == tab_funosr::MODE_SYNC));

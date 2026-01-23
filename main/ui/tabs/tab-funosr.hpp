@@ -4,6 +4,7 @@
 #include "tab.hpp"
 #include "tab-object-status.hpp"
 #include "tab-object-segbar.hpp"
+#include "tab-object-modetimer.hpp"
 
 class tab_funosr : public Tab {
  public:
@@ -25,21 +26,19 @@ class tab_funosr : public Tab {
   const char *funosr_main_modes_c = "Manual\nTimer\nRandom\nSync";
   main_modes main_mode;
   bool need_refresh = false;
+  tab_object_status *status;
+  tab_object_modetimer *modetimer;
+  tab_object_segbar *segbar;
 
  private:
-  tab_object_status *status;
   int main_pattern = 0;
   void tab_create(void);
   bool need_knob_refresh = false;
   bool ison;
   int knob_speed, knob_stroke, knob_depth;
-  int timermillis = 0;
   void send_funosr();
   void send_stop();
   void goto_min();
   void goto_max();
-
   char msg[200];
-
-  tab_object_segbar *segbar;
 };

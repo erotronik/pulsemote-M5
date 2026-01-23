@@ -13,6 +13,17 @@ tab_ossm::tab_ossm() {
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
   modeselect = new tab_object_modes();
+  modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
+      device_ossm *md = static_cast<device_ossm *>(device);
+      ison = active_on;
+      if (active_on) {
+          md->set_speed(knob_speed);
+          send_sync_data(SYNC_ON);
+      } else {
+          md->set_speed(0);
+          send_sync_data(SYNC_OFF);
+      }
+  });
   page = nullptr;
   old_last_change = last_change = D_NONE;
   status = nullptr;
@@ -104,6 +115,7 @@ void tab_ossm::switch_change(int sw, bool value) {
       send_sync_data(SYNC_OFF);
     }
     main_mode = MODE_MANUAL;
+    modetimer->set_is_on(false);
     modeselect->reset();
   }
 }
@@ -150,35 +162,8 @@ void tab_ossm::loop(bool activetab) {
     }
   }
 
-  if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-    if (timermillis < millis()) {
+  if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
-      if (!ison) {
-        ison = true;
-        md->set_speed(knob_speed);
-        send_sync_data(SYNC_ON);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeon() * 1000;
-        else
-          timermillis = millis() + timer->gettimeon() * 1000;
-      } else {
-        ison = false;
-        md->set_speed(0);
-        send_sync_data(SYNC_OFF);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeoff() * 1000;
-        else
-          timermillis = millis() + timer->gettimeoff() * 1000;
-      }
-    }
-    if (activetab) {
-      int seconds = (timermillis - millis()) / 1000;
-      static int last_seconds;
-      if (seconds != last_seconds) {
-        need_refresh = true;
-        last_seconds = seconds;
-      }
-    }
   }
 
   if (activetab && need_refresh) {
@@ -188,7 +173,7 @@ void tab_ossm::loop(bool activetab) {
     status->set_active(ison);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      int seconds = (timermillis - millis()) / 1000;
+      int seconds = modetimer->get_remaining_seconds();
       status->set_text_fmt("%.10s\n%s: %d", md->pattern_name_for_idx(main_pattern), ison?"On":"Off", seconds);
     } else {
       status->set_text_fmt("%.10s\n%s", md->pattern_name_for_idx(main_pattern), ison?"On":"Off");
@@ -242,6 +227,9 @@ void ossm_mode_change_cb(lv_event_t *event) {
   ossm_tab->main_mode = static_cast<tab_ossm::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("ossm", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), ossm_tab->main_mode);
   ossm_tab->need_refresh = true;
+  if (ossm_tab->main_mode == tab_ossm::MODE_RANDOM || ossm_tab->main_mode == tab_ossm::MODE_TIMER) {
+      ossm_tab->modetimer->start();
+  }
   ossm_tab->rand_timer->show((ossm_tab->main_mode == tab_ossm::MODE_RANDOM));
   ossm_tab->timer->show((ossm_tab->main_mode == tab_ossm::MODE_TIMER));
   ossm_tab->sync->show((ossm_tab->main_mode == tab_ossm::MODE_SYNC));

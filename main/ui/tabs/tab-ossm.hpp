@@ -4,6 +4,7 @@
 #include "tab.hpp"
 #include "tab-object-status.hpp"
 #include "tab-object-segbar.hpp"
+#include "tab-object-modetimer.hpp"
 
 class tab_ossm : public Tab {
  public:
@@ -27,9 +28,11 @@ class tab_ossm : public Tab {
   main_modes main_mode;
   int main_pattern = 0;
   bool need_refresh = false;
+  tab_object_status *status;
+  tab_object_modetimer *modetimer;
+  tab_object_segbar *segbar;
 
  private:
-  tab_object_status *status;
   int thrustcount = 0;
   bool firstdata = false;
   void tab_create(void);
@@ -37,8 +40,4 @@ class tab_ossm : public Tab {
   bool ison;
   bool lockpanel = false;
   int knob_speed, knob_stroke, knob_depth, knob_sensation;
-  int timermillis = 0;
-  unsigned long tempotimer = 0;
-
-  tab_object_segbar *segbar;
 };

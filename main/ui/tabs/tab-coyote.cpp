@@ -13,6 +13,17 @@ tab_coyote::tab_coyote() {
     rand_timer = new tab_object_timer(true);
     sync = new tab_object_sync();
     modeselect = new tab_object_modes();
+    modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active) {
+        device_coyote *md = static_cast<device_coyote *>(device);
+        ison = active;
+        if (active) {
+            md->set_ab_mode(mode_a, mode_b);
+            send_sync_data(SYNC_ON);
+        } else {
+            md->set_ab_mode(M_NONE, M_NONE);
+            send_sync_data(SYNC_OFF);
+        }
+    });
     status = nullptr;
     device = nullptr;
     ison = true;
@@ -80,6 +91,7 @@ void tab_coyote::switch_change(int sw, bool state) {
   if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && state) {  // Stop
     auto md = static_cast<device_coyote*>(device);   
     main_mode = MODE_MANUAL;
+    modetimer->set_is_on(false);
     modeselect->reset();
     ison = false;
     md->set_ab_mode(M_NONE,M_NONE);
@@ -142,31 +154,8 @@ void tab_coyote::loop(bool active) {
   //if (!md->is_connected) return;
   // ESP_LOGE("coyote", "loop");
 
-  if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-
-    if (timermillis < millis()) {
-      auto md = static_cast<device_coyote*>(device);
+  if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
-      if (ison == 0) {
-        ison = 1;
-        md->set_ab_mode(mode_a,mode_b);
-        send_sync_data(SYNC_ON);
-        timermillis = millis() + (main_mode == MODE_RANDOM ? rand_timer->gettimeon() : timer->gettimeon()) * 1000;
-      } else {
-        ison = 0;
-        md->set_ab_mode(M_NONE,M_NONE);
-        send_sync_data(SYNC_OFF);
-        timermillis = millis() + (main_mode == MODE_RANDOM ? rand_timer->gettimeoff() : timer->gettimeon()) * 1000;
-      }
-    }
-    if (active) {
-      int seconds = (timermillis - millis()) / 1000;
-      static int last_seconds;
-      if (seconds != last_seconds) {
-        need_refresh = true;
-        last_seconds = seconds;
-      }
-    }
   }
   if (need_refresh) last_refresh = millis();
 
@@ -205,7 +194,7 @@ void tab_coyote::loop(bool active) {
     } 
     status->set_active(ison);
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      int seconds = (timermillis - millis()) / 1000;
+      int seconds = modetimer->get_remaining_seconds();
       status->set_text_fmt("A: %s\nB: %s\n%d", md->getModeName(ison?mode_a:M_NONE), md->getModeName(ison?mode_b:M_NONE), seconds);
     } else {                              
       status->set_text_fmt("A: %s\nB: %s",md->getModeName(ison?mode_a:M_NONE), md->getModeName(ison?mode_b:M_NONE));
@@ -234,6 +223,9 @@ void tab_coyote::coyote_mode_change_cb(lv_event_t *event) {
   ctab->main_mode = static_cast<tab_coyote::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("coyote", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), ctab->main_mode);
   ctab->need_refresh = true;
+  if (ctab->main_mode == tab_coyote::MODE_RANDOM || ctab->main_mode == tab_coyote::MODE_TIMER) {
+      ctab->modetimer->start();
+  }
   ctab->rand_timer->show((ctab->main_mode == tab_coyote::MODE_RANDOM));
   ctab->timer->show((ctab->main_mode == tab_coyote::MODE_TIMER));
   ctab->sync->show((ctab->main_mode == tab_coyote::MODE_SYNC));

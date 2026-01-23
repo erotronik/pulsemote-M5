@@ -3,6 +3,7 @@
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "tab-object-status.hpp"
+#include "tab-object-modetimer.hpp"
 
 class tab_lovense : public Tab {
  public:
@@ -28,9 +29,10 @@ class tab_lovense : public Tab {
   main_modes main_mode;
   int main_pattern = 0;
   bool need_refresh = false;
+  tab_object_status *status;
+  tab_object_modetimer *modetimer;
 
  private:
-  tab_object_status *status;
   lv_obj_t *tab_battery;
   int thrustcount = 0;
   void tab_create(void);
@@ -39,7 +41,6 @@ class tab_lovense : public Tab {
   bool ison;
   bool lockpanel = false;
   int knob_speed, knob_tempo;
-  int timermillis = 0;
   unsigned long tempotimer = 0;
   time_t battery_time = 0;
   int battery_pc = 0;

@@ -13,6 +13,17 @@ tab_lovense::tab_lovense() {
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
   modeselect = new tab_object_modes();
+  modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
+      device_lovense *md = static_cast<device_lovense *>(device);
+      ison = active_on;
+      if (active_on) {
+          md->setmodespeed(main_pattern, knob_speed);
+          send_sync_data(SYNC_ON);
+      } else {
+          md->setmodespeed(main_pattern, 0);
+          send_sync_data(SYNC_OFF);
+      }
+  });
   page = nullptr;
   old_last_change = last_change = D_NONE;
   status = nullptr;
@@ -85,6 +96,7 @@ void tab_lovense::switch_change(int sw, bool value) {
       send_sync_data(SYNC_OFF);
     }
     main_mode = MODE_MANUAL;
+    modetimer->set_is_on(false);
     modeselect->reset();
   }
   if (sw == tab_object_buttonbar::rotary3 && value) {
@@ -131,35 +143,8 @@ void tab_lovense::loop(bool activetab) {
     need_refresh = true;
   }
 
-  if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-    if (timermillis < millis()) {
+  if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
-      if (!ison) {
-        ison = true;
-        md->setmodespeed(main_pattern,knob_speed);
-        send_sync_data(SYNC_ON);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeon() * 1000;
-        else
-          timermillis = millis() + timer->gettimeon() * 1000;
-      } else {
-        ison = false;
-        md->setmodespeed(main_pattern,0);
-        send_sync_data(SYNC_OFF);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeoff() * 1000;
-        else
-          timermillis = millis() + timer->gettimeoff() * 1000;
-      }
-    }
-    if (activetab) {
-      int seconds = (timermillis - millis()) / 1000;
-      static int last_seconds;
-      if (seconds != last_seconds) {
-        need_refresh = true;
-        last_seconds = seconds;
-      }
-    }
   }
 
   if (activetab && need_refresh) {
@@ -173,7 +158,7 @@ void tab_lovense::loop(bool activetab) {
       lv_label_set_text_fmt(lv_obj_get_child(tab_battery, 0), "battery %d%%", battery_pc);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      int seconds = (timermillis - millis()) / 1000;
+      int seconds = modetimer->get_remaining_seconds();
       status->set_text_fmt("%s\n%s: %d", md->patterns[main_pattern], ison?"On":"Off", seconds);
     } else {
       status->set_text_fmt("%s\n%s", md->patterns[main_pattern], ison?"On":"Off");
@@ -217,6 +202,9 @@ void lovense_mode_change_cb(lv_event_t *event) {
   lovense_tab->main_mode = static_cast<tab_lovense::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
   ESP_LOGI("lovense", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), lovense_tab->main_mode);
   lovense_tab->need_refresh = true;
+  if (lovense_tab->main_mode == tab_lovense::MODE_RANDOM || lovense_tab->main_mode == tab_lovense::MODE_TIMER) {
+      lovense_tab->modetimer->start();
+  }
   lovense_tab->rand_timer->show((lovense_tab->main_mode == tab_lovense::MODE_RANDOM));
   lovense_tab->timer->show((lovense_tab->main_mode == tab_lovense::MODE_TIMER));
   lovense_tab->sync->show((lovense_tab->main_mode == tab_lovense::MODE_SYNC));

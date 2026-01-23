@@ -3,6 +3,7 @@
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "tab-object-status.hpp"
+#include "tab-object-modetimer.hpp"
 
 class tab_mqtt_leds : public Tab {
  public:
@@ -31,11 +32,12 @@ class tab_mqtt_leds : public Tab {
 
   main_modes main_mode;
   bool need_refresh = false;
+  tab_object_status *status;
+  tab_object_modetimer *modetimer;
 
  private:
   char mqtt_topic[100] = "";
   char mqtt_topic_name[20] = "";
-  tab_object_status *status;
   void tab_create(void);
   bool need_knob_refresh = false;
   uint8_t hue = 0;
@@ -43,5 +45,4 @@ class tab_mqtt_leds : public Tab {
   int preset = 0;
   bool ison;
   bool lockpanel = false;
-  int timermillis = 0;
 };

@@ -35,6 +35,7 @@ idf_component_register(
          "ui/widgets/tab-object-timer.cpp"
          "ui/widgets/tab-object-status.cpp"
          "ui/widgets/tab-object-segbar.cpp"
+         "ui/widgets/tab-object-modetimer.cpp"
          "ui/tabs/tab-ossm.cpp"
          "ui/tabs/tab-splashscreen.cpp"
          "ui/tabs/tab-thrustalot.cpp"

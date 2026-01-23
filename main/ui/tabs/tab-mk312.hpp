@@ -6,6 +6,7 @@
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "tab-object-status.hpp"
+#include "tab-object-modetimer.hpp"
 
 class tab_mk312 : public Tab {
  public:
@@ -29,12 +30,13 @@ class tab_mk312 : public Tab {
 
   main_modes main_mode;
   bool need_refresh = false;
+  tab_object_status *status;
+  tab_object_modetimer *modetimer;
 
 
 
   
  private:
-  tab_object_status *status;
   void tab_create(void);
   bool need_knob_refresh = false;
   bool ison;
@@ -42,5 +44,4 @@ class tab_mk312 : public Tab {
   int level_a, level_b;
   int last_level_button_press_a = 0;
   int last_level_button_press_b = 0;
-  int timermillis = 0;
 };

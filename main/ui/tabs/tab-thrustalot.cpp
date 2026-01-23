@@ -13,6 +13,16 @@ tab_thrustalot::tab_thrustalot() {
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
   modeselect = new tab_object_modes();
+  modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
+      device_thrustalot *md = static_cast<device_thrustalot *>(device);
+      ison = active_on;
+      if (active_on) {
+          md->thrustonetime(knob_speed);
+          send_sync_data(SYNC_ON);
+      } else {
+          send_sync_data(SYNC_OFF);
+      }
+  });
   page = nullptr;
   old_last_change = last_change = D_NONE;
   status = nullptr;
@@ -71,7 +81,9 @@ void tab_thrustalot::switch_change(int sw, bool value) {
   if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && value) {
     ison = 0;
     main_mode = MODE_MANUAL;
+    modetimer->set_is_on(false);
     modeselect->reset();
+    send_sync_data(SYNC_OFF);
   }
   if (sw == tab_object_buttonbar::rotary3 && !ison && main_mode == MODE_MANUAL) {
     md->thrustonetime(knob_speed);
@@ -133,34 +145,8 @@ void tab_thrustalot::loop(bool activetab) {
     need_refresh = true;
   }
 
-  if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-    if (timermillis < millis()) {
+  if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
-      if (ison == 0) {
-        ison = 1;
-        md->thrustonetime(knob_speed);
-        send_sync_data(SYNC_ON);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeon() * 1000;
-        else
-          timermillis = millis() + timer->gettimeon() * 1000;
-      } else {
-        ison = 0;
-        send_sync_data(SYNC_OFF);
-        if (main_mode == MODE_RANDOM)
-          timermillis = millis() + rand_timer->gettimeoff() * 1000;
-        else
-          timermillis = millis() + timer->gettimeoff() * 1000;
-      }
-    }
-    if (activetab) {
-      int seconds = (timermillis - millis()) / 1000;
-      static int last_seconds;
-      if (seconds != last_seconds) {
-        need_refresh = true;
-        last_seconds = seconds;
-      }
-    }
   }
 
   if (activetab && need_refresh) {
@@ -171,7 +157,7 @@ void tab_thrustalot::loop(bool activetab) {
     status->set_active(ison);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      int seconds = (timermillis - millis()) / 1000;
+      int seconds = modetimer->get_remaining_seconds();
       status->set_text_fmt("%s: %s\n%d",
                              ison?"On":"Off",md->getpostext(), seconds);
     } else {
@@ -219,6 +205,9 @@ void thrustalot_mode_change_cb(lv_event_t *event) {
            pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
            thrustalot_tab->main_mode);
   thrustalot_tab->need_refresh = true;
+  if (thrustalot_tab->main_mode == tab_thrustalot::MODE_RANDOM || thrustalot_tab->main_mode == tab_thrustalot::MODE_TIMER) {
+      thrustalot_tab->modetimer->start();
+  }
   thrustalot_tab->rand_timer->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_RANDOM));
   thrustalot_tab->timer->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_TIMER));
   thrustalot_tab->sync->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_SYNC));

@@ -3,6 +3,7 @@
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "tab-object-status.hpp"
+#include "tab-object-modetimer.hpp"
 
 class tab_thrustalot : public Tab {
  public:
@@ -27,16 +28,16 @@ class tab_thrustalot : public Tab {
 
   main_modes main_mode;
   bool need_refresh = false;
+  tab_object_status *status;
+  tab_object_modetimer *modetimer;
 
  private:
-  tab_object_status *status;
   int thrustcount = 0;
   void tab_create(void);
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;
   int knob_speed, knob_tempo;
-  int timermillis = 0;
   unsigned long tempotimer = 0;
   int tempo_to_ms(int x);
 
