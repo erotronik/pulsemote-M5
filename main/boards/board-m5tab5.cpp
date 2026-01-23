@@ -13,6 +13,7 @@ int hardware_get_battery_level() {
   if (M5.Power.getBatteryLevel() == 0 && M5.Power.isCharging()) return 100; // no batter
   return M5.Power.getBatteryLevel();
 }
+
 bool hardware_is_charging() {
     return M5.Power.isCharging();
 }
@@ -20,8 +21,6 @@ bool hardware_is_charging() {
 void hardware_beep() {
   M5.Speaker.tone(2000, 1000);
 }
-
-
 
 void hardware_tft_loop() {
     M5.update();
@@ -31,7 +30,6 @@ void hardware_tft_init() {
   ESP_LOGD("main", "M5.begin()");
   M5.begin();
   M5.Speaker.begin();
-
 
   M5.Display.setRotation(3);
   M5.Display.setSwapBytes(true);
@@ -63,7 +61,6 @@ void hardware_tft_init() {
 void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {
   uint32_t w = (area->x2 - area->x1 + 1);
   uint32_t h = (area->y2 - area->y1 + 1);
-
   //lv_draw_sw_rgb565_swap(px_map, w * h);
   M5.Display.pushImageDMA<uint16_t>(area->x1, area->y1, w, h, (uint16_t *)px_map);
   lv_disp_flush_ready(disp);

@@ -1,18 +1,11 @@
 #pragma once
 
-//#include <WiFi.h>
 #include "tab.hpp"
 #include "device.hpp"
 #include "lvgl-utils.h"
 #include "config.h"
 
-// #include <PubSubClient.h>
-
 class tab_mqtt;
-
-//void ok_event_cb(lv_event_t * e);
-//void close_event_cb(lv_event_t * e);
-//void list_event_handler(lv_event_t * e);
 
 class tab_mqtt : public Tab {
   public:

@@ -13,13 +13,13 @@ lv_indev_t *indev;
 int hardware_get_battery_level() {
     return M5.Power.getBatteryLevel();
 }
+
 bool hardware_is_charging() {
     return M5.Power.isCharging();
 }
 
 void hardware_beep() {
   M5.Speaker.tone(2000, 1000);
-
 }
 
 void hardware_tft_loop() {
