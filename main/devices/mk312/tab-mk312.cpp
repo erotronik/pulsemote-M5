@@ -1,7 +1,7 @@
 #include "device-mk312.hpp"
 #include "tab-mk312.hpp"
-#include "tab.hpp"
-#include "lvgl-utils.h"
+#include "../../ui/tab.hpp"
+#include "../../core/lvgl-utils.h"
 
 tab_mk312::tab_mk312() {
   ison = true; // default power on mode is on

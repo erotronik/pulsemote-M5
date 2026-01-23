@@ -2,8 +2,8 @@
 
 #include "device-lovense.hpp"
 #include "tab-lovense.hpp"
-#include "tab.hpp"
-#include "lvgl-utils.h"
+#include "../../ui/tab.hpp"
+#include "../../core/lvgl-utils.h"
 
 tab_lovense::tab_lovense() {
   ison = false;

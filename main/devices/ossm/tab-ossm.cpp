@@ -2,8 +2,8 @@
 
 #include "device-ossm.hpp"
 #include "tab-ossm.hpp"
-#include "tab.hpp"
-#include "lvgl-utils.h"
+#include "../../ui/tab.hpp"
+#include "../../core/lvgl-utils.h"
 
 tab_ossm::tab_ossm() {
   ison = false;

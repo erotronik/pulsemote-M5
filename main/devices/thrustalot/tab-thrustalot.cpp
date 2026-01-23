@@ -2,8 +2,8 @@
 
 #include "device-thrustalot.hpp"
 #include "tab-thrustalot.hpp"
-#include "tab.hpp"
-#include "lvgl-utils.h"
+#include "../../ui/tab.hpp"
+#include "../../core/lvgl-utils.h"
 
 tab_thrustalot::tab_thrustalot() {
   ison = true;

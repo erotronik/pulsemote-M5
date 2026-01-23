@@ -1,8 +1,8 @@
 #include <memory>
 #include "device-funosr.hpp"
 #include "tab-funosr.hpp"
-#include "tab.hpp"
-#include "lvgl-utils.h"
+#include "../../ui/tab.hpp"
+#include "../../core/lvgl-utils.h"
 #include <cmath>
 
 tab_funosr::tab_funosr() {
