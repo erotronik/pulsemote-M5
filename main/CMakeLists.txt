@@ -18,6 +18,7 @@ idf_component_register(
          "devices/device-mk312.cpp"
          "devices/device-ossm.cpp"
          "devices/device-thrustalot.cpp"
+	 "ui/tab.cpp"
          "ui/tabs/tab-bubblebottle.cpp"
          "ui/tabs/tab-coyote.cpp"
          "ui/tabs/tab-dgbutton.cpp"

@@ -102,6 +102,11 @@ class Tab {
     }
   };
 
+  lv_obj_t* create_standard_page(const char* modes_str);
+  void create_standard_widgets();
+  void update_standard_mode_visibility();
+  static void standard_mode_change_cb(lv_event_t* event);
+
   DeviceType type;
   lv_obj_t *page = NULL;  // the content of the tab, don't use tab_id as we need to remove tabs
   type_of_change old_last_change;

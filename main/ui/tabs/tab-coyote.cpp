@@ -216,40 +216,17 @@ void tab_coyote::loop(bool active) {
 
 }
 
-void tab_coyote::coyote_mode_change_cb(lv_event_t *event) {
-  auto ctab = static_cast<tab_coyote *>(lv_event_get_user_data(event));
-  ctab->main_mode = static_cast<tab_coyote::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("coyote", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), ctab->main_mode);
-  ctab->need_refresh = true;
-  if (ctab->main_mode == tab_coyote::MODE_RANDOM || ctab->main_mode == tab_coyote::MODE_TIMER) {
-      ctab->modetimer->start();
-  }
-  ctab->rand_timer->show((ctab->main_mode == tab_coyote::MODE_RANDOM));
-  ctab->timer->show((ctab->main_mode == tab_coyote::MODE_TIMER));
-  ctab->sync->show((ctab->main_mode == tab_coyote::MODE_SYNC));
-}
 
 
 void tab_coyote::coyote_tab_create() {
-  page = lv_tabview_add_tab(tv, gettabname());
-  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
+  create_standard_page(coyote_main_modes_c);
+  create_standard_widgets();
 
-  modeselect->createdropdown(page, coyote_main_modes_c);
-  lv_obj_add_event_cb(modeselect->getdropdownobject(), coyote_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
-  
-  buttonbar = new tab_object_buttonbar(page);
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
   buttonbar->set_onmain(tab_object_buttonbar::rotary2, true);
 
-  status = new tab_object_status(page, 160-8-8, 96);
+  // Override default status alignment
   status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(8), 0);
-
-  rand_timer->view(page);
-  timer->view(page);
-  sync->view(page);
-
-  buttonbar->set_click_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
 bool tab_coyote::hardware_changed(void) {

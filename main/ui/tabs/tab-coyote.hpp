@@ -17,7 +17,6 @@ class tab_coyote: public Tab {
         const char *coyote_main_modes_c =  "Manual\nTimer\nRandom\nSync";  
 
     private:
-        static void coyote_mode_change_cb(lv_event_t *event);
         void coyote_tab_create(void);
         time_t last_refresh = 0;
         bool ison;

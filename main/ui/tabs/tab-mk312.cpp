@@ -229,18 +229,6 @@ void tab_mk312::loop(bool activetab) {
   }
 }
 
-void mk312_mode_change_cb(lv_event_t *event) {
-  tab_mk312 *mk312_tab = static_cast<tab_mk312 *>(lv_event_get_user_data(event));
-  mk312_tab->main_mode = static_cast<tab_mk312::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("mk312", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), mk312_tab->main_mode);
-  mk312_tab->need_refresh = true;
-  if (mk312_tab->main_mode == tab_mk312::MODE_RANDOM || mk312_tab->main_mode == tab_mk312::MODE_TIMER) {
-      mk312_tab->modetimer->start();
-  }
-  mk312_tab->rand_timer->show((mk312_tab->main_mode == tab_mk312::MODE_RANDOM));
-  mk312_tab->timer->show((mk312_tab->main_mode == tab_mk312::MODE_TIMER));
-  mk312_tab->sync->show((mk312_tab->main_mode == tab_mk312::MODE_SYNC));
-}
 
 void mk312_pattern_change_cb(lv_event_t *event) {
   tab_mk312 *mk312_tab = static_cast<tab_mk312 *>(lv_event_get_user_data(event));
@@ -262,28 +250,15 @@ void tab_mk312::focus_change(bool focus) {
 void tab_mk312::tab_create() {
   device_mk312 *md = static_cast<device_mk312 *>(device);
 
-  page = lv_tabview_add_tab(tv, gettabname());
+  create_standard_page(mk312_main_modes_c);
+  create_standard_widgets();
 
-  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
-
-  modeselect->createdropdown(page, mk312_main_modes_c);
-  lv_obj_add_event_cb(modeselect->getdropdownobject(), mk312_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
-  buttonbar = new tab_object_buttonbar(page);
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
   buttonbar->set_onmain(tab_object_buttonbar::rotary2, true);
 
-  status = new tab_object_status(page, 160-8-8, 64);
-  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
-
-  rand_timer->view(page);
-  timer->view(page);
-  sync->view(page);
-
+  // MK312 specific pattern UI
   patternselect->selectpattern(page, md->etmodes , md->etmodes_n);
   lv_obj_add_event_cb(patternselect->getdropdownobject(), mk312_pattern_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
 // return false if we removed ourselves from the connected devices list

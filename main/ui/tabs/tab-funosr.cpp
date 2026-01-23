@@ -227,18 +227,6 @@ void tab_funosr::loop(bool activetab) {
   }
 }
 
-void funosr_mode_change_cb(lv_event_t *event) {
-  tab_funosr *funosr_tab = static_cast<tab_funosr *>(lv_event_get_user_data(event));
-  funosr_tab->main_mode = static_cast<tab_funosr::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("funosr", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), funosr_tab->main_mode);
-  funosr_tab->need_refresh = true;
-  if (funosr_tab->main_mode == tab_funosr::MODE_RANDOM || funosr_tab->main_mode == tab_funosr::MODE_TIMER) {
-      funosr_tab->modetimer->start();
-  }
-  funosr_tab->rand_timer->show((funosr_tab->main_mode == tab_funosr::MODE_RANDOM));
-  funosr_tab->timer->show((funosr_tab->main_mode == tab_funosr::MODE_TIMER));
-  funosr_tab->sync->show((funosr_tab->main_mode == tab_funosr::MODE_SYNC));
-}
 
 void tab_funosr::focus_change(bool focus) {
   ESP_LOGD("funosr", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
@@ -248,28 +236,13 @@ void tab_funosr::focus_change(bool focus) {
 
 
 void tab_funosr::tab_create() {
-  ESP_LOGD("funosr","tab_create");
+  create_standard_page(funosr_main_modes_c);
+  create_standard_widgets();
 
-  page = lv_tabview_add_tab(tv, gettabname());
- 
-  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
-
-  modeselect->createdropdown(page, funosr_main_modes_c);
-  lv_obj_add_event_cb(modeselect->getdropdownobject(), funosr_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
-  buttonbar = new tab_object_buttonbar(page);
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
-
-  status = new tab_object_status(page, 150, 64);
-  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
 
   segbar = new tab_object_segbar(page, LV_SCALE(150), LV_SCALE(12));
   segbar->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(72));
-  rand_timer->view(page);
-  timer->view(page);
-  sync->view(page);
-
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
 

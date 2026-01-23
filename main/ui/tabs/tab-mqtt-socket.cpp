@@ -156,22 +156,6 @@ void tab_mqtt_socket::loop(bool activetab) {
   }
 }
 
-void mqtt_socket_mode_change_cb(lv_event_t *event) {
-  tab_mqtt_socket *mqtt_socket_tab =
-      static_cast<tab_mqtt_socket *>(lv_event_get_user_data(event));
-  mqtt_socket_tab->main_mode = static_cast<tab_mqtt_socket::main_modes>(
-      lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("mqtt_socket", "cb %s on %d: new mode %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
-           mqtt_socket_tab->main_mode);
-  mqtt_socket_tab->need_refresh = true;
-  if (mqtt_socket_tab->main_mode == tab_mqtt_socket::MODE_RANDOM || mqtt_socket_tab->main_mode == tab_mqtt_socket::MODE_TIMER) {
-      mqtt_socket_tab->modetimer->start();
-  }
-  mqtt_socket_tab->rand_timer->show((mqtt_socket_tab->main_mode == tab_mqtt_socket::MODE_RANDOM));
-  mqtt_socket_tab->timer->show((mqtt_socket_tab->main_mode == tab_mqtt_socket::MODE_TIMER));
-  mqtt_socket_tab->sync->show((mqtt_socket_tab->main_mode == tab_mqtt_socket::MODE_SYNC));
-}
 
 void tab_mqtt_socket::focus_change(bool focus) {
   ESP_LOGD("mqtt_socket", "focus cb %s on %d: %d",
@@ -183,23 +167,10 @@ void tab_mqtt_socket::focus_change(bool focus) {
 
 
 void tab_mqtt_socket::tab_create() {
-  page = lv_tabview_add_tab(tv, gettabname());
-  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
+  create_standard_page(mqtt_socket_main_modes_c);
+  create_standard_widgets();
 
-  modeselect->createdropdown(page, mqtt_socket_main_modes_c);
-  lv_obj_add_event_cb(modeselect->getdropdownobject(), mqtt_socket_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
-  buttonbar = new tab_object_buttonbar(page);
-  status = new tab_object_status(page, 108, 64);
-  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
-  rand_timer->view(page);
-  timer->view(page);
-  sync->view(page);
   mqttsubscribe(mqtt_topic);
-
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
-  buttonbar->set_click_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
-
 }
 
 // return false if we removed ourselves from the connected devices list

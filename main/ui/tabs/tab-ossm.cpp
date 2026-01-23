@@ -220,18 +220,6 @@ void tab_ossm::loop(bool activetab) {
   }
 }
 
-void ossm_mode_change_cb(lv_event_t *event) {
-  tab_ossm *ossm_tab = static_cast<tab_ossm *>(lv_event_get_user_data(event));
-  ossm_tab->main_mode = static_cast<tab_ossm::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("ossm", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), ossm_tab->main_mode);
-  ossm_tab->need_refresh = true;
-  if (ossm_tab->main_mode == tab_ossm::MODE_RANDOM || ossm_tab->main_mode == tab_ossm::MODE_TIMER) {
-      ossm_tab->modetimer->start();
-  }
-  ossm_tab->rand_timer->show((ossm_tab->main_mode == tab_ossm::MODE_RANDOM));
-  ossm_tab->timer->show((ossm_tab->main_mode == tab_ossm::MODE_TIMER));
-  ossm_tab->sync->show((ossm_tab->main_mode == tab_ossm::MODE_SYNC));
-}
 
 void tab_ossm::focus_change(bool focus) {
   ESP_LOGD("ossm", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
@@ -241,27 +229,13 @@ void tab_ossm::focus_change(bool focus) {
 
 
 void tab_ossm::tab_create() {
-  page = lv_tabview_add_tab(tv, gettabname());
- 
-  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
+  create_standard_page(ossm_main_modes_c);
+  create_standard_widgets();
 
-  modeselect->createdropdown(page, ossm_main_modes_c);
-  lv_obj_add_event_cb(modeselect->getdropdownobject(), ossm_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
-  buttonbar = new tab_object_buttonbar(page);
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
-
-  status = new tab_object_status(page, 150, 64);
-  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
 
   segbar = new tab_object_segbar(page, LV_SCALE(150), LV_SCALE(12));
   segbar->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(72));
-
-  rand_timer->view(page);
-  timer->view(page);
-  sync->view(page);
-
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
 

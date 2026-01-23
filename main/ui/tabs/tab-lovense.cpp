@@ -195,18 +195,6 @@ void tab_lovense::loop(bool activetab) {
   }
 }
 
-void lovense_mode_change_cb(lv_event_t *event) {
-  tab_lovense *lovense_tab = static_cast<tab_lovense *>(lv_event_get_user_data(event));
-  lovense_tab->main_mode = static_cast<tab_lovense::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("lovense", "cb %s on %d: new mode %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), lovense_tab->main_mode);
-  lovense_tab->need_refresh = true;
-  if (lovense_tab->main_mode == tab_lovense::MODE_RANDOM || lovense_tab->main_mode == tab_lovense::MODE_TIMER) {
-      lovense_tab->modetimer->start();
-  }
-  lovense_tab->rand_timer->show((lovense_tab->main_mode == tab_lovense::MODE_RANDOM));
-  lovense_tab->timer->show((lovense_tab->main_mode == tab_lovense::MODE_TIMER));
-  lovense_tab->sync->show((lovense_tab->main_mode == tab_lovense::MODE_SYNC));
-}
 
 void tab_lovense::focus_change(bool focus) {
   ESP_LOGD("lovense", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
@@ -231,21 +219,10 @@ void tab_lovense::tab_create_battery(lv_obj_t *tv2) {
 
 
 void tab_lovense::tab_create() {
-  page = lv_tabview_add_tab(tv, gettabname());
-  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
+  create_standard_page(lovense_main_modes_c);
+  create_standard_widgets();
 
-  modeselect->createdropdown(page, lovense_main_modes_c);
-  lv_obj_add_event_cb(modeselect->getdropdownobject(), lovense_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
-  buttonbar = new tab_object_buttonbar(page);
-  status = new tab_object_status(page, 150, 64);
-  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
   tab_create_battery(page);
-  rand_timer->view(page);
-  timer->view(page);
-  sync->view(page);
-
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
 // return false if we removed ourselves from the connected devices list

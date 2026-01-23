@@ -196,20 +196,6 @@ void tab_thrustalot::loop(bool activetab) {
   }
 }
 
-void thrustalot_mode_change_cb(lv_event_t *event) {
-  tab_thrustalot *thrustalot_tab = static_cast<tab_thrustalot *>(lv_event_get_user_data(event));
-  thrustalot_tab->main_mode = static_cast<tab_thrustalot::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("thrustalot", "cb %s on %d: new mode %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
-           thrustalot_tab->main_mode);
-  thrustalot_tab->need_refresh = true;
-  if (thrustalot_tab->main_mode == tab_thrustalot::MODE_RANDOM || thrustalot_tab->main_mode == tab_thrustalot::MODE_TIMER) {
-      thrustalot_tab->modetimer->start();
-  }
-  thrustalot_tab->rand_timer->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_RANDOM));
-  thrustalot_tab->timer->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_TIMER));
-  thrustalot_tab->sync->show((thrustalot_tab->main_mode == tab_thrustalot::MODE_SYNC));
-}
 
 void tab_thrustalot::focus_change(bool focus) {
   ESP_LOGD("thrustalot", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
@@ -220,22 +206,8 @@ void tab_thrustalot::focus_change(bool focus) {
 
 
 void tab_thrustalot::tab_create() {
-  page = lv_tabview_add_tab(tv, gettabname());
-  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
-
-  modeselect->createdropdown(page, thrustalot_main_modes_c);
-  lv_obj_add_event_cb(modeselect->getdropdownobject(), thrustalot_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
-  buttonbar = new tab_object_buttonbar(page);
-
-  status = new tab_object_status(page, 150, 64);
-  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
-
-  rand_timer->view(page);
-  timer->view(page);
-  sync->view(page);
-
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
+  create_standard_page(thrustalot_main_modes_c);
+  create_standard_widgets();
 }
 
 // return false if we removed ourselves from the connected devices list

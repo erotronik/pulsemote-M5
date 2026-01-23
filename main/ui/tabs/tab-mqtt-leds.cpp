@@ -205,22 +205,6 @@ void tab_mqtt_leds::loop(bool activetab) {
   }
 }
 
-void mqtt_leds_mode_change_cb(lv_event_t *event) {
-  tab_mqtt_leds *mqtt_leds_tab =
-      static_cast<tab_mqtt_leds *>(lv_event_get_user_data(event));
-  mqtt_leds_tab->main_mode = static_cast<tab_mqtt_leds::main_modes>(
-      lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
-  ESP_LOGI("mqtt_leds", "cb %s on %d: new mode %d",
-           pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(),
-           mqtt_leds_tab->main_mode);
-  mqtt_leds_tab->need_refresh = true;
-  if (mqtt_leds_tab->main_mode == tab_mqtt_leds::MODE_RANDOM || mqtt_leds_tab->main_mode == tab_mqtt_leds::MODE_TIMER) {
-      mqtt_leds_tab->modetimer->start();
-  }
-  mqtt_leds_tab->rand_timer->show((mqtt_leds_tab->main_mode == tab_mqtt_leds::MODE_RANDOM));
-  mqtt_leds_tab->timer->show((mqtt_leds_tab->main_mode == tab_mqtt_leds::MODE_TIMER));
-  mqtt_leds_tab->sync->show((mqtt_leds_tab->main_mode == tab_mqtt_leds::MODE_SYNC));
-}
 
 void tab_mqtt_leds::focus_change(bool focus) {
   ESP_LOGD("mqtt_leds", "focus cb %s on %d: %d",
@@ -232,21 +216,10 @@ void tab_mqtt_leds::focus_change(bool focus) {
 
 
 void tab_mqtt_leds::tab_create() {
-  page = lv_tabview_add_tab(tv, gettabname());
-  lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
+  create_standard_page(mqtt_leds_main_modes_c);
+  create_standard_widgets();
 
-  modeselect->createdropdown(page, mqtt_leds_main_modes_c);
-  lv_obj_add_event_cb(modeselect->getdropdownobject(), mqtt_leds_mode_change_cb, LV_EVENT_VALUE_CHANGED, this);
-
-  buttonbar = new tab_object_buttonbar(page);
-  status = new tab_object_status(page, 108, 64);
-  status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), 0);
-  rand_timer->view(page);
-  timer->view(page);
-  sync->view(page);
   mqttsubscribe(mqtt_topic);
-
-  lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
 }
 
 // return false if we removed ourselves from the connected devices list
