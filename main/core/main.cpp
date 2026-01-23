@@ -240,11 +240,7 @@ void TaskMain(void *pvParameters) {
   while (true) main_loop();
 }
 
-void loop() {}; // We use FreeRTOS tasks instead
-
-// Usual setup start
-
-void setup() {
+extern "C" void app_main() {
   tabs_mutex = xSemaphoreCreateRecursiveMutex();
   lvgl_mutex = xSemaphoreCreateRecursiveMutex();
   device_event_queue = xQueueCreate(16, sizeof(device_event_t));
@@ -262,9 +258,3 @@ void setup() {
   xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 1);
   xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 20, nullptr, 2, nullptr, 0); // ble networking is on core0
 }
-
-#ifndef ARDUINO
-extern "C" void app_main() {
-    setup();
-}
-#endif

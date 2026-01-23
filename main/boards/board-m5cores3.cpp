@@ -39,7 +39,6 @@ void hardware_tft_init() {
   lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(indev, lvgl_touchpad_read);
   lv_init_pulsemote();
-
 }
 
 void lvgl_display_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {

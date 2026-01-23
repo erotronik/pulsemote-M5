@@ -15,7 +15,7 @@ class tab_mqtt : public Tab {
     const char* gettabname(void) override;
     void setup(void) override;
     void gotsyncdata(Tab *t, sync_data status) override;
-    void popup_add_device(lv_obj_t *base);
+    void popup_add_device();
 
   private:
     static void popup_add_device_ok_event_cb(lv_event_t * e);

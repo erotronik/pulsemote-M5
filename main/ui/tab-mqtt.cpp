@@ -187,7 +187,7 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
   t->popup_add_device_open = false;
 }
 
-void tab_mqtt::popup_add_device(lv_obj_t *base) {
+void tab_mqtt::popup_add_device() {
     if (popup_add_device_open) {
         lv_obj_del(popup_add_device_modal); // Close the message box
         popup_add_device_open = false;
@@ -200,10 +200,11 @@ void tab_mqtt::popup_add_device(lv_obj_t *base) {
     lv_style_set_bg_color(&style_selected, lv_palette_main(LV_PALETTE_BLUE));
     lv_style_set_bg_opa(&style_selected, LV_OPA_50);
 
-    popup_add_device_modal = lv_obj_create(base);
+    popup_add_device_modal = lv_obj_create(lv_layer_top());
     lv_obj_set_style_pad_all(popup_add_device_modal,0, LV_PART_MAIN);
     lv_obj_set_size(popup_add_device_modal, LV_PCT(100), LV_PCT(100));
     lv_obj_align(popup_add_device_modal, LV_ALIGN_CENTER, 0, 0);
+
 
     lv_obj_set_flex_flow(popup_add_device_modal, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(popup_add_device_modal, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);

@@ -85,7 +85,7 @@ void tab_splashscreen::popup_add_wifi_device() {
   for (const auto& st: tabs) {
     if (!strncmp(st->gettabname(),"wifi",4)) {
       tab_mqtt *t = static_cast<tab_mqtt *>(st);
-      t->popup_add_device(tabs.front()->page);
+      t->popup_add_device();
     }
   }
 }
