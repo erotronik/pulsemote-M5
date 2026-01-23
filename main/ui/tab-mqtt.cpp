@@ -6,8 +6,8 @@
 #include "tab-mqtt.hpp"
 
 #ifdef CONFIG_MQTT_SERVER
-#include "tab-mqtt-socket.hpp"
-#include "tab-mqtt-leds.hpp"
+#include "../../devices/mqtt-socket/tab-mqtt-socket.hpp"
+#include "../../devices/mqtt-leds/tab-mqtt-leds.hpp"
 #endif
 
 #include <freertos/queue.h>

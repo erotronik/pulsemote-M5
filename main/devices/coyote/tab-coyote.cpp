@@ -1,9 +1,9 @@
 #include <memory>
 #include "device-coyote.hpp"
 #include "lvgl-utils.h"
-#include "tab.hpp"
 #include "tab-coyote.hpp"
-#include "lvgl-utils.h"
+#include "../../ui/tab.hpp"
+#include "../../core/lvgl-utils.h"
 
 tab_coyote::tab_coyote() {
     page = nullptr;

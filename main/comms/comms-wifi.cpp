@@ -4,7 +4,6 @@
 #include "config.h"
 #include "comms-wifi.hpp"
 #include "tab-mqtt.hpp"
-#include "tab-mqtt-socket.hpp"
 
 #include <freertos/queue.h>
 #include <freertos/task.h>
