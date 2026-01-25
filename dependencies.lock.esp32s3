@@ -7,6 +7,15 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 7.4.2
+  erotronik/CoyoStim:
+    component_hash: 
+      1fced5c8005dc17a780af5087eefeef54634fd286069b4973be381b1dd97d10e
+    dependencies: []
+    source:
+      git: https://github.com/erotronik/CoyoStim.git
+      path: .
+      type: git
+    version: 6f815c7cd9d62317147ff710ce71ccf561a00de3
   espressif/mqtt:
     component_hash: 
       ffdad5659706b4dc14bc63f8eb73ef765efa015bf7e9adf71c813d52a2dc9342
@@ -67,13 +76,13 @@ dependencies:
     version: 03565ccc96cb0b73c8b157f5ec3fbde439b034ad
   m5stack/M5Unified:
     component_hash: 
-      36275fd880d379bc7208306563540362aa16d1feafff908415aff88127eae195
+      23da9450f64ed46f537a82ec302a1cfde0208f7c61be51754f405fcecc2b2657
     dependencies: []
     source:
       git: https://github.com/m5stack/M5Unified.git
       path: .
       type: git
-    version: 80922a5e3e81b216bbe93f2eb3bfbc9add0f2af4
+    version: 0c59b5e8627ed615112e508f574768ab45f183be
   m5stack/m5gfx:
     component_hash: 
       4c420c89ae7bfe33231dab80b784f4508591279b2a3a935ac849dddb1942d0d5
@@ -84,11 +93,12 @@ dependencies:
     version: 0.2.17
 direct_dependencies:
 - bblanchon/ArduinoJson
+- erotronik/CoyoStim
 - espressif/mqtt
 - h2zero/esp-nimble-cpp
 - lvgl/lvgl
 - m5stack/M5GFX
 - m5stack/M5Unified
-manifest_hash: c948408c4613b7d1196d37bf92e031a633ff70d5d8c1c88365758bf4e2cb0820
+manifest_hash: 5438cdebb054fb29da8d441ac7f64326601ebded266a63b12f69863d839d7fd6
 target: esp32s3
 version: 2.0.0

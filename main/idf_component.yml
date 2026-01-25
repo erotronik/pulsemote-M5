@@ -12,3 +12,7 @@ dependencies:
     version: v9.2.0
   bblanchon/ArduinoJson: ^7.0.0
   espressif/mqtt: "*"
+  erotronik/CoyoStim:
+    git: https://github.com/erotronik/CoyoStim.git
+    version: espidf
+    
