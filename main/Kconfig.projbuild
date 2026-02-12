@@ -20,6 +20,11 @@ config PULSEMOTE_PCB
     help
         If you have the Pulsemote-M5 PCB attached
 
+config HASM5ENCODER
+    bool "Has a M5Encoder8 board"
+    help
+        If you have a M5Encoder8 board
+
 config HASWIFICOPRO
     bool "Has a espat coprocessor for wifi"
     default y if BOARD_M5CORESS3

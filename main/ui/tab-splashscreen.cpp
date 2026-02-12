@@ -8,6 +8,7 @@
 #include "tab-mqtt.hpp"
 #include <pulsemote-pcb.hpp>
 #include "board.hpp"
+#include <m5encoder8.hpp>
 
 tab_splashscreen::tab_splashscreen() {
   page = nullptr;
@@ -176,5 +177,11 @@ void tab_splashscreen::setup(void) {
   buttonbar = new tab_object_buttonbar(page);
 
   needs_refresh = true;
+
+#if CONFIG_HASM5ENCODER
+  auto x = new M5Encoder8(); if (x->begin()) { ESP_LOGI("splashscreen", "M5Encoder8 found"); } else { ESP_LOGI("splashscreen", "M5Encoder8 not found"); delete x; }
+  x->setLEDColor(0, 0xFF0000);  x->setLEDColor(1, 0x00FF00);x->setLEDColor(2, 0x0000FF); 
+
+#endif
 
 }
