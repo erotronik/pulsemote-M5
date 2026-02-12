@@ -2,7 +2,7 @@
 dependencies:
   m5stack/M5Unified:
     git: https://github.com/m5stack/M5Unified.git
-    version: develop
+    version: 80922a5e3e81b216bbe93f2eb3bfbc9add0f2af4
   m5stack/M5GFX:
     git: https://github.com/m5stack/M5GFX
     version: 0.2.18

@@ -33,7 +33,7 @@ dependencies:
     version: 1.1.4
   espressif/esp_hosted:
     component_hash: 
-      49424510d8cf3659aa4bcf787e7b4abbf11848a25e7e5f133cf7f3324860d066
+      5e1f8af8b51b47714eafb30c59bac952d6abc03125c01cb6a970f368d1e1cb83
     dependencies:
     - name: idf
       require: private
@@ -41,7 +41,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 2.11.3
+    version: 2.11.7
   espressif/esp_serial_slave_link:
     component_hash: 
       ac1776806de0a6e371c84e87898bb983e19ce62aa7f1e2e5c4a3b0234a575d2c
@@ -55,7 +55,7 @@ dependencies:
     version: 1.1.2
   espressif/esp_wifi_remote:
     component_hash: 
-      e5cb66acbf9b3e115dab6b8e1262a5473e7de6e4106d32a2a8ca7384bd21fc00
+      67efd839bd84efb94b149a28044f9918473e7f4facf709bf4121744e4927df09
     dependencies:
     - name: espressif/esp_hosted
       registry_url: https://components.espressif.com
@@ -73,7 +73,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 1.3.1
+    version: 1.3.2
   espressif/mqtt:
     component_hash: 
       ffdad5659706b4dc14bc63f8eb73ef765efa015bf7e9adf71c813d52a2dc9342
@@ -87,7 +87,7 @@ dependencies:
     version: 1.0.0
   espressif/wifi_remote_over_eppp:
     component_hash: 
-      e1b4c485ed5afe36615b9b555dfdcbe4be33898dc3732b5bedf235bba45bd286
+      ac4d13625cc9f88597cd612d2758580fac287d8ec731b606f2a0720d28cda6cd
     dependencies:
     - name: espressif/eppp_link
       registry_url: https://components.espressif.com
@@ -99,7 +99,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 0.3.0
+    version: 0.3.1
   h2zero/esp-nimble-cpp:
     component_hash: 
       ecdcabe83333948495103f9d62e4ecb651bff866fce123d00bfc106baa383e54
@@ -174,6 +174,6 @@ direct_dependencies:
 - lvgl/lvgl
 - m5stack/M5GFX
 - m5stack/M5Unified
-manifest_hash: 5438cdebb054fb29da8d441ac7f64326601ebded266a63b12f69863d839d7fd6
+manifest_hash: 553ae2b69bf33c3d2b691c1932629491fdd099ae734480c777a78bdca0d41e25
 target: esp32p4
 version: 2.0.0

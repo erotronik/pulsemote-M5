@@ -43,7 +43,7 @@ idf_component_register(
     INCLUDE_DIRS "core" "comms" "boards" "devices" "ui" "ui/widgets"
                  "devices/bubblebottle" "devices/coyote" "devices/dgbutton" "devices/funosr" 
                  "devices/loop" "devices/lovense" "devices/mk312" "devices/ossm" "devices/thrustalot"
-    REQUIRES esp-nimble-cpp lvgl m5-pulsemote-pcb CoyoStim Venerate Rotary-master driver esp_timer ArduinoJson
+    REQUIRES esp-nimble-cpp lvgl m5-pulsemote-pcb CoyoStim Venerate Rotary-master driver esp_timer ArduinoJson  m5-encoder8
     )
 
 if(CONFIG_BOARD_M5TAB5)
