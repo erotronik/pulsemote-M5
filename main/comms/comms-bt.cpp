@@ -6,6 +6,7 @@
 #include "device-thrustalot.hpp"
 #include "device-lovense.hpp"
 #include "device-funosr.hpp"
+#include "device-breath.hpp"
 #include "device-ossm.hpp"
 #include "device-bubblebottle.hpp"
 #include "device-loop.hpp"
@@ -14,7 +15,8 @@
 #include "comms-bt.hpp"
 
 // An instance of each device is used for scanning
-std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_ossm(), new device_thrustalot(), new device_bubblebottle(), new device_coyote(), new device_dgbutton(), new device_lovense(), new device_funosr() };
+std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_ossm(), new device_thrustalot(), new device_bubblebottle(), new device_coyote(), new device_dgbutton(), 
+  new device_lovense(), new device_funosr(), new device_breath() };
 
 NimBLEScan *pBLEScan;
 NimBLEAdvertisedDevice *found_bledevice;

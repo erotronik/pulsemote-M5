@@ -18,8 +18,8 @@ bool hardware_is_charging() {
     return M5.Power.isCharging();
 }
 
-void hardware_beep() {
-  M5.Speaker.tone(2000, 1000);
+void hardware_beep(int duration_ms) {
+  M5.Speaker.tone(2000, duration_ms);
 }
 
 void hardware_tft_loop() {

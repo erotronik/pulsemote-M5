@@ -5,6 +5,7 @@
 #include "thrustalot/tab-thrustalot.hpp"
 #include "funosr/tab-funosr.hpp"
 #include "lovense/tab-lovense.hpp"
+#include "breath/tab-breath.hpp"
 #include "tab-splashscreen.hpp"
 #include "ossm/tab-ossm.hpp"
 #include "bubblebottle/tab-bubblebottle.hpp"
@@ -162,6 +163,7 @@ void process_device_events() {
       case DeviceType::device_coyote:       ta = new tab_coyote(); break;
       case DeviceType::device_funosr:       ta = new tab_funosr(); break;
       case DeviceType::device_lovense:      ta = new tab_lovense(); break;
+      case DeviceType::device_breath:       ta = new tab_breath(); break;
       case DeviceType::device_ossm:         ta = new tab_ossm(); break;
       case DeviceType::device_bubblebottle: ta = new tab_bubblebottle(); break;
       case DeviceType::device_dgbutton:     ta = new tab_dgbutton(); break;
