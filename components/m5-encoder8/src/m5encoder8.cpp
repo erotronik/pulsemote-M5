@@ -13,7 +13,7 @@ void M5Encoder8::update() {
 
 bool M5Encoder8::begin() {
     auto ad = readRegister8(ENCODER8_I2C_ADDRESS_REG);
-    ESP_LOGI("m5encoder8", "Read address %x %x", ad.value_or(-1),_dev->getAddress());   
+    ESP_LOGI("m5encoder8", "Read address %x should be %x", ad.value_or(-1),_dev->getAddress());   
  
     return ( ad.has_value() && ad.value_or(0) != -1);
 }

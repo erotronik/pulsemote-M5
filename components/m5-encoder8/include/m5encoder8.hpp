@@ -16,9 +16,12 @@ public:
     static constexpr uint8_t ENCODER8_FIRMWARE_VERSION_REG = 0xFE;
     static constexpr uint8_t ENCODER8_I2C_ADDRESS_REG = 0xFF;
 
-    M5Encoder8(std::uint8_t i2c_addr = ENCODER8_ENCODER_ADDR, std::uint32_t freq = 4000000UL,
+    M5Encoder8(std::uint8_t i2c_addr = ENCODER8_ENCODER_ADDR, std::uint32_t freq = 100000L,
 		m5::I2C_Class* i2c = &m5::Ex_I2C)
-      : _dev(new m5::I2C_Device(i2c_addr, freq, i2c)) {}
+      : _dev(new m5::I2C_Device(i2c_addr, freq, i2c)) {
+          i2c->begin();
+          ESP_LOGE("m5encoder8", "SDA=%d SCL=%d", i2c->getSDA(), i2c->getSCL());
+      }
 
     void init();
     void update();
