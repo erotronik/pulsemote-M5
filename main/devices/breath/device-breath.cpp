@@ -104,7 +104,7 @@ void device_breath::ble_breath_send(const char *newValue) {
 }
 
 void device_breath::breath_block(int pc) {
-  if (pc == 100) hardware_beep(30);
+  if (pc == 100) hardware_beep(10);
   if (pc == 100) 
     ble_breath_send("3\n");
   else if (pc == 50) 
