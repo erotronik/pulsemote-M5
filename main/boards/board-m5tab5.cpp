@@ -29,6 +29,7 @@ void hardware_tft_loop() {
 void hardware_tft_init() {
   ESP_LOGD("main", "M5.begin()");
   M5.begin();
+  M5.Display.setBrightness(255); // needed since M5 update after Apr 2026
   M5.Speaker.begin();
 
   M5.Display.setRotation(3);

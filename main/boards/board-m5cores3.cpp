@@ -28,6 +28,7 @@ void hardware_tft_loop() {
 
 void hardware_tft_init() {
   M5.begin();
+  M5.Display.setBrightness(255); // needed since M5 update after Apr 2026
   M5.Speaker.begin();
   lv_init();
   lv_tick_set_cb(lvgl_tick_function);
