@@ -14,9 +14,8 @@ NimBLEUUID lovense_UUID_RX("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID lovense_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
 
 bool device_lovense::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
-  if (advertisedDevice->isAdvertisingService(lovense_SERVICE_BLEUUID)) // it's a pretty generic UART though so check the name too
-    if (strnstr(advertisedDevice->getName().c_str(),"LVS-Z",5))
-      return true;
+  if (strnstr(advertisedDevice->getName().c_str(),"LVS-",4))
+    return true;
   return false;
 }
 
@@ -151,28 +150,63 @@ bool device_lovense::connect_to_device(NimBLEAdvertisedDevice* device) {
   notify(D_CONNECTING);
   bool res = true;
 
-  ESP_LOGI(getShortName(), "Will try to connect to %s", device->getAddress().toString().c_str());
+  ESP_LOGI(getShortName(), "Will try to connect to %s",
+         device->getAddress().toString().c_str());
 
-  if (!bleClient->connect(device)) {
-    ESP_LOGE(getShortName(), "Connection failed");
-    return false;
-  }
+vTaskDelay(pdMS_TO_TICKS(300));
+
+  NimBLEUUID serviceUuid = lovense_SERVICE_BLEUUID;
+  NimBLEUUID txUuid = lovense_UUID_TX;
+  NimBLEUUID rxUuid = lovense_UUID_RX;
+
+if (!bleClient->connect(device, true, false, false)) {
+  ESP_LOGE(getShortName(), "Connection failed");
+  return false;
+}
   ESP_LOGI(getShortName(), "Connection established");
-  res = ble_get_service(lovenseService, bleClient, lovense_SERVICE_BLEUUID);
-  if (!res) {
-    ESP_LOGE(getShortName(), "Missing service");
-    bleClient->disconnect();
-    return false;
-  }
 
-  res = ble_get_characteristic(lovenseService, uuid_rx_Characteristic, lovense_UUID_RX,
+  res = ble_get_service(lovenseService, bleClient, serviceUuid);
+  if (!res) {
+  for (uint8_t i = 0; i < device->getServiceUUIDCount(); i++) {
+    std::string s = device->getServiceUUID(i).toString();
+
+    if (s.length() == 36 &&
+        s.substr(2, 6) == "300001" &&
+        s.substr(9, 3) == "002" &&
+        s.substr(13) == "-4bd4-bbd5-a6920e4c5653") {
+
+      std::string rx = s;
+      std::string tx = s;
+      rx.replace(4, 4, "0003");
+      tx.replace(4, 4, "0002");
+
+      serviceUuid = NimBLEUUID(s);
+      rxUuid = NimBLEUUID(rx);
+      txUuid = NimBLEUUID(tx);
+
+      ESP_LOGI(getShortName(), "Trying v3 service %s", s.c_str());
+      ESP_LOGI(getShortName(), "Trying v3 rx %s", rx.c_str());
+      ESP_LOGI(getShortName(), "Trying v3 tx %s", tx.c_str());
+
+      res = ble_get_service(lovenseService, bleClient, serviceUuid);
+      break;
+    }
+  }
+}
+if (!res) {
+  ESP_LOGE(getShortName(), "Missing service");
+  bleClient->disconnect();
+  return false;
+}
+
+  res = ble_get_characteristic(lovenseService, uuid_rx_Characteristic, rxUuid,
       std::bind(&device_lovense::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
   if (!res) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");
     bleClient->disconnect();
     return false;
   }
-  res = ble_get_characteristic(lovenseService, uuid_tx_Characteristic, lovense_UUID_TX, nullptr);
+  res = ble_get_characteristic(lovenseService, uuid_tx_Characteristic, txUuid, nullptr);
 
   if (!res) {
     ESP_LOGE(getShortName(), "Missing tx characteristic");
