@@ -180,17 +180,41 @@ void rotaryReaderTask(void* pArgs) {
   }
 }
 
+static void i2c_scan(m5::I2C_Class& bus, const char* name) {
+  bool found[120] = { false };
+  bus.scanID(found);                       // fills found[addr] for 0x00..0x77
+
+  ESP_LOGI("I2CSCAN", "Scanning %s...", name);
+  uint8_t count = 0;
+  for (int addr = 1; addr < 0x78; addr++) {
+    if (found[addr]) {
+      ESP_LOGI("I2CSCAN", "  found device at 0x%02X", addr);
+      count++;
+    }
+  }
+  ESP_LOGI("I2CSCAN", "%s: %u device(s)", name, count);
+}
 
 void pulsemote_pcb_init(void) {
   auto& i2c = M5.Ex_I2C;
+
+  M5.Power.setExtOutput(true);
+  ESP_LOGD("M5","ext output %d", M5.Power.getExtOutput());
+  ESP_LOGD("M5","ext VBUS voltage %d", M5.Power.getVBUSVoltage());
+
+  vTaskDelay(pdMS_TO_TICKS(100));  
   i2c.begin();
+
+  i2c_scan(M5.In_I2C, "In_I2C");   // internal: PMIC, touch, etc.
+
+  i2c_scan(M5.Ex_I2C, "Ex_I2C");   // your PCA/MCP bus
 
   event_queue = xQueueCreate(10, sizeof(event_t));
 
   pca.attach(i2c, 0x42);
   if (!pca.begin(true)) { // true = invert outputs (MODE2 INVRT)
     ESP_LOGE("PCA9685", "No PCA9685 found");
-    return;
+    //return;
   }
   mcp.attach(i2c, 0x21);
   if (!mcp.begin()) {
