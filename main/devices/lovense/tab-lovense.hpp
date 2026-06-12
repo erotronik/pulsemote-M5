@@ -30,7 +30,7 @@ class tab_lovense : public Tab {
   bool lockpanel = false;
   int knob_speed, knob_tempo;
   unsigned long tempotimer = 0;
-  time_t battery_time = 0;
+  time_t battery_time;
   int battery_pc = 0;
 
 };

@@ -28,7 +28,7 @@ tab_lovense::tab_lovense() {
   device = nullptr;
   knob_speed = 10; // 50%
   main_pattern = 0; // continuous
-  battery_time = millis()-50000;
+  battery_time = 0;
 }
 tab_lovense::~tab_lovense() {}
 
@@ -46,8 +46,8 @@ void tab_lovense::encoder_change(int sw, int change) {
   }
   if (sw == tab_object_buttonbar::rotary3) {
     main_pattern+=change;
-    if (main_pattern<0) main_pattern=md->patterns_n-1;
-    if (main_pattern>=md->patterns_n) main_pattern=0;
+    if (main_pattern<0) main_pattern=md->get_patterns_n()-1;
+    if (main_pattern>=md->get_patterns_n()) main_pattern=0;
     if (ison) md->setmodespeed(main_pattern,knob_speed);
     need_refresh = true;
   }
@@ -99,7 +99,7 @@ void tab_lovense::switch_change(int sw, bool value) {
   }
   if (sw == tab_object_buttonbar::rotary3 && value) {
     main_pattern++;
-    if (main_pattern>=md->patterns_n) main_pattern=0;
+    if (main_pattern>=md->get_patterns_n()) main_pattern=0;
     if (ison) md->setmodespeed(main_pattern,knob_speed);
   }
 }
@@ -134,7 +134,7 @@ void tab_lovense::gotsyncdata(Tab *t, sync_data syncstatus) {
 void tab_lovense::loop(bool activetab) {
   device_lovense *md = static_cast<device_lovense *>(device);
 
-  if ( millis() - battery_time > 60000) { // just every minute
+  if ( md->is_connected && (battery_time == 0 ||millis() - battery_time > 60000)) { // just every minute
     battery_pc = md->ble_lovense_getbattery();
     ESP_LOGI("lovense","Battery %d%%",battery_pc);
     battery_time = millis();
@@ -157,9 +157,9 @@ void tab_lovense::loop(bool activetab) {
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = modetimer->get_remaining_seconds();
-      status->set_text_fmt("%s\n%s: %d", md->patterns[main_pattern], ison?"On":"Off", seconds);
+      status->set_text_fmt("%s\n%s: %d", md->get_patterns()[main_pattern], ison?"On":"Off", seconds);
     } else {
-      status->set_text_fmt("%s\n%s", md->patterns[main_pattern], ison?"On":"Off");
+      status->set_text_fmt("%s\n%s", md->get_patterns()[main_pattern], ison?"On":"Off");
     }
     need_refresh = false;
     need_knob_refresh = true;

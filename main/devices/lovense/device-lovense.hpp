@@ -11,9 +11,6 @@ class device_lovense : public Device {
   device_lovense();
   ~device_lovense();
 
-  const char* patterns[12] = {"Constant", "Luck", "RampDown",  "FastBuzz",  "RampUp"};
-  const int patterns_n = 5;
-
   DeviceType getType() const override { return DeviceType::device_lovense; }
   const char* getShortName() const override { return "Lovense"; }
   
@@ -28,6 +25,17 @@ class device_lovense : public Device {
     return new device_lovense();
   }
   int ble_lovense_getbattery(void);
+
+  enum LovenseModel {
+    LOVENSE_UNKNOWN = 0,
+    LOVENSE_HUSH,
+    LOVENSE_HUSH2,
+  };
+  LovenseModel model = LOVENSE_UNKNOWN;
+
+  const char** get_patterns();
+  int get_patterns_n();
+
 
  private:
 

@@ -13,6 +13,22 @@ NimBLEUUID lovense_SERVICE_BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID lovense_UUID_RX("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 NimBLEUUID lovense_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
 
+const char** device_lovense::get_patterns() {
+    static const char* hush_patterns[5] = {
+        "Constant", "Luck", "RampDown", "FastBuzz", "RampUp"
+    };
+
+    static const char* hush2_patterns[6] = {
+        "Constant", "Luck", "FastBuzz", "Wave", "RampUp", "Heartbeat"
+    };
+
+    return model==LOVENSE_HUSH2 ? hush2_patterns : hush_patterns;
+}
+
+int device_lovense::get_patterns_n() {
+    return  model==LOVENSE_HUSH2 ? 6 : 5;
+}
+
 bool device_lovense::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
   if (strnstr(advertisedDevice->getName().c_str(),"LVS-",4))
     return true;
@@ -72,7 +88,7 @@ device_lovense::~device_lovense() {
 void device_lovense::setmodespeed(int mode, int speed) {
   char buf[32];
   if (mode ==1 && speed !=0) {
-    int i = rand()%(5+patterns_n-2);
+    int i = rand()%(5+get_patterns_n()-2);
     if (i<5) {
       mode = 0;
       speed = (i+1)*4;
@@ -98,31 +114,39 @@ void device_lovense::ble_lovense_send(const char* newValue) {
   device_lovense::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
   NotifyPacket received;
 
-  if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
-    char buf[100];
-    int len = received.length < 99? received.length: 99;
-    strncat(buf,(const char *)received.data,len);
-    buf[len]=0;
-    ESP_LOGI("lovense","command returned %s",buf);
-  }
+if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
+  char buf[100] = {0};
+  int len = received.length < 99 ? received.length : 99;
+
+  memcpy(buf, received.data, len);
+  buf[len] = 0;
+
+  ESP_LOGI("lovense", "command returned %s", buf);
+}
 }
 
 int device_lovense::ble_lovense_getbattery() {
   if (!is_connected) 
     return 0;
-  int batterylevel = 0;
   xQueueReset(notifyQueue);
   static const char* newValue = "Battery;";
-  device_lovense::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
-
+  uuid_tx_Characteristic->writeValue(newValue, strlen(newValue), true);
   NotifyPacket received;
 
-  if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
-    if (received.length == 4) {
-      batterylevel = 100*(received.data[0]-'0')+10*(received.data[1]-'0')+received.data[0]-'0';
-    }
+  if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(1000))) {
+    char buf[8] = {0};
+    int len = received.length < 7 ? received.length : 7;
+
+    memcpy(buf, received.data, len);
+    buf[len] = 0;
+
+    ESP_LOGI("lovense", "battery raw '%s' len=%d", buf, received.length);
+
+    return atoi(buf);
   }
-  return batterylevel;
+
+  ESP_LOGW("lovense", "battery timeout");
+  return 0;
 }
 
 void device_lovense::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
@@ -140,6 +164,7 @@ void device_lovense::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacte
 }
 
 bool device_lovense::connect_to_device(NimBLEAdvertisedDevice* device) {
+  is_connected = false;
   ESP_LOGI(getShortName(), "Connecting");
   notifyQueue = xQueueCreate(NOTIFY_QUEUE_LEN, sizeof(NotifyPacket));
 
@@ -163,9 +188,11 @@ if (!bleClient->connect(device, true, false, false)) {
   ESP_LOGE(getShortName(), "Connection failed");
   return false;
 }
+  model = LOVENSE_UNKNOWN;
   ESP_LOGI(getShortName(), "Connection established");
 
   res = ble_get_service(lovenseService, bleClient, serviceUuid);
+  if (res) model = LOVENSE_HUSH;
   if (!res) {
   for (uint8_t i = 0; i < device->getServiceUUIDCount(); i++) {
     std::string s = device->getServiceUUID(i).toString();
@@ -174,7 +201,8 @@ if (!bleClient->connect(device, true, false, false)) {
         s.substr(2, 6) == "300001" &&
         s.substr(9, 3) == "002" &&
         s.substr(13) == "-4bd4-bbd5-a6920e4c5653") {
-
+        
+      model = LOVENSE_HUSH2;
       std::string rx = s;
       std::string tx = s;
       rx.replace(4, 4, "0003");
@@ -200,7 +228,7 @@ if (!res) {
 }
 
   res = ble_get_characteristic(lovenseService, uuid_rx_Characteristic, rxUuid,
-      std::bind(&device_lovense::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+      std::bind(&device_lovense::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), true);
   if (!res) {
     ESP_LOGE(getShortName(), "Missing rx characteristic");
     bleClient->disconnect();
