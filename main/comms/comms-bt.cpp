@@ -3,6 +3,7 @@
 
 #include "device-coyote.hpp"
 #include "device-mk312.hpp"
+#include "device-zc95.hpp"
 #include "device-thrustalot.hpp"
 #include "device-lovense.hpp"
 #include "device-funosr.hpp"
@@ -15,7 +16,7 @@
 #include "comms-bt.hpp"
 
 // An instance of each device is used for scanning
-std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_ossm(), new device_thrustalot(), new device_bubblebottle(), new device_coyote(), new device_dgbutton(), 
+std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_zc95(), new device_ossm(), new device_thrustalot(), new device_bubblebottle(), new device_coyote(), new device_dgbutton(), 
   new device_lovense(), new device_funosr(), new device_breath() };
 
 NimBLEScan *pBLEScan;

@@ -2,6 +2,7 @@
 
 #include "coyote/tab-coyote.hpp"
 #include "mk312/tab-mk312.hpp"
+#include "zc95/tab-zc95.hpp"
 #include "thrustalot/tab-thrustalot.hpp"
 #include "funosr/tab-funosr.hpp"
 #include "lovense/tab-lovense.hpp"
@@ -163,6 +164,7 @@ void process_device_events() {
     Tab *ta = nullptr;
     switch (d->getType()) {
       case DeviceType::device_mk312:        ta = new tab_mk312(); break;
+      case DeviceType::device_zc95:         ta = new tab_zc95(); break;
       case DeviceType::device_coyote:       ta = new tab_coyote(); break;
       case DeviceType::device_funosr:       ta = new tab_funosr(); break;
       case DeviceType::device_lovense:      ta = new tab_lovense(); break;

@@ -25,6 +25,8 @@ idf_component_register(
          "devices/lovense/tab-lovense.cpp"
          "devices/mk312/device-mk312.cpp"
          "devices/mk312/tab-mk312.cpp"
+         "devices/zc95/device-zc95.cpp"
+         "devices/zc95/tab-zc95.cpp"
          "devices/mqtt-leds/tab-mqtt-leds.cpp"
          "devices/mqtt-socket/tab-mqtt-socket.cpp"
          "devices/ossm/device-ossm.cpp"
@@ -44,7 +46,7 @@ idf_component_register(
          "ui/widgets/tab-object-timer.cpp"
     INCLUDE_DIRS "core" "comms" "boards" "devices" "ui" "ui/widgets"
                  "devices/bubblebottle" "devices/coyote" "devices/dgbutton" "devices/funosr" 
-                 "devices/loop" "devices/lovense" "devices/mk312" "devices/ossm" "devices/thrustalot"
+                 "devices/loop" "devices/lovense" "devices/mk312" "devices/ossm" "devices/thrustalot" "devices/zc95"
 		 "devices/breath"
     REQUIRES esp-nimble-cpp lvgl m5-pulsemote-pcb CoyoStim Venerate Rotary-master driver esp_timer ArduinoJson  m5-encoder8
     )
