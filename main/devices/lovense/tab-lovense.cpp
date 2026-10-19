@@ -131,6 +131,20 @@ void tab_lovense::gotsyncdata(Tab *t, sync_data syncstatus) {
   device_lovense *md = static_cast<device_lovense *>(device);
   if (!md) return;
   ESP_LOGD("lovense", "got sync data %d from %s", syncstatus, t->gettabname());
+  // A button (e.g. a DG button) is held: speed up a little until it's released
+  if (syncstatus == SYNC_BUTTONPRESS && !button_held) {
+    button_held = true;
+    last_speed_button_press = knob_speed;
+    knob_speed = std::min(20, knob_speed + 1 + rand() % 2);
+    if (ison && main_pattern == 0) md->setmodespeed(main_pattern, knob_speed);
+    need_knob_refresh = true;
+  }
+  if (syncstatus == SYNC_BUTTONRELEASE && button_held) {
+    button_held = false;
+    knob_speed = last_speed_button_press;
+    if (ison && main_pattern == 0) md->setmodespeed(main_pattern, knob_speed);
+    need_knob_refresh = true;
+  }
   if (syncstatus == SYNC_ALLOFF) {
     main_mode = MODE_MANUAL;
     modeselect->reset();

@@ -34,5 +34,7 @@ class tab_lovense : public Tab {
   time_t battery_time;
   int battery_pc = 0;
   int battery_fails = 0;
+  bool button_held = false;
+  int last_speed_button_press = 0;
 
 };
