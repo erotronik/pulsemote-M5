@@ -3,6 +3,7 @@
 #if CONFIG_BOARD_M5CORES3
 
 #include <M5Unified.h>
+#include <esp_heap_caps.h>
 
 constexpr int32_t SCREENW = 320;
 constexpr int32_t SCREENH = 240;
@@ -31,6 +32,14 @@ void hardware_tft_init() {
   M5.Display.setBrightness(255); // needed since M5 update after Apr 2026
   M5.Speaker.begin();
   lv_init();
+  // LVGL's own 64k pool only holds a few device tabs: give it more from PSRAM. Each pool has to be
+  // smaller than LV_MEM_SIZE, the largest LVGL's allocator can handle
+  constexpr size_t lv_extra_pool = 60 * 1024;
+  for (int i = 0; i < 4; i++) {
+    void *pool = heap_caps_malloc(lv_extra_pool, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!pool || !lv_mem_add_pool(pool, lv_extra_pool))
+      ESP_LOGE("board", "couldn't add LVGL memory pool %d", i);
+  }
   lv_tick_set_cb(lvgl_tick_function);
   display = lv_display_create(SCREENW, SCREENH);
   lv_display_set_flush_cb(display, lvgl_display_flush);
