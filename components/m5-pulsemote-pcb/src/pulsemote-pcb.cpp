@@ -84,6 +84,7 @@ void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb) {
 
 bool lastbuttonstates[numbuttons] = {false};
 static unsigned long lastbuttondebounce[numbuttons] = {0};
+static bool button_recheck = false;  // a change was ignored as bounce, so look again once that's over
 
 void handlemcpinterrupt() {
   // The pins as they are now, not as captured when the interrupt fired: an encoder's second pin can
@@ -97,13 +98,17 @@ void handlemcpinterrupt() {
   }
   // check for button change
   unsigned long now = millis32();
+  button_recheck = false;
   for (uint8_t i = 0; i < numbuttons; i++) {
-    if (now - lastbuttondebounce[i] > 150) {  // debounce time
-      uint8_t result = (data >> buttonpins[i]) & 1;
-      if (buttonpins[i] == 14) result = !result;  // cherry is inverted
+    uint8_t result = (data >> buttonpins[i]) & 1;
+    if (buttonpins[i] == 14) result = !result;  // cherry is inverted
+    if (now - lastbuttondebounce[i] <= 150) {  // debounce time
+      if (result != lastbuttonstates[i]) button_recheck = true;
+    } else {
       if (result != lastbuttonstates[i]) {
         event_t new_event = {.target = i, .value = result};
         xQueueSend(event_queue, &new_event, 0);  // no blocking, don't care if full
+        lastbuttonstates[i] = result;  // otherwise a bounce on release looks like another press
         lastbuttondebounce[i] = now;
       }
     }
@@ -150,7 +155,7 @@ void rotaryReaderTask(void* pArgs) {
   while (true) {
     uint32_t bits = 0;
     xTaskNotifyWait(0, UINT32_MAX, &bits, pdMS_TO_TICKS(10));
-    if (bits & NOTIF_MCP) {
+    if (bits & NOTIF_MCP || button_recheck) {
       handlemcpinterrupt();
     }
     if (bits & NOTIF_LED) {
