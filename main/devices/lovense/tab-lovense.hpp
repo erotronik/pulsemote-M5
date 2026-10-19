@@ -33,5 +33,6 @@ class tab_lovense : public Tab {
   unsigned long tempotimer = 0;
   time_t battery_time;
   int battery_pc = 0;
+  int battery_fails = 0;
 
 };

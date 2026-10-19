@@ -155,9 +155,14 @@ void tab_lovense::gotsyncdata(Tab *t, sync_data syncstatus) {
 void tab_lovense::loop(bool activetab) {
   device_lovense *md = static_cast<device_lovense *>(device);
 
-  if ( md->is_connected && (battery_time == 0 ||millis() - battery_time > 60000)) { // just every minute
-    battery_pc = md->ble_lovense_getbattery();
-    ESP_LOGI("lovense","Battery %d%%",battery_pc);
+  // Every minute. The first read, straight after connecting, often gets no answer, so retry a few
+  // times sooner until one works (each failed read stalls the UI for a second)
+  unsigned long battery_interval = (battery_pc > 0 || battery_fails >= 3) ? 60000 : 5000;
+  if ( md->is_connected && (battery_time == 0 ||millis() - battery_time > battery_interval)) {
+    int pc = md->ble_lovense_getbattery();
+    ESP_LOGI("lovense","Battery %d%%",pc);
+    if (pc > 0) battery_pc = pc;
+    else battery_fails++;
     battery_time = millis();
     need_refresh = true;
   }
