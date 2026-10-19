@@ -27,7 +27,7 @@ class tab_breath : public Tab {
   void tab_create(void);
   bool need_knob_refresh = false;
   bool timed_cycle_active = false;
-  void set_breath_block(int pc);
+  bool set_breath_block(int pc);
   void send_breath_block();
   unsigned long last_block_start = 0;
   unsigned long last_block_sent = 0;

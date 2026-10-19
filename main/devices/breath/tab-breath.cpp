@@ -16,8 +16,8 @@ tab_breath::tab_breath() {
   modeselect = new tab_object_modes();
   modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
       if (active_on) {
-          set_breath_block(get_breath_pc(current_pattern_mode));
-          send_sync_data(SYNC_ON);
+          if (set_breath_block(get_breath_pc(current_pattern_mode)))
+            send_sync_data(SYNC_ON);
       } else {
           set_breath_block(0);
           send_sync_data(SYNC_OFF);
@@ -50,15 +50,17 @@ void tab_breath::breath_mode_change_cb(lv_event_t *event) {
   tab->update_standard_mode_visibility();
 }
 
-void tab_breath::set_breath_block(int pc) {
+// Returns false if refused: blocking isn't allowed during the recovery period
+bool tab_breath::set_breath_block(int pc) {
   if (pc != 0 && last_block_end != 0 && millis() < last_block_end + RECOVERY_MS) {
     ESP_LOGI("breath", "Ignoring set_breath_block(%d) — in recovery period", pc);
-    return;
+    return false;
   }
   if (pc < 100 && breath_block == 100) last_block_end = millis();
   breath_block = pc;
   send_breath_block();
   if (breath_block == 100) last_block_start = millis();
+  return true;
 }
 
 void tab_breath::send_breath_block() {
@@ -113,9 +115,10 @@ void tab_breath::switch_change(int sw, bool value) {
   if (main_mode == MODE_MANUAL) {
     if (sw == tab_object_buttonbar::switch1 && value && breath_block == 0) {
       int on_seconds = manual_timer->gettimeon();
-      manual_on_until = millis() + (on_seconds * 1000UL);
-      set_breath_block(get_breath_pc(current_pattern_mode));
-      send_sync_data(SYNC_ON);
+      if (set_breath_block(get_breath_pc(current_pattern_mode))) {
+        manual_on_until = millis() + (on_seconds * 1000UL);
+        send_sync_data(SYNC_ON);
+      }
     }
     else if (sw == tab_object_buttonbar::switch1 && value && breath_block != 0) {
       manual_on_until = 0;
