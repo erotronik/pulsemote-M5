@@ -12,6 +12,7 @@ tab_lovense::tab_lovense() {
   rand_timer = new tab_object_timer(true);
   sync = new tab_object_sync();
   modeselect = new tab_object_modes();
+  patternselect = new tab_object_patterns();
   modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
       device_lovense *md = static_cast<device_lovense *>(device);
       ison = active_on;
@@ -45,10 +46,9 @@ void tab_lovense::encoder_change(int sw, int change) {
     if (ison) md->setmodespeed(main_pattern,knob_speed);
   }
   if (sw == tab_object_buttonbar::rotary3) {
-    main_pattern+=change;
-    if (main_pattern<0) main_pattern=md->get_patterns_n()-1;
-    if (main_pattern>=md->get_patterns_n()) main_pattern=0;
-    if (ison) md->setmodespeed(main_pattern,knob_speed);
+    if (!patternselect->visible())
+      patternselect->show(main_pattern);
+    patternselect->rotary_change(change);
     need_refresh = true;
   }
 
@@ -98,10 +98,31 @@ void tab_lovense::switch_change(int sw, bool value) {
     modeselect->reset();
   }
   if (sw == tab_object_buttonbar::rotary3 && value) {
-    main_pattern++;
-    if (main_pattern>=md->get_patterns_n()) main_pattern=0;
-    if (ison) md->setmodespeed(main_pattern,knob_speed);
+    if (!patternselect->visible())
+      patternselect->show(main_pattern);
+    else
+      set_pattern(patternselect->hide());
   }
+}
+
+void tab_lovense::set_pattern(int pattern) {
+  device_lovense *md = static_cast<device_lovense *>(device);
+  main_pattern = pattern;
+  if (ison) md->setmodespeed(main_pattern,knob_speed);
+  need_refresh = true;
+  need_knob_refresh = true;
+}
+
+void lovense_pattern_change_cb(lv_event_t *event) {
+  tab_lovense *lovense_tab = static_cast<tab_lovense *>(lv_event_get_user_data(event));
+  lv_obj_t *dropdown = (lv_obj_t *)lv_event_get_target(event);
+
+  // Turning rotary3 changes the selection while the list is open: that's just scrolling. The pattern is
+  // picked when the list closes, by clicking rotary3 (see switch_change()) or touching an option.
+  if (lv_dropdown_is_open(dropdown)) return;
+
+  lovense_tab->set_pattern(lv_dropdown_get_selected(dropdown));
+  lovense_tab->patternselect->hide();
 }
 
 // another device can push data to us when they connect, disconnect, turn on, turn off
@@ -223,6 +244,10 @@ void tab_lovense::tab_create() {
   create_standard_widgets();
 
   tab_create_battery(page);
+
+  device_lovense *md = static_cast<device_lovense *>(device);
+  patternselect->selectpattern(page, md->get_patterns(), md->get_patterns_n());
+  lv_obj_add_event_cb(patternselect->getdropdownobject(), lovense_pattern_change_cb, LV_EVENT_VALUE_CHANGED, this);
 }
 
 // return false if we removed ourselves from the connected devices list

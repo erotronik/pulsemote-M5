@@ -19,6 +19,7 @@ class tab_lovense : public Tab {
   int getcyclecount(void) override { return thrustcount; };
 
   int main_pattern = 0;
+  void set_pattern(int pattern);
 
  private:
   lv_obj_t *tab_battery;
