@@ -14,7 +14,8 @@ void send_led_mqtt_data(const char *topic, const char *topic2, const char *messa
 }
 
 void send_led_onoff(const char *mqtt_topic, bool on) {
-  send_led_mqtt_data(mqtt_topic, "/api", on?"{\\\"on\\\":\\\"true\\\"}":"{\\\"on\\\":\\\"false\\\"}");
+  // A boolean: WLED takes a string starting with 't' as toggle
+  send_led_mqtt_data(mqtt_topic, "/api", on?"{\\\"on\\\":true}":"{\\\"on\\\":false}");
 }
 
 tab_mqtt_leds::tab_mqtt_leds(char *n, char *t) {
