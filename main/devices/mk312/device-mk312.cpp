@@ -246,6 +246,17 @@ void device_mk312::etbox_refresh_ma(bool always_send) {
   send_ma();
 }
 
+// The box's Bluetooth module can stay connected when the box is off. Then nothing answers the next
+// command, Venerate marks the session as not connected, and only a disconnect would remove the
+// tab: so disconnect.
+void device_mk312::check_box_answering(void) {
+  if (!box_answered || !is_connected || dropping || !bleClient || BOX.isconnected()) return;
+
+  ESP_LOGW(getShortName(), "box stopped answering, disconnecting");
+  dropping = true;
+  bleClient->disconnect();
+}
+
 int device_mk312::etbox_get_ma(void) {
   if (ma_min == ma_max) return -1;
   return ma_position;
@@ -342,6 +353,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
     return false;
   }
   ESP_LOGI(getShortName(), "test read, KNOBA=%d", y);
+  box_answered = true;
   notify(D_CONNECTED);
   return true;
 }

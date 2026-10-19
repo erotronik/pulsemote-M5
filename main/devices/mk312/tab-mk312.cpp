@@ -171,6 +171,7 @@ void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
 void tab_mk312::loop(bool activetab) {
   device_mk312 *md = static_cast<device_mk312 *>(device);
   if (!md) return;
+  md->check_box_answering();
 
   if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;

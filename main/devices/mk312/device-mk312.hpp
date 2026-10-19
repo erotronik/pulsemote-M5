@@ -48,6 +48,9 @@ class device_mk312 : public Device {
   void etbox_set_ma(int position);
   void etbox_refresh_ma(bool always_send = true);
 
+  // Call regularly: if the box has stopped answering, drop the connection
+  void check_box_answering(void);
+
   Device* clone() const override {
     return new device_mk312();
   }
@@ -84,6 +87,8 @@ class device_mk312 : public Device {
   bool read_ma_range(void);
   void send_ma(void);
   bool ma_control = false;  // panel is locked, so we set MA
+  bool dropping = false;    // disconnecting because the box stopped answering
+  bool box_answered = false; // the handshake worked, so the box not answering now means it's gone
   int ma_position = -1;     // 0-99, -1 until known
   int ma_min = 0, ma_max = 0;
 
