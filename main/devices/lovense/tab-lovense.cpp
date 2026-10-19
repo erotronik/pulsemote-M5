@@ -158,7 +158,8 @@ void tab_lovense::gotsyncdata(Tab *t, sync_data syncstatus) {
   if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
       md->setmodespeed(main_pattern,knob_speed);
-    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted) ||
+               syncstatus == SYNC_BYE) {  // the source has gone away
       ison = false;
       md->setmodespeed(main_pattern,0);
     }

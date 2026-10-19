@@ -65,7 +65,8 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
       md->set_ab_mode(mode_a,mode_b);
-    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted) ||
+               syncstatus == SYNC_BYE) {  // the source has gone away
       ison = false;
       md->set_ab_mode(M_NONE,M_NONE);
     }

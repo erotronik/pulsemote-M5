@@ -137,7 +137,8 @@ void tab_ossm::gotsyncdata(Tab *t, sync_data syncstatus) {
   if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
       md->set_speed(knob_speed);
-    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted) ||
+               syncstatus == SYNC_BYE) {  // the source has gone away
       ison = false;
       md->set_speed(0);
     }

@@ -138,7 +138,8 @@ void tab_mqtt_leds::gotsyncdata(Tab *t, sync_data syncstatus) {
       ison = true;
       send_led_onoff(mqtt_topic,ison);
       //send_mqtt_data(mqtt_topic, "ON");
-    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted)) {
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted) ||
+               syncstatus == SYNC_BYE) {  // the source has gone away
       ison = false;
       send_led_onoff(mqtt_topic,ison);
       //send_mqtt_data(mqtt_topic, "OFF");
