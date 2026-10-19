@@ -123,8 +123,8 @@ void tab_object_timer::show(bool show) {
 }
 
 int tab_object_timer::gettimeon(void) {
-  if (moderandom)
-    return value[0] + rand() % (value[1] - value[0]);
+  if (moderandom)  // min to max inclusive: they can be equal
+    return value[0] + rand() % (value[1] - value[0] + 1);
   else
     return value[0];
 }
@@ -132,7 +132,7 @@ int tab_object_timer::gettimeon(void) {
 int tab_object_timer::gettimeoff(void) {
   if (mode_on_only) return 0;
   if (moderandom)
-    return value[2] + rand() % (value[3] - value[2]);
+    return value[2] + rand() % (value[3] - value[2] + 1);
   else
     return value[1];
 }
