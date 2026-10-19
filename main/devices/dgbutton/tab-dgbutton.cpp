@@ -18,12 +18,16 @@ void tab_dgbutton::loop(bool activetab) {
   device_dgbutton::dgbutton_event state;
   if (xQueueReceive(md->events,&state, 0)) {
     if (state == device_dgbutton::dgbutton_event::PUSH) {
+      held = false;
       send_sync_data(SYNC_BUTTONPRESS);
     }
     if (state == device_dgbutton::dgbutton_event::RELEASE) {
+      held = false;
       send_sync_data(SYNC_BUTTONRELEASE);
     }
-    if (state == device_dgbutton::dgbutton_event::HELD) {
+    // The button repeats HELD every second: only act on the first
+    if (state == device_dgbutton::dgbutton_event::HELD && !held) {
+      held = true;
       printf_log("DG Button Pushed\n");
       send_sync_data(SYNC_ALLOFF);
       hardware_beep();

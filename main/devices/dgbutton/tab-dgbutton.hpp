@@ -10,4 +10,7 @@ class tab_dgbutton : public Tab {
 
   void loop(bool activetab) override;
   bool hardware_changed(void) override;
+
+ private:
+  bool held = false;
 };
