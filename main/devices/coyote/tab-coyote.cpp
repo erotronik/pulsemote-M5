@@ -23,6 +23,8 @@ tab_coyote::tab_coyote() {
     });
     device = nullptr;
     ison = true;
+    mode_a = M_BREATH;  // as set when connected
+    mode_b = M_BREATH;
     level_a_req = 0;
     level_b_req = 0;
 }
