@@ -13,6 +13,8 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstdio>
+#include <string>
+#include <vector>
 
 // Wifi Comms via coprocessor esp-at connected to serial
 
@@ -37,6 +39,18 @@ int cstate = 0;
 unsigned long cstate_timeout;
 
 QueueHandle_t mqttsenthandle;
+
+// Topics we've subscribed to, so we can subscribe again after reconnecting to the broker. Only
+// used by wifi_task
+static std::vector<std::string> mqtt_subscriptions;
+
+static void espat_sendAT(const char* cmd);
+
+static void espat_subscribe(const char *topic) {
+  char cmd[256];
+  std::snprintf(cmd, sizeof(cmd), "AT+MQTTSUB=0,\"%s\",0", topic);
+  espat_sendAT(cmd);
+}
 
 static esp_err_t espat_uart_init(void) {
     const uart_config_t cfg = {
@@ -181,6 +195,7 @@ static void espat_handleLine(const char* line) {
 
   if (starts_with(line, "+MQTTDISCONNECTED") && wifi_connected) {
     cstate = 8;
+    cstate_timeout = millis();  // start again from the top if reconnecting fails
     wifi_connected = false;
     return;
   }
@@ -365,6 +380,9 @@ void wifi_task(void* pvParameters) {
       wifi_connected = true;
       cstate_timeout = 0;
       cstate++;
+      // after a reconnect the broker has forgotten our subscriptions
+      for (const auto &topic : mqtt_subscriptions)
+        espat_subscribe(topic.c_str());
     }
 
     espat_processSerialInput();
@@ -382,11 +400,11 @@ void wifi_task(void* pvParameters) {
           espat_sendATCommand(cmd);
         } else if (mqtttosend.command == 1) {
           // Subscribe: AT+MQTTSUB=0,"<topic>",0
-          char cmd[256];
-          std::snprintf(cmd, sizeof(cmd),
-                        "AT+MQTTSUB=0,\"%s\",0",
-                        mqtttosend.topic);
-          espat_sendAT(cmd);
+          bool known = false;
+          for (const auto &topic : mqtt_subscriptions)
+            if (topic == mqtttosend.topic) known = true;
+          if (!known) mqtt_subscriptions.push_back(mqtttosend.topic);
+          espat_subscribe(mqtttosend.topic);
         }
       }
     }
