@@ -188,6 +188,12 @@ void tab_coyote::loop(bool active) {
     ESP_LOGD("coyote","did a refresh to A %d B %d", level_a_req, level_b_req);
   }
 
+  // The box reports its battery level now and then
+  if (tab_battery && md->get().get_batterylevel() != battery_shown) {
+    battery_shown = md->get().get_batterylevel();
+    lv_label_set_text_fmt(lv_obj_get_child(tab_battery, 0), "battery %d%%", battery_shown);
+  }
+
   if (need_refresh && buttonbar) {
     auto md = static_cast<device_coyote*>(device);
     need_refresh = false;
@@ -239,6 +245,19 @@ void tab_coyote::loop(bool active) {
 
 
 
+void tab_coyote::coyote_tab_create_battery(lv_obj_t *tv2) {
+  tab_battery = lv_obj_create(tv2);
+  lv_obj_set_size(tab_battery, LV_SCALE(150), LV_SCALE(24));
+  lv_obj_align(tab_battery, LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(64+12));
+  lv_obj_t *labelx = lv_label_create(tab_battery);
+  lv_label_set_text(labelx, "");
+  lv_obj_set_style_text_font(labelx, LV_FONT_GET(14), LV_PART_MAIN);
+  lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_set_style_pad_ver(tab_battery, LV_SCALE(3), LV_PART_MAIN);
+  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_set_scrollbar_mode(tab_battery, LV_SCROLLBAR_MODE_OFF);
+}
+
 void tab_coyote::coyote_tab_create() {
   create_standard_page(coyote_main_modes_c);
   create_standard_widgets();
@@ -248,6 +267,8 @@ void tab_coyote::coyote_tab_create() {
 
   // Override default status alignment
   status->align(LV_ALIGN_TOP_LEFT, LV_SCALE(8), 0);
+
+  coyote_tab_create_battery(page);
 }
 
 bool tab_coyote::hardware_changed(void) {
