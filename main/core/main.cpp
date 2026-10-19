@@ -207,6 +207,9 @@ void handlehardwarecallbacks() {
         TabLock l_lock(lvgl_mutex);
         lv_hide_tab(t->page);
         st = tabs.erase(st);
+        // Deleting the device also frees its NimBLE client, of which there are only a few
+        delete t->device;
+        delete t;
         return;
       }
       t->old_last_change = t->last_change;

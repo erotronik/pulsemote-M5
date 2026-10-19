@@ -45,6 +45,8 @@ struct TabLock {
 };
 class Tab {
  public:
+  virtual ~Tab() {}
+
   enum sync_data {
     SYNC_START =0, SYNC_ON, SYNC_OFF, SYNC_BYE, SYNC_ALLOFF, SYNC_BUTTONPRESS, SYNC_BUTTONRELEASE
   };
