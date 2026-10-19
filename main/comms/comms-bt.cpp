@@ -14,6 +14,7 @@
 #include "device-dgbutton.hpp"
 #include "device.hpp"
 #include "comms-bt.hpp"
+#include "lvgl-utils.h"
 
 // An instance of each device is used for scanning
 std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new device_zc95(), new device_ossm(), new device_thrustalot(), new device_bubblebottle(), new device_coyote(), new device_dgbutton(), 
@@ -102,6 +103,7 @@ void scan_loop() {
 
       vTaskDelay(pdMS_TO_TICKS(100));
       dev->set_callback(device_change_handler);
+      printf_log("Connecting %s\n", dev->getShortName());  // there's no tab until it's connected
 
       bool connected = dev->connect_to_device(adv);
       if (!connected) {

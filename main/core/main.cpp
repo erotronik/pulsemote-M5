@@ -158,7 +158,9 @@ void process_device_events() {
       }
     }
     
-    if (found || t == D_DISCONNECTED) continue;
+    // A tab is only made once the device has connected: a failed connection never gets one, so the
+    // scan task can delete that device straight away
+    if (found || t != D_CONNECTED) continue;
 
     ESP_LOGD("main", "a new device has appeared");
     Tab *ta = nullptr;
