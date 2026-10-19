@@ -41,10 +41,7 @@ void device_mk312::connected_callback() {
 void device_mk312::disconnected_callback(int reason) {
   is_connected = false;
   ESP_LOGI(getShortName(), "Client onDisconnect reason: %d", reason);
-  if (notifyStream) {
-    vStreamBufferDelete(notifyStream);
-    notifyStream = nullptr;
-  }
+  // notifyStream is kept until we're deleted: the tab's task may be reading it right now
   notify(D_DISCONNECTED);
 }
 
@@ -78,6 +75,11 @@ device_mk312::~device_mk312() {
   if (bleClient) {
     NimBLEDevice::deleteClient(bleClient);
     bleClient = nullptr;
+  }
+  // After the client, so no notification can arrive for it
+  if (notifyStream) {
+    vStreamBufferDelete(notifyStream);
+    notifyStream = nullptr;
   }
 }
 
@@ -192,10 +194,10 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
   ESP_LOGI(getShortName(), "Connecting core%d", xPortGetCoreID());
 
   if (notifyStream) {
-    vStreamBufferDelete(notifyStream);
-    notifyStream = nullptr;
+    xStreamBufferReset(notifyStream);
+  } else {
+    notifyStream = xStreamBufferCreate(NOTIFY_STREAM_SIZE, 1 /* trigger level */);
   }
-  notifyStream = xStreamBufferCreate(NOTIFY_STREAM_SIZE, 1 /* trigger level */);
   if (!notifyStream) {
     ESP_LOGE(getShortName(), "Failed to create notifyStream");
     return false;
