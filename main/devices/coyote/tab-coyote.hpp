@@ -24,5 +24,8 @@ class tab_coyote: public Tab {
         coyote_mode mode_b;
         int level_a_req;
         int level_b_req;  
+        bool button_held = false;
+        int last_level_button_press_a = 0;
+        int last_level_button_press_b = 0;
 };
 

@@ -32,6 +32,25 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
   auto md = static_cast<device_coyote*>(device);
   if (!md) return;
   ESP_LOGD("coyote", "got sync data %d from %s", syncstatus, t->gettabname());
+  // A button (e.g. a DG button) is held: turn up both channels a little until it's released
+  if (syncstatus == SYNC_BUTTONPRESS && !button_held) {
+    button_held = true;
+    last_level_button_press_a = level_a_req;
+    last_level_button_press_b = level_b_req;
+    level_a_req = std::min(99, level_a_req + 5 + rand() % 6);
+    level_b_req = std::min(99, level_b_req + 5 + rand() % 6);
+    md->get().chan_a().put_power_pc(level_a_req);
+    md->get().chan_b().put_power_pc(level_b_req);
+    need_refresh = true;
+  }
+  if (syncstatus == SYNC_BUTTONRELEASE && button_held) {
+    button_held = false;
+    level_a_req = last_level_button_press_a;
+    level_b_req = last_level_button_press_b;
+    md->get().chan_a().put_power_pc(level_a_req);
+    md->get().chan_b().put_power_pc(level_b_req);
+    need_refresh = true;
+  }
   if (syncstatus == SYNC_ALLOFF) {
     main_mode = MODE_MANUAL;
     modeselect->reset();
