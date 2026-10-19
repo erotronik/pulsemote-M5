@@ -78,16 +78,13 @@ void tab_dgbutton::update_battery_icon(void) {
   if (md->get_battery() == battery_shown) return;
   battery_shown = md->get_battery();
   if (!battery_icon) {
-    for (const auto& t : tabs) {
-      if (t->type != DeviceType::splashscreen) continue;
-      lv_obj_t *icons = static_cast<tab_splashscreen *>(t)->icons_bg;
-      if (!icons) return;
-      battery_icon = lv_obj_create(icons);
-      lv_obj_remove_style_all(battery_icon);
-      lv_obj_set_size(battery_icon, LV_SCALE(20), LV_SCALE(18));
-      lv_obj_move_to_index(battery_icon, 0);
-      lv_obj_add_event_cb(battery_icon, battery_icon_draw_cb, LV_EVENT_DRAW_MAIN, md);
-    }
+    lv_obj_t *icons = splashscreen_icons();
+    if (!icons) return;
+    battery_icon = lv_obj_create(icons);
+    lv_obj_remove_style_all(battery_icon);
+    lv_obj_set_size(battery_icon, LV_SCALE(20), LV_SCALE(18));
+    lv_obj_move_to_index(battery_icon, 0);
+    lv_obj_add_event_cb(battery_icon, battery_icon_draw_cb, LV_EVENT_DRAW_MAIN, md);
   }
   if (battery_icon) lv_obj_invalidate(battery_icon);
 }

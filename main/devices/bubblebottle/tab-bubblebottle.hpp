@@ -10,4 +10,8 @@ class tab_bubblebottle : public Tab {
 
   void loop(bool activetab) override;
   bool hardware_changed(void) override;
+
+ private:
+  lv_obj_t *icon = nullptr;
+  void update_icon(bool breath_in);
 };

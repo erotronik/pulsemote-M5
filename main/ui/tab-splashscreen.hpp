@@ -4,6 +4,9 @@
 #include "lvgl-utils.h"
 #include "tab.hpp"
 
+// The splashscreen's status icon area, for tabs to add their own icons to (nullptr until it exists)
+lv_obj_t *splashscreen_icons(void);
+
 class tab_splashscreen: public Tab {
     public:
         tab_splashscreen();

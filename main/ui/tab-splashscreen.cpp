@@ -82,6 +82,13 @@ void tab_splashscreen::loop(bool activetab) {
   }
 }
 
+lv_obj_t *splashscreen_icons(void) {
+  for (const auto& t : tabs)
+    if (t->type == DeviceType::splashscreen)
+      return static_cast<tab_splashscreen *>(t)->icons_bg;
+  return nullptr;
+}
+
 // found[] is only rebuilt when this tab refreshes, so a tab in it may have been removed (and deleted)
 // since: only compare the pointer
 static bool tab_still_there(Tab *t) {
