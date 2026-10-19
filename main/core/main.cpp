@@ -30,7 +30,7 @@ struct device_event_t {
 QueueHandle_t device_event_queue = NULL;
 
 uint8_t lastencodervalue[numencoders] = {128, 128, 128, 128};
-uint8_t encodervalue[numencoders] = {128, 128, 128, 128};
+volatile uint8_t encodervalue[numencoders] = {128, 128, 128, 128}; // counted by the encoder task
 
 void RotaryEncoderChanged(bool clockwise, int id) {
   encodervalue[id] += clockwise ? 1 : -1;
@@ -61,9 +61,12 @@ void handlebuttonpushes() {
 
 void handlerotaryencoders() {
   for (int i = 0; i < numencoders; i++) {
-    int change = encodervalue[i] - lastencodervalue[i];
+    // Read the count once and remember it, rather than resetting it: the encoder task can add a
+    // click at any moment, and resetting would lose it
+    uint8_t value = encodervalue[i];
+    int change = (int8_t)(uint8_t)(value - lastencodervalue[i]);
     if (change != 0) {
-      lastencodervalue[i] = encodervalue[i] = 128;
+      lastencodervalue[i] = value;
       // find what device tab is active as encoders must only work on active tab
       TabLock lock(tabs_mutex);
       TabLock l_lock(lvgl_mutex);
