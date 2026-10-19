@@ -152,15 +152,20 @@ void device_mk312::next_mode() {
   get_mode();
 }
 
+// The last mode known, as an index into etmodes. The box has modes the table doesn't (User5-7):
+// they show as Waves rather than reading past the end of it
 int device_mk312::get_last_mode() {
-  return (lastvalidmode > ETMODE_waves? (lastvalidmode - ETMODE_waves):0);
+  int index = lastvalidmode - ETMODE_waves;
+  if (index < 0 || index >= etmodes_n) return 0;
+  return index;
 }
 
 int device_mk312::get_mode() {
-  int mode = etbox_getbyte(ETMEM_mode);
+  // BOX.getbyte(), not etbox_getbyte(): that returns uint8_t, so a failed read (-1) looks like 255
+  int mode = BOX.isconnected() ? BOX.getbyte(ETMEM_mode) : -1;
   ESP_LOGD("get_mode","get mode %d",mode);
   if (mode != -1) lastvalidmode = mode;
-  return (lastvalidmode > ETMODE_waves? (lastvalidmode - ETMODE_waves):0);
+  return get_last_mode();
 }
 
 // The mode the box is set to, as an index into etmodes, or -1 if it can't be read or isn't one of
