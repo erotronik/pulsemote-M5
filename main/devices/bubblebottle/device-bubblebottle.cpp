@@ -12,8 +12,8 @@ NimBLEUUID BUBBLEBOTTLE_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
 
 bool device_bubblebottle::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
    if (advertisedDevice->isAdvertisingService(BUBBLEBOTTLE_SERVICE_BLEUUID)) {
-    uint8_t *md = (uint8_t *)advertisedDevice->getManufacturerData().data();
-    if (md && md[0] == 0xf1 && md[1] == 0xf1) 
+    std::string md = advertisedDevice->getManufacturerData();
+    if (md.size() >= 2 && (uint8_t)md[0] == 0xf1 && (uint8_t)md[1] == 0xf1)
       return true;
    }
    return false;
@@ -70,6 +70,7 @@ device_bubblebottle::~device_bubblebottle() {
     NimBLEDevice::deleteClient(bleClient);
     bleClient = nullptr;
   }
+  vQueueDelete(events);
 }
 
 void device_bubblebottle::ble_bubblebottle_send(const char* newValue) {
@@ -80,24 +81,22 @@ void device_bubblebottle::ble_bubblebottle_send(const char* newValue) {
     ESP_LOGE("bubblebottle","cant send not connected");
 }
 
+// Messages are lines, "*B" for breath in and "*R" for release. A packet can hold more than one, and
+// the end of a packet also ends a line
 void device_bubblebottle::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-  char bug[100];
-  uint8_t j = 0;
-  for (uint8_t i = 0; i < length; i++) {
-    bug[j] = (char)(*(pData + i));
-    if (bug[j] == '\n' || j == length - 1 || j == 98)  {
-      bug[j + 1] = 0;
-      if (bug[0] == '*')  {
-        ESP_LOGD("bottlecb","%c", bug[1]);
-        if (bug[1] == 'B')
-          bottle_state = 1;
-        else if (bug[1] == 'R') 
-          bottle_state = 2;
-        xQueueSend(events, &bottle_state, 0);
-      } 
-      j = 0;
-    } else
-      j++;
+  size_t start = 0;
+  for (size_t i = 0; i <= length; i++) {
+    if (i < length && pData[i] != '\n') continue;
+    if (i - start >= 2 && pData[start] == '*') {
+      ESP_LOGD("bottlecb","%c", pData[start + 1]);
+      int state = 0;
+      if (pData[start + 1] == 'B')
+        state = 1;
+      else if (pData[start + 1] == 'R')
+        state = 2;
+      if (state) xQueueSend(events, &state, 0);
+    }
+    start = i + 1;
   }
 }
 

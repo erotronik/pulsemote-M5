@@ -63,6 +63,7 @@ device_dgbutton::~device_dgbutton() {
     NimBLEDevice::deleteClient(bleClient);
     bleClient = nullptr;
   }
+  vQueueDelete(events);
 }
 
 void device_dgbutton::ble_mk_callback(
