@@ -163,6 +163,15 @@ int device_mk312::get_mode() {
   return (lastvalidmode > ETMODE_waves? (lastvalidmode - ETMODE_waves):0);
 }
 
+// The mode the box is set to, as an index into etmodes, or -1 if it can't be read or isn't one of
+// them (User5-7 have no entry)
+int device_mk312::etbox_read_mode(void) {
+  if (!BOX.isconnected()) return -1;
+  int mode = BOX.getbyte(ETMEM_mode);
+  if (mode < ETMODE_waves || mode - ETMODE_waves >= etmodes_potluck) return -1;
+  return mode - ETMODE_waves;
+}
+
 void device_mk312::etbox_on(int mode) {
   if (mode == -1) mode = get_mode();
   set_mode(mode);

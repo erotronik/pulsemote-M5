@@ -307,6 +307,9 @@ bool tab_mk312::hardware_changed(void) {
     printf_log("Connecting %s\n", device->getShortName());
   } else if (last_change == D_CONNECTED) {
     device_mk312 *md = static_cast<device_mk312 *>(device);
+    // Carry on with whatever mode the box is set to, rather than always switching to Waves
+    int box_mode = md->etbox_read_mode();
+    if (box_mode >= 0) wanted_mode = box_mode;
     tab_create();
     send_sync_data(SYNC_START);
     send_sync_data(SYNC_ON);

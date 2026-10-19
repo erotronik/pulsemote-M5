@@ -39,6 +39,7 @@ class device_mk312 : public Device {
   uint8_t etbox_getbyte(uint16_t a);
   void next_mode(void);
   int get_mode(void);
+  int etbox_read_mode(void);
   bool connected(void);
 
   // Multi adjust, as a knob position 0-99 (99 = fully clockwise, as on the box). While the panel is
