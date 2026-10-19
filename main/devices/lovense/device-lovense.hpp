@@ -52,7 +52,7 @@ class device_lovense : public Device {
   NimBLERemoteCharacteristic* uuid_rx_Characteristic;
   NimBLERemoteCharacteristic* uuid_tx_Characteristic;
 
-  QueueHandle_t notifyQueue;
+  QueueHandle_t notifyQueue = nullptr;
 
   static const int NOTIFY_QUEUE_LEN =5;
   static const int NOTIFY_MAX_DATA = 64;

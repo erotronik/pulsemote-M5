@@ -81,6 +81,10 @@ device_lovense::~device_lovense() {
     NimBLEDevice::deleteClient(bleClient);
     bleClient = nullptr;
   }
+  if (notifyQueue) {
+    vQueueDelete(notifyQueue);
+    notifyQueue = nullptr;
+  }
 }
 
 // mode 0 is continuous, mode 1 is randomly pick something, mode 2,3,4 are presets 1,2,3
@@ -159,7 +163,8 @@ void device_lovense::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacte
 bool device_lovense::connect_to_device(NimBLEAdvertisedDevice* device) {
   is_connected = false;
   ESP_LOGI(getShortName(), "Connecting");
-  notifyQueue = xQueueCreate(NOTIFY_QUEUE_LEN, sizeof(NotifyPacket));
+  if (!notifyQueue)
+    notifyQueue = xQueueCreate(NOTIFY_QUEUE_LEN, sizeof(NotifyPacket));
 
   if (!bleClient) {
     bleClient = NimBLEDevice::createClient();
