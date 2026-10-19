@@ -5,6 +5,7 @@
 #include <device-mk312.hpp>
 #include <device.hpp>
 #include <functional>
+#include <algorithm>
 
 // This code works with a MK-312BT box that has a bluetooth serial BLE board installed
 // or with an original ET-312B that has a bluetooth serial dongle attached. In both
@@ -141,6 +142,9 @@ void device_mk312::set_mode(int p) {
 
   vTaskDelay(pdMS_TO_TICKS(180));
   lastvalidmode = p + ETMODE_waves;
+
+  // The new mode has its own MA range, and the box won't work out MA itself while the panel is locked
+  if (ma_control) etbox_refresh_ma();
 }
 
 void device_mk312::next_mode() {
@@ -186,6 +190,57 @@ void device_mk312::etbox_setpanellock(bool x) {
   int flags = BOX.getbyte(ETMEM_panellock);
   if (flags < 0) return;
   etbox_setbyte(ETMEM_panellock, x ? (flags | 0x01) : (flags & ~0x01));
+
+  // Locking the panel also stops the box reading its MA knob, so take over MA from where it is now
+  ma_control = x;
+  ma_position = -1;
+  if (ma_control) etbox_refresh_ma();
+}
+
+// The box works out MA from its knob as min + (255 - knob) * (max - min) / 255, where min and max
+// ($4086, $4087) are set by each mode, and the same min and max mean the mode doesn't use MA.
+
+bool device_mk312::read_ma_range(void) {
+  int min = BOX.getbyte(ETMEM_knobmamin);
+  int max = BOX.getbyte(ETMEM_knobmamax);
+  if (min < 0 || max < 0) return false;
+  ma_min = min;
+  ma_max = max;
+  return true;
+}
+
+void device_mk312::send_ma(void) {
+  if (ma_position < 0 || ma_min == ma_max) return;
+  int knob = 255 - (ma_position * 255 + 49) / 99;
+  etbox_setbyte(ETMEM_knobmaset, ma_min + knob * (ma_max - ma_min) / 255);
+}
+
+// Read the mode's MA range again, and set MA for it. The first time, start from the box's value.
+// Unless always_send, MA is only sent if the range has changed (e.g. the mode was changed on the box).
+void device_mk312::etbox_refresh_ma(bool always_send) {
+  int old_min = ma_min, old_max = ma_max;
+  if (!ma_control || !BOX.isconnected() || !read_ma_range() || ma_min == ma_max) return;
+
+  if (ma_position < 0) {
+    int value = BOX.getbyte(ETMEM_knobmaset);
+    if (value < 0) return;
+    int knob = std::min(255, std::max(0, (value - ma_min) * 255 / (ma_max - ma_min)));
+    ma_position = ((255 - knob) * 99 + 127) / 255;
+  } else if (!always_send && ma_min == old_min && ma_max == old_max) {
+    return;
+  }
+  send_ma();
+}
+
+int device_mk312::etbox_get_ma(void) {
+  if (ma_min == ma_max) return -1;
+  return ma_position;
+}
+
+void device_mk312::etbox_set_ma(int position) {
+  if (!ma_control || ma_position < 0) return;
+  ma_position = std::min(99, std::max(0, position));
+  send_ma();
 }
 
 void device_mk312::ble_mk_callback(

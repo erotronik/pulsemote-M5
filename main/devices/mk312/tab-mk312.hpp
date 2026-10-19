@@ -22,6 +22,8 @@ class tab_mk312 : public Tab {
   
  private:
   void tab_create(void);
+  bool settings_have_focus(void);
+  TickType_t last_ma_check = 0;
   bool need_knob_refresh = false;
   bool ison;
   bool lockpanel = false;

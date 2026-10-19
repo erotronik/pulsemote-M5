@@ -42,9 +42,15 @@ void tab_mk312::encoder_change(int sw, int change) {
     need_knob_refresh = true;
   }
   if (sw == tab_object_buttonbar::rotary4) {
-    rand_timer->rotary_change(change);
-    timer->rotary_change(change);
-    modeselect->rotary_change(change);
+    // With the panel locked, rotary4 is the MA knob unless it's been clicked into the settings
+    if (lockpanel && !settings_have_focus() && md->etbox_get_ma() >= 0) {
+      md->etbox_set_ma(md->etbox_get_ma() + change);
+      need_knob_refresh = true;
+    } else {
+      rand_timer->rotary_change(change);
+      timer->rotary_change(change);
+      modeselect->rotary_change(change);
+    }
   }
   if (sw == tab_object_buttonbar::rotary3) {
     if (!patternselect->visible()) {
@@ -173,6 +179,14 @@ void tab_mk312::loop(bool activetab) {
   if (ison && md->connected() && wanted_mode != -1 && wanted_mode != md->get_last_mode()) {
     ESP_LOGD("et312","need to set mode to %d currently %d", wanted_mode, md->get_last_mode());
     md->set_mode(wanted_mode);
+    need_knob_refresh = true;
+  }
+
+  // The mode can also be changed on the box, which changes the MA range, so check it now and then
+  if (lockpanel && md->connected() && xTaskGetTickCount() - last_ma_check > pdMS_TO_TICKS(60000)) {
+    last_ma_check = xTaskGetTickCount();
+    md->etbox_refresh_ma(false);
+    need_knob_refresh = true;
   }
 
   if (activetab && need_refresh) {
@@ -206,6 +220,19 @@ void tab_mk312::loop(bool activetab) {
         buttonbar->set_value(tab_object_buttonbar::rotary4,0);
     }
 
+    if (lockpanel && !settings_have_focus()) {
+      int ma = md->etbox_get_ma();
+      if (ma >= 0) {
+        buttonbar->set_text_fmt(tab_object_buttonbar::rotary4, "MA\n%" LV_PRId32 "%%", ma);
+        buttonbar->set_value(tab_object_buttonbar::rotary4, ma);
+      } else {
+        buttonbar->set_text(tab_object_buttonbar::rotary4, "MA\n-");  // this mode doesn't use MA
+        buttonbar->set_value(tab_object_buttonbar::rotary4, 0);
+      }
+    } else {
+      buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+    }
+
     buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
     if (lockpanel) {
       buttonbar->set_click_text(tab_object_buttonbar::rotary1,"");
@@ -229,6 +256,11 @@ void tab_mk312::loop(bool activetab) {
   }
 }
 
+
+// rotary4 has been clicked into the mode/timer settings
+bool tab_mk312::settings_have_focus(void) {
+  return modeselect->has_focus() || timer->has_focus() || rand_timer->has_focus();
+}
 
 void mk312_pattern_change_cb(lv_event_t *event) {
   tab_mk312 *mk312_tab = static_cast<tab_mk312 *>(lv_event_get_user_data(event));

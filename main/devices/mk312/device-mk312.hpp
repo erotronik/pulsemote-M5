@@ -41,6 +41,12 @@ class device_mk312 : public Device {
   int get_mode(void);
   bool connected(void);
 
+  // Multi adjust, as a knob position 0-99 (99 = fully clockwise, as on the box). While the panel is
+  // locked the box ignores its MA knob, and this sets MA instead. -1 if the mode doesn't use MA.
+  int etbox_get_ma(void);
+  void etbox_set_ma(int position);
+  void etbox_refresh_ma(bool always_send = true);
+
   Device* clone() const override {
     return new device_mk312();
   }
@@ -73,6 +79,12 @@ class device_mk312 : public Device {
   NimBLERemoteCharacteristic* uuid_rxtx_Characteristic;
   Venerate BOX = Venerate(0);
   int lastvalidmode =0;
+
+  bool read_ma_range(void);
+  void send_ma(void);
+  bool ma_control = false;  // panel is locked, so we set MA
+  int ma_position = -1;     // 0-99, -1 until known
+  int ma_min = 0, ma_max = 0;
 
   void etbox_flushcb(void);
   void etbox_txcb(uint8_t c);
