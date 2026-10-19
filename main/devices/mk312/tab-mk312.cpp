@@ -232,7 +232,13 @@ void tab_mk312::loop(bool activetab) {
 
 void mk312_pattern_change_cb(lv_event_t *event) {
   tab_mk312 *mk312_tab = static_cast<tab_mk312 *>(lv_event_get_user_data(event));
-  int i = static_cast<tab_mk312::main_modes>(lv_dropdown_get_selected((lv_obj_t *)lv_event_get_target(event)));
+  lv_obj_t *dropdown = (lv_obj_t *)lv_event_get_target(event);
+
+  // Turning rotary3 changes the selection while the list is open: that's just scrolling. The mode is
+  // picked when the list closes, by clicking rotary3 (see switch_change()) or touching an option.
+  if (lv_dropdown_is_open(dropdown)) return;
+
+  int i = static_cast<tab_mk312::main_modes>(lv_dropdown_get_selected(dropdown));
   ESP_LOGI("mk312", "cb %s on %d: new pattern %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), i);
   mk312_tab->wanted_mode = i;
   mk312_tab->need_refresh = true;
