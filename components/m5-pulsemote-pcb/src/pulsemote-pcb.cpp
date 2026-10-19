@@ -84,6 +84,9 @@ void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb) {
 
 bool lastbuttonstates[numbuttons] = {false};
 static unsigned long lastbuttondebounce[numbuttons] = {0};
+// Long enough for a switch to stop bouncing. It applies after both the press and the release, so a
+// longer time loses clicks when they come quickly
+static const unsigned long button_debounce_ms = 30;
 static bool button_recheck = false;  // a change was ignored as bounce, so look again once that's over
 
 void handlemcpinterrupt() {
@@ -102,7 +105,7 @@ void handlemcpinterrupt() {
   for (uint8_t i = 0; i < numbuttons; i++) {
     uint8_t result = (data >> buttonpins[i]) & 1;
     if (buttonpins[i] == 14) result = !result;  // cherry is inverted
-    if (now - lastbuttondebounce[i] <= 150) {  // debounce time
+    if (now - lastbuttondebounce[i] <= button_debounce_ms) {
       if (result != lastbuttonstates[i]) button_recheck = true;
     } else {
       if (result != lastbuttonstates[i]) {
