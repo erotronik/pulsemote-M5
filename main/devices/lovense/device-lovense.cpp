@@ -106,23 +106,12 @@ void device_lovense::setmodespeed(int mode, int speed) {
   }   
 }
 
+// Doesn't wait for the reply ("OK;"): waiting stalls the UI on every knob click
 void device_lovense::ble_lovense_send(const char* newValue) {
   if (!is_connected) 
     return;
-  xQueueReset(notifyQueue);
   ESP_LOGI("lovense","Sending %s" ,newValue);
   device_lovense::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
-  NotifyPacket received;
-
-if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(200))) {
-  char buf[100] = {0};
-  int len = received.length < 99 ? received.length : 99;
-
-  memcpy(buf, received.data, len);
-  buf[len] = 0;
-
-  ESP_LOGI("lovense", "command returned %s", buf);
-}
 }
 
 int device_lovense::ble_lovense_getbattery() {
@@ -133,7 +122,10 @@ int device_lovense::ble_lovense_getbattery() {
   uuid_tx_Characteristic->writeValue(newValue, strlen(newValue), true);
   NotifyPacket received;
 
-  if (xQueueReceive(notifyQueue, &received, pdMS_TO_TICKS(1000))) {
+  // Replies to earlier commands can still turn up first: skip anything that isn't a number
+  TickType_t end = xTaskGetTickCount() + pdMS_TO_TICKS(1000);
+  TickType_t now;
+  while ((int32_t)(end - (now = xTaskGetTickCount())) > 0 && xQueueReceive(notifyQueue, &received, end - now)) {
     char buf[8] = {0};
     int len = received.length < 7 ? received.length : 7;
 
@@ -142,7 +134,8 @@ int device_lovense::ble_lovense_getbattery() {
 
     ESP_LOGI("lovense", "battery raw '%s' len=%d", buf, received.length);
 
-    return atoi(buf);
+    if (isdigit((unsigned char)buf[0]))
+      return atoi(buf);
   }
 
   ESP_LOGW("lovense", "battery timeout");
