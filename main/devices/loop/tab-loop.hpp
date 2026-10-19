@@ -31,6 +31,7 @@ class tab_loop : public Tab {
     int setpoint_min =0;
     int setpoint_max =0;
     bool is_on = false;
+    unsigned long shifttime = 0;
 
     int32_t data[LOOP_DATA_POINTS] = {0}; 
 };

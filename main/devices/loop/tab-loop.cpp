@@ -44,7 +44,6 @@ void tab_loop::encoder_change(int sw, int change) {
 }
 
 void tab_loop::update_chart(int32_t new_data) {
-  static long shifttime = millis()+2000; // let data settle a bit
   if (millis() > shifttime) {
     if (data[0] == 0 && graph_data) {
       for(int i = 0; i < LOOP_DATA_POINTS; i++) {
@@ -72,7 +71,7 @@ void tab_loop::update_chart(int32_t new_data) {
   // Add new data at the end
   data[LOOP_DATA_POINTS - 1] = new_data;
 
-  int loopreadingmin = std::max<int>({setpoint_min,*std::min_element(data, data + LOOP_DATA_POINTS)});
+  int loopreadingmin = std::min<int>({setpoint_min,*std::min_element(data, data + LOOP_DATA_POINTS)});
   int loopreadingmax = std::max<int>({setpoint_max,*std::max_element(data, data + LOOP_DATA_POINTS)});
 
   if (chart) lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, loopreadingmin, loopreadingmax);
@@ -123,6 +122,8 @@ void tab_loop::loop_tab_create() {
   page = lv_tabview_add_tab(tv, gettabname());
   lv_obj_add_style(page, &lvpulsemote_style_tab, LV_PART_MAIN);
 
+  shifttime = millis() + 2000; // let data settle a bit
+
   chart = lv_chart_create(page);
   lv_obj_align(chart, LV_ALIGN_TOP_RIGHT, LV_SCALE(-4), 0);
   lv_chart_set_type(chart,LV_CHART_TYPE_LINE);
@@ -161,6 +162,8 @@ bool tab_loop::hardware_changed(void) {
     loop_tab_create();
   } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());
+    // don't leave devices following us turned on
+    if (is_on) send_sync_data(SYNC_OFF);
     send_sync_data(SYNC_BYE);
     return false;
   }

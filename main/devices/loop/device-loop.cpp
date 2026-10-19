@@ -66,6 +66,7 @@ device_loop::~device_loop() {
     NimBLEDevice::deleteClient(bleClient);
     bleClient = nullptr;
   }
+  vQueueDelete(events);
 }
 
 int device_loop::get_reading() {
