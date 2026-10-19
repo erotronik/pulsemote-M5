@@ -17,6 +17,7 @@ class tab_splashscreen: public Tab {
     void focus_change(bool focus) override;
     void gotsyncdata(Tab *t, sync_data status) override;
     lv_obj_t *lv_debug_window;
+    lv_obj_t *icons_bg = nullptr;  // the status icons, top right: other tabs can add their own widgets
 
     private:
      unsigned long batterycheckmillis = 0;

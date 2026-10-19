@@ -13,4 +13,7 @@ class tab_dgbutton : public Tab {
 
  private:
   bool held = false;
+  lv_obj_t *battery_icon = nullptr;
+  int battery_shown = 0;
+  void update_battery_icon(void);
 };
