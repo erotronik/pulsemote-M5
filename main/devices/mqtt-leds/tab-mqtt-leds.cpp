@@ -46,7 +46,7 @@ tab_mqtt_leds::~tab_mqtt_leds() {}
 
 void tab_mqtt_leds::encoder_change(int sw, int change) {
   if (sw == tab_object_buttonbar::rotary1 && ison) {
-    hue+=change*4;
+    hue = (hue + change*4 + 360) % 360;
     lv_color_t rgb = lv_color_hsv_to_rgb(hue, 100, 50);
     buttonbar->set_rgb(tab_object_buttonbar::rotary1, rgb); 
     if (huesend == 0) { 

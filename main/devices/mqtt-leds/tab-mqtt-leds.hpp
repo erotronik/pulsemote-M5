@@ -27,7 +27,7 @@ class tab_mqtt_leds : public Tab {
   char mqtt_topic_name[20] = "";
   void tab_create(void);
   bool need_knob_refresh = false;
-  uint8_t hue = 0;
+  int hue = 0;  // 0-359
   time_t huesend;
   int preset = 0;
   bool ison;
