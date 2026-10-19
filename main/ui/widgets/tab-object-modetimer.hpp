@@ -47,5 +47,6 @@ private:
 
     bool current_ison = false;
     uint32_t next_millis = 0;
+    bool first_update = true;
     int last_remaining = -1;
 };

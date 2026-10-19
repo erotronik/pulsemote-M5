@@ -7,8 +7,8 @@ void tab_object_modetimer::start() {
     current_ison = true;
     _cb(true);
     // Initial delay is always from the currently active widget (determined in update)
-    // We set next_millis to 0 to force update() to calculate it immediately
-    next_millis = 0; 
+    // so make update() calculate it immediately
+    first_update = true;
 }
 
 bool tab_object_modetimer::update(bool is_active_mode, bool is_random_mode) {
@@ -20,13 +20,14 @@ bool tab_object_modetimer::update(bool is_active_mode, bool is_random_mode) {
     bool refresh = false;
     uint32_t now = millis();
 
-    // 1. Check for state toggle
-    if (now >= next_millis) {
+    // 1. Check for state toggle. Compare the difference, so it still works when millis() wraps
+    if (first_update || (int32_t)(now - next_millis) >= 0) {
         refresh = true;
-        if (next_millis != 0) { // Don't toggle on first start call
+        if (!first_update) { // Don't toggle on first start call
             current_ison = !current_ison;
             _cb(current_ison);
         }
+        first_update = false;
 
         tab_object_timer *active_widget = is_random_mode ? _rand_timer : _timer;
         int delay_sec = current_ison ? active_widget->gettimeon() : active_widget->gettimeoff();
@@ -44,7 +45,7 @@ bool tab_object_modetimer::update(bool is_active_mode, bool is_random_mode) {
 }
 
 int tab_object_modetimer::get_remaining_seconds() const {
-    uint32_t now = millis();
-    if (now >= next_millis) return 0;
-    return (next_millis - now) / 1000;
+    int32_t remaining = (int32_t)(next_millis - (uint32_t)millis());
+    if (remaining <= 0) return 0;
+    return remaining / 1000;
 }
