@@ -28,7 +28,9 @@ class PulsemoteAdvertisedDeviceCallbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice *advertisedDevice) override {
     ESP_LOGI("comms-bt", "Advertised Device: %s", advertisedDevice->toString().c_str());
     // can't connect while scanning is going on - it locks up everything.
-    found_device = nullptr;
+    // Once something's been found the scan is stopping, but more results can arrive meanwhile:
+    // ignore them, rather than lose (and leak) what was found
+    if (found_device) return;
 
     for (int i=0; i< ble_devices.size(); i++) {
       if (ble_devices[i]->is_device(advertisedDevice)) {
