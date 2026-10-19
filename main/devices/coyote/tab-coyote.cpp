@@ -93,7 +93,8 @@ void tab_coyote::switch_change(int sw, bool state) {
     md->set_ab_mode(M_NONE,M_NONE);
   }
 
-  if ((sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) && state) { // click to move to the next mode, then back to start
+  // Only while on: setting a channel's mode starts its output
+  if ((sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) && state && ison) { // click to move to the next mode, then back to start
     auto md = static_cast<device_coyote*>(device);
     coyote_mode mode;
     if (sw == tab_object_buttonbar::rotary1) 
