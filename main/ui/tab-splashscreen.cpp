@@ -82,6 +82,14 @@ void tab_splashscreen::loop(bool activetab) {
   }
 }
 
+// found[] is only rebuilt when this tab refreshes, so a tab in it may have been removed (and deleted)
+// since: only compare the pointer
+static bool tab_still_there(Tab *t) {
+  for (const auto& st : tabs)
+    if (st == t) return true;
+  return false;
+}
+
 void tab_splashscreen::popup_add_wifi_device() {
   for (const auto& st: tabs) {
     if (!strncmp(st->gettabname(),"wifi",4)) {
@@ -99,7 +107,7 @@ void tab_splashscreen::switch_change(int sw, bool value) {
     #endif
   }
   for (size_t i = 0; i < found_count; ++i) {
-    if (sw == buttonbar->rotary_order[i]) {
+    if (sw == buttonbar->rotary_order[i] && tab_still_there(found[i].tab)) {
       auto* st  = found[i].tab;
       lv_tabview_set_act(tv,lv_get_tabview_idx_from_page(tv,st->page),LV_ANIM_OFF);
     }
@@ -112,7 +120,7 @@ void tab_splashscreen::encoder_change(int sw, int change) {
   ESP_LOGI("splashscreen", "Encoder %d: %+d", sw, change);
 
   for (size_t i = 0; i < found_count; ++i) {
-    if (sw == buttonbar->rotary_order[i]) {
+    if (sw == buttonbar->rotary_order[i] && tab_still_there(found[i].tab)) {
       auto* st  = found[i].tab;
       st->encoder_change(found[i].control, change);
       st->loop(false);
