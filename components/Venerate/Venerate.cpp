@@ -183,9 +183,7 @@ bool Venerate::newhello()
         _mod = 0;
 
         int chars = Venerate::cp(send, 2, rx);
-        int sum = rx[0] + rx[1];
-        if (sum > 256) sum -= 256;
-        if (chars < 3 || rx[0] != 0x21 || sum != rx[2]) {
+        if (chars < 3 || rx[0] != 0x21 || (uint8_t)(rx[0] + rx[1]) != rx[2]) {
             if (_debug) _debugserial.printf("no sync\n");
                 s = 0;
         } else {
