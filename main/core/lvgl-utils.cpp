@@ -98,12 +98,18 @@ void lv_hide_tab(lv_obj_t *page) {
   int tabid = lv_get_tabview_idx_from_page(tv, page);
   ESP_LOGD("main", "hide tab id %d", tabid);
   if (tabid == -1) return;
-  // if we're viewing the tab that's gone away then switch to the main screen
-  if (lv_tabview_get_tab_act(tv) == tabid)
-    lv_tabview_set_act(tv, 0, LV_ANIM_OFF);
 
+  // The tabview remembers the active tab by index, which is wrong once a tab before it is deleted.
+  // So remember the page to show: the main screen if we're viewing the tab that's gone away
   lv_obj_t *tbar = lv_tabview_get_tab_bar(tv);  // in lvgl 9 they are real buttons not a matrix
   lv_obj_t *cont = lv_tabview_get_content(tv);
+  int active = lv_tabview_get_tab_act(tv);
+  lv_obj_t *show = lv_obj_get_child(cont, active == tabid ? 0 : active);
+
   lv_obj_del(lv_obj_get_child(tbar, tabid));
   lv_obj_del(lv_obj_get_child(cont, tabid));
+
+  int showid = lv_get_tabview_idx_from_page(tv, show);
+  lv_tabview_set_act(tv, showid == -1 ? 0 : showid, LV_ANIM_OFF);
+  lv_obj_send_event(tv, LV_EVENT_VALUE_CHANGED, NULL);  // so the tab shown gets focus_change()
 }
