@@ -86,7 +86,9 @@ bool lastbuttonstates[numbuttons] = {false};
 static unsigned long lastbuttondebounce[numbuttons] = {0};
 
 void handlemcpinterrupt() {
-  auto data = mcp.getCapturedInterrupt();
+  // The pins as they are now, not as captured when the interrupt fired: an encoder's second pin can
+  // change before we get here, and the decoder would miss that step
+  auto data = mcp.readGPIOAB();
   //ESP_LOGE("MCP23017", "Interrupt data: 0x%04X", data);
 
   // check for rotary encoder change
