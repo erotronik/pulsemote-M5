@@ -16,8 +16,8 @@ NimBLEUUID breath_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
 
 bool device_breath::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
   if (advertisedDevice->isAdvertisingService(breath_SERVICE_BLEUUID)) {
-    uint8_t *md = (uint8_t *)advertisedDevice->getManufacturerData().data();
-    if (md && md[0] == 0xf1 && md[1] == 0xf5) 
+    std::string md = advertisedDevice->getManufacturerData();
+    if (md.size() >= 2 && (uint8_t)md[0] == 0xf1 && (uint8_t)md[1] == 0xf5)
       return true;
   }
   return false;
