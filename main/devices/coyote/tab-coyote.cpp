@@ -56,6 +56,7 @@ void tab_coyote::gotsyncdata(Tab *t, sync_data syncstatus) {
     modeselect->reset();
     ison = false;
     md->set_ab_mode(M_NONE,M_NONE);
+    need_refresh = true;
   }
   if (main_mode == MODE_SYNC) {
     bool isinverted = sync->isinverted();
