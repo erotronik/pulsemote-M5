@@ -179,8 +179,13 @@ void device_mk312::etbox_setlevelb(uint8_t data) {
   etbox_setbyte(ETMEM_knobb, (data * 256+99) / 100); // Round up to match the display
 }
 
+// $400f is the box's register r15: bit 0 turns off the front panel pots (A, B and MA), the other
+// bits are used by mode programs and linked boxes, so only change bit 0
 void device_mk312::etbox_setpanellock(bool x) {
-  etbox_setbyte(ETMEM_panellock, x?1:0);
+  if (!BOX.isconnected()) return;
+  int flags = BOX.getbyte(ETMEM_panellock);
+  if (flags < 0) return;
+  etbox_setbyte(ETMEM_panellock, x ? (flags | 0x01) : (flags & ~0x01));
 }
 
 void device_mk312::ble_mk_callback(
