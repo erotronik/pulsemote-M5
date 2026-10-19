@@ -105,6 +105,11 @@ void device_mk312::etbox_txcb(uint8_t c) {
   if (mktx_n == mktx_maxlen) etbox_flushcb();
 }
 
+// Throw away anything received but not read, so it isn't taken as the reply to the next message
+void device_mk312::etbox_discardcb(void) {
+  if (notifyStream) xStreamBufferReset(notifyStream);
+}
+
 int device_mk312::etbox_rxcb(char* p, int x) {
   if (!notifyStream || !p || x <= 0) return 0;
   size_t n = xStreamBufferReceive(notifyStream, p, (size_t)x, pdMS_TO_TICKS(200));
@@ -237,7 +242,8 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
 
   BOX.begin(std::bind(&device_mk312::etbox_txcb, this, std::placeholders::_1),
             std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&device_mk312::etbox_flushcb, this));
+            std::bind(&device_mk312::etbox_flushcb, this),
+            std::bind(&device_mk312::etbox_discardcb, this));
   BOX.setdebug(0, venerate_logger, nullptr); // logging every byte is useful for debugging, set to 2
   vTaskDelay(pdMS_TO_TICKS(100));
   BOX.newhello();

@@ -141,7 +141,8 @@ class Venerate
     using cbfunc_t = std::function<void(uint8_t)>;
     using cbfunc_r = std::function<int(char*, int)>;
     using cbfunc_f = std::function<void()>;
-    void begin(cbfunc_t t, cbfunc_r r, cbfunc_f f);    
+    using cbfunc_d = std::function<void()>;  // throw away any received bytes not yet read
+    void begin(cbfunc_t t, cbfunc_r r, cbfunc_f f, cbfunc_d d = nullptr);    
 
     void setdebug(uint8_t debug, log_write_fn fn = nullptr, void* ctx = nullptr) {
       _debug = debug;
@@ -150,7 +151,7 @@ class Venerate
 
     void setmod(uint8_t mod);
     bool isconnected(void);
-    int cp(uint8_t msg[], uint8_t n, uint8_t reply[]);
+    int cp(uint8_t msg[], uint8_t n, uint8_t reply[], uint8_t expected = maxrxbytes);
     int getbyte(int n);
     bool setbyte(int n, int b);
     bool hello();
@@ -168,5 +169,6 @@ class Venerate
     cbfunc_t _txcb = NULL;
     cbfunc_r _rxcb = NULL;
     cbfunc_f _flushcb = NULL;        
+    cbfunc_d _discardcb = NULL;
 };
 

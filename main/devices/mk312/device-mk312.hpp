@@ -77,6 +77,7 @@ class device_mk312 : public Device {
   void etbox_flushcb(void);
   void etbox_txcb(uint8_t c);
   int etbox_rxcb(char* p, int x);
+  void etbox_discardcb(void);
 
   static const int mktx_maxlen = 20;  // For sending via bluetooth max is 20 bytes
   uint8_t mktx[mktx_maxlen];
