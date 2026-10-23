@@ -7,3 +7,9 @@ sdkconfig
 .vscode/ipch
 .vscode/extensions.json
 *~
+build/
+build-*/
+managed_components/
+sdkconfig.old
+#*#
+.clangd
