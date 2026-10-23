@@ -193,8 +193,7 @@ void tab_lovense::loop(bool activetab) {
     device_lovense *md = static_cast<device_lovense *>(device);
     status->set_active(ison);
 
-    if (battery_pc>0)
-      lv_label_set_text_fmt(lv_obj_get_child(tab_battery, 0), "battery %d%%", battery_pc);
+    set_battery_label(battery_pc > 0 ? battery_pc : -1);
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = modetimer->get_remaining_seconds();
@@ -245,25 +244,11 @@ void tab_lovense::focus_change(bool focus) {
 }
 
 
-void tab_lovense::tab_create_battery(lv_obj_t *tv2) {
-  tab_battery = lv_obj_create(tv2);
-  lv_obj_set_size(tab_battery, LV_SCALE(150), LV_SCALE(24));
-  lv_obj_align(tab_battery, LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(64+12));
-  lv_obj_t *labelx = lv_label_create(tab_battery);
-  lv_label_set_text(labelx, "");
-  lv_obj_set_style_text_font(labelx, LV_FONT_GET(14), LV_PART_MAIN);
-  lv_obj_set_style_text_align(labelx, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_pad_ver(tab_battery, LV_SCALE(3), LV_PART_MAIN);
-  lv_obj_align(labelx, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_set_scrollbar_mode(tab_battery, LV_SCROLLBAR_MODE_OFF);
-}
-
-
 void tab_lovense::tab_create() {
   create_standard_page(lovense_main_modes_c);
   create_standard_widgets();
 
-  tab_create_battery(page);
+  create_battery_label(page);
 
   device_lovense *md = static_cast<device_lovense *>(device);
   patternselect->selectpattern(page, md->get_patterns(), md->get_patterns_n());

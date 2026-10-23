@@ -18,9 +18,6 @@ class tab_coyote: public Tab {
 
     private:
         void coyote_tab_create(void);
-        void coyote_tab_create_battery(lv_obj_t *tv2);
-        lv_obj_t *tab_battery = nullptr;
-        int battery_shown = -1;
         time_t last_refresh = 0;
         bool ison;
         coyote_mode mode_a;

@@ -14,6 +14,8 @@
 static NimBLEUUID ZC95_SERVICE_BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
 static NimBLEUUID ZC95_UUID_RX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");  // we write
 static NimBLEUUID ZC95_UUID_TX("6e400003-b5a3-f393-e0a9-e50e24dcca9e");  // box notifies
+static NimBLEUUID BATTERY_SERVICE_BLEUUID((uint16_t)0x180F);
+static NimBLEUUID BATTERY_LEVEL_BLEUUID((uint16_t)0x2A19);
 
 static const char STX = 0x02;
 static const char ETX = 0x03;
@@ -289,6 +291,27 @@ void device_zc95::disconnect_and_delete(void) {
   notify(D_DISCONNECTED);
 }
 
+// Newer ZC95 firmware has the standard battery service in BLE serial mode. Older firmware doesn't,
+// which is fine
+void device_zc95::read_battery_service(void) {
+  NimBLERemoteService* service = bleClient->getService(BATTERY_SERVICE_BLEUUID);
+  NimBLERemoteCharacteristic* level = service ? service->getCharacteristic(BATTERY_LEVEL_BLEUUID) : nullptr;
+  if (!level) {
+    ESP_LOGI(getShortName(), "No battery service");
+    return;
+  }
+  if (level->canRead()) {
+    NimBLEAttValue value = level->readValue();
+    if (value.size() >= 1) battery = value[0];
+  }
+  // Subscribe with a write request, as for the UART service
+  if (level->canNotify())
+    level->subscribe(true, [this](NimBLERemoteCharacteristic*, uint8_t* data, size_t length, bool) {
+      if (length >= 1) battery = data[0];
+    }, true);
+  ESP_LOGI(getShortName(), "Battery %d%%", (int)battery);
+}
+
 bool device_zc95::connect_to_device(NimBLEAdvertisedDevice* device) {
   ESP_LOGI(getShortName(), "Connecting core%d", xPortGetCoreID());
 
@@ -329,6 +352,7 @@ bool device_zc95::connect_to_device(NimBLEAdvertisedDevice* device) {
     disconnect_and_delete();
     return false;
   }
+  read_battery_service();
 
   notify(D_CONNECTED);
   return true;

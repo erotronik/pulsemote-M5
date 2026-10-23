@@ -106,6 +106,10 @@ class Tab {
 
   lv_obj_t* create_standard_page(const char* modes_str);
   void create_standard_widgets();
+  // A box under the status showing the device's battery level, for devices that report one. It stays
+  // hidden until set_battery_label() is given a level
+  void create_battery_label(lv_obj_t *parent);
+  void set_battery_label(int percent);  // -1 if unknown
   void update_standard_mode_visibility();
   static void standard_mode_change_cb(lv_event_t* event);
 
@@ -118,6 +122,8 @@ class Tab {
   bool needssetup = false;
   bool need_refresh = false;
   bool need_knob_refresh = false;
+  lv_obj_t *battery_label = nullptr;
+  int shown_battery = -1;
 
   main_modes main_mode = MODE_MANUAL;
   tab_object_status *status = nullptr;

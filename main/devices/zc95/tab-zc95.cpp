@@ -211,6 +211,8 @@ void tab_zc95::loop(bool activetab) {
     need_refresh = true;
   }
 
+  if (activetab) set_battery_label(zd->get_battery());
+
   if (activetab && need_refresh) {
     status->set_active(ison);
     const char *name = zd->get_pattern_name(wanted_pattern);
@@ -290,6 +292,8 @@ void tab_zc95::tab_create() {
   buttonbar->set_click_text(tab_object_buttonbar::rotary2, "");
   buttonbar->set_click_text(tab_object_buttonbar::rotary3, "mode");
   buttonbar->set_click_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+
+  create_battery_label(page);
 
   // Patterns are read from the box when it connects
   patternselect->selectpattern(page, zd->get_pattern_names(), zd->pattern_count());

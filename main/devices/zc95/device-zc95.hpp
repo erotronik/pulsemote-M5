@@ -45,6 +45,9 @@ class device_zc95 : public Device {
   // has no further effect. 1000 until the box has reported it.
   int get_power_limit(int channel) { return power_limit[channel]; }
 
+  // The box's battery level, 0-100, or -1 if its firmware doesn't report it
+  int get_battery(void) { return battery; }
+
  private:
   bool get_version(void);
   bool get_patterns(void);
@@ -86,4 +89,7 @@ class device_zc95 : public Device {
   int running_pattern = -1;
 
   int power_limit[4] = {1000, 1000, 1000, 1000};
+
+  void read_battery_service(void);
+  volatile int battery = -1;
 };
