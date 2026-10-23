@@ -48,11 +48,32 @@ void tab_bubblebottle::loop(bool activetab) {
   int state;
   if (!icon) update_icon(false);
   if (xQueueReceive(md->events,&state, 0)) {
-    update_icon(state == 1);
+    if (state == 1 && !breath_in) add_breath();
+    breath_in = state == 1;
+    update_icon(breath_in);
     send_sync_data(state==1?SYNC_ON:SYNC_OFF);
   }
 }
   
+void tab_bubblebottle::add_breath(void) {
+  if (breath_count == breaths_max) {
+    memmove(breaths, breaths + 1, sizeof(breaths[0]) * (breaths_max - 1));
+    breath_count--;
+  }
+  breaths[breath_count++] = millis();
+}
+
+// From the breaths in the last minute, or 0 once there haven't been any for half a minute
+float tab_bubblebottle::get_rate(void) {
+  unsigned long now = millis();
+  if (breath_count == 0) return -1;
+  if (now - breaths[breath_count - 1] > 30000) return 0;
+  int first = 0;
+  while (first < breath_count - 1 && now - breaths[first] > 60000) first++;
+  if (breath_count - first < 2) return -1;
+  return 60000.0f * (breath_count - first - 1) / (breaths[breath_count - 1] - breaths[first]);
+}
+
 // return false if we removed ourselves from the connected devices list
 bool tab_bubblebottle::hardware_changed(void) {
   if (last_change == D_CONNECTING) {
@@ -62,6 +83,8 @@ bool tab_bubblebottle::hardware_changed(void) {
     send_sync_data(SYNC_START);
     send_sync_data(SYNC_OFF);
     xQueueReset(md->events);
+    breath_in = false;
+    breath_count = 0;
     printf_log("Connected %s\n", device->getShortName());
   } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());

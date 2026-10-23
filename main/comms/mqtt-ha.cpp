@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
+#include <cmath>
 #include <map>
 #include <string>
 
@@ -162,6 +163,10 @@ static void device_pass(Tab *t, unsigned long now) {
       announce("event", id, name, "button", "Button", nullptr, nullptr, "button");
       d.events_announced = true;
     }
+    if (t->activity_name())
+      announce("binary_sensor", id, name, "activity", t->activity_name(), "{{ value_json.activity }}");
+    if (t->rate_name())
+      announce("sensor", id, name, "rate", t->rate_name(), "{{ value_json.rate }}", "/min", nullptr, "rate");
     d.announced = true;
     d.last_sent = 0;
     // After Home Assistant has had a moment to subscribe to it, from the discovery messages
@@ -174,6 +179,8 @@ static void device_pass(Tab *t, unsigned long now) {
     doc["status"] = t->get_status_text();
     doc["mode"] = mode_name(t->main_mode);
   }
+  if (t->activity_name()) doc["activity"] = t->get_activity() ? "ON" : "OFF";
+  if (t->rate_name() && t->get_rate() >= 0) doc["rate"] = roundf(t->get_rate() * 10) / 10;
 
   int battery = t->get_battery();
   if (battery >= 0) {

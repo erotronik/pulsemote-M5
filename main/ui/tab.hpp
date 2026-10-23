@@ -125,6 +125,16 @@ class Tab {
   // True for a button device, which sends button events to Home Assistant (mqtt-ha.cpp)
   virtual bool has_button_events(void) { return false; }
 
+  // A device with an on/off reading of its own, like the bubble bottle's breathing, which shows in
+  // Home Assistant as a binary sensor with this name. nullptr for none
+  virtual const char *activity_name(void) { return nullptr; }
+  virtual bool get_activity(void) { return false; }
+
+  // And a rate per minute, like breaths per minute, as a sensor with this name. nullptr for none;
+  // get_rate() is -1 while it isn't known yet
+  virtual const char *rate_name(void) { return nullptr; }
+  virtual float get_rate(void) { return -1; }
+
   lv_obj_t* create_standard_page(const char* modes_str);
   void create_standard_widgets();
   // A box under the status showing the device's battery level, for devices that report one. It stays
