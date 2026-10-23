@@ -23,7 +23,34 @@ std::vector<Device*> ble_devices = { new device_loop(), new device_mk312(), new 
 NimBLEScan *pBLEScan;
 NimBLEAdvertisedDevice *found_bledevice;
 Device *found_device;
-bool scanthread_is_scanning = false;
+static volatile bool scanthread_is_scanning = false;
+// Wakes the scan task for a new session. (Not a task notification: NimBLE uses those to wait)
+static SemaphoreHandle_t scan_request = nullptr;
+static portMUX_TYPE scan_mux = portMUX_INITIALIZER_UNLOCKED;
+static unsigned long scan_until = 0;  // millis() when the scan session ends
+
+static void extend_scan(void) {
+  taskENTER_CRITICAL(&scan_mux);
+  scan_until = millis() + scan_session_ms;
+  taskEXIT_CRITICAL(&scan_mux);
+}
+
+// ms left in the scan session, 0 if it's over
+static uint32_t scan_time_left(void) {
+  taskENTER_CRITICAL(&scan_mux);
+  long left = (long)(scan_until - millis());
+  taskEXIT_CRITICAL(&scan_mux);
+  return left > 0 ? left : 0;
+}
+
+void ble_start_scan(void) {
+  extend_scan();
+  if (scan_request) xSemaphoreGive(scan_request);
+}
+
+bool ble_is_scanning(void) {
+  return scanthread_is_scanning;
+}
 
 class PulsemoteAdvertisedDeviceCallbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice *advertisedDevice) override {
@@ -84,12 +111,17 @@ void scan_comms_init(void) {
   ESP_LOGI("comms-bt", "Started ble scanning task");
 }
 
-void scan_loop() {
-  for (;;) {
-    bool repeatscan = false;  // reset each pass
+// Scan until the session runs out, connecting whatever turns up. Each connection gives the session its
+// full time again, so devices switched on one after another all get found
 
-    ESP_LOGI("comms-bt", "Scanning for %ds on core%d", scanTime, xPortGetCoreID());
-    pBLEScan->getResults(scanTime * 1000, false);  // blocks until timeout or stop()
+void scan_loop() {
+  printf_log("Scanning for devices\n");
+  for (;;) {
+    uint32_t left = scan_time_left();
+    if (left == 0) break;
+
+    ESP_LOGI("comms-bt", "Scanning for %lus on core%d", (unsigned long)(left / 1000), xPortGetCoreID());
+    pBLEScan->getResults(left, false);  // blocks until timeout or stop()
     ESP_LOGI("comms-bt", "Scanning stopped");
 
     // Take ownership of what the callback found, then clear globals
@@ -112,15 +144,12 @@ void scan_loop() {
         ESP_LOGD("comms-bt", "%s connection failed", dev->getShortName());
         delete dev;
         dev = nullptr;
+      } else {
+        extend_scan();
       }
 
       delete adv;
       adv = nullptr;
-
-      // If we successfully connected (or you want to continue regardless), rescan
-      // repeatscan = (dev != nullptr);   // or just `true` if you always want to rescan
-      repeatscan = false;
-      // If you keep `dev`, make sure you have a plan to delete it later.
     } else {
       // If one is set and the other isn't, that's a race/logic bug worth logging
       if (dev || adv) {
@@ -132,27 +161,26 @@ void scan_loop() {
 
     pBLEScan->clearResults();
     vTaskDelay(pdMS_TO_TICKS(10));
-
-    if (!repeatscan) break;
   }
+  printf_log("Scan finished\n");
 }
+
 // We scan in a separate task - scanning is a blocking
 // operation. All the communication with the Bluetooth devices also happens
-// in this task.
-
-// Currently we scan forever, but we might want to stop after the first
-// scan_loop() (which runs for some number of seconds after the last thing is connected)
-// until something manual causes it to start again (like a disconnection or
-// pushing a manual start scan button)
+// in this task. It waits for ble_start_scan() between scan sessions
 
 void TaskCommsBT(void *pvParameters) {
   scanthread_is_scanning = false;
   scan_comms_init();
   vTaskDelay(pdMS_TO_TICKS(2000)); // time for serial/debug to be ready
+  scan_request = xSemaphoreCreateBinary();
+  extend_scan();  // scan at power-on
   while (true) {
-    scanthread_is_scanning = true;
-    scan_loop();
-    scanthread_is_scanning = false;
-    vTaskDelay(pdMS_TO_TICKS(2000));  // Scan for X seconds, wait for X second
+    if (scan_time_left() > 0) {
+      scanthread_is_scanning = true;
+      scan_loop();
+      scanthread_is_scanning = false;
+    }
+    xSemaphoreTake(scan_request, portMAX_DELAY);
   }
 }

@@ -6,4 +6,9 @@ void TaskCommsBT(void *pvParameters);
 bool ble_get_service( NimBLERemoteService*& service, NimBLEClient* bleClient, NimBLEUUID uuid);
 bool ble_get_characteristic( NimBLERemoteService* service, NimBLERemoteCharacteristic*& c,  NimBLEUUID uuid, NimBLERemoteCharacteristic::notify_callback notifyCallback = nullptr, bool response = false);
 
-const int scanTime = 30;  // Duration is in seconds in NimBLE
+// Scanning for devices runs in sessions: at power-on, when a device goes away, and from a Scan button.
+// A session ends this long after it started, or after the last device it connected
+const uint32_t scan_session_ms = 2 * 60 * 1000;
+
+void ble_start_scan(void);  // start a scan session, or give the one running its full time again
+bool ble_is_scanning(void);

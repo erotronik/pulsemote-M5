@@ -9,6 +9,7 @@
 #include <pulsemote-pcb.hpp>
 #include "board.hpp"
 #include <m5encoder8.hpp>
+#include "comms-bt.hpp"
 
 tab_splashscreen::tab_splashscreen() {
   page = nullptr;
@@ -25,7 +26,7 @@ void tab_splashscreen::updateicons() {
   for (const auto& t : tabs) {
     strncat(iconb,t->geticons(),sizeof(iconb)-1);
   }
-  bool is_bluetooth_scanning = true; // todo
+  bool is_bluetooth_scanning = ble_is_scanning();
   bool charging = hardware_is_charging();
   lv_label_set_text_fmt(labelicons, "%s %s %s %s",iconb, is_bluetooth_scanning?LV_SYMBOL_BLUETOOTH:"",batteryicons[level], charging?batteryicons[5]:"");
 }
@@ -46,6 +47,8 @@ void tab_splashscreen::loop(bool activetab) {
   if (needs_refresh && activetab) {
     #if CONFIG_HASWIFICOPRO
     buttonbar->set_text(tab_object_buttonbar::switch1, "Add\nDevice");
+    #else
+    buttonbar->set_text(tab_object_buttonbar::switch1, "Scan");
     #endif
 
     found_count = 0;
@@ -111,6 +114,8 @@ void tab_splashscreen::switch_change(int sw, bool value) {
   if (sw == tab_object_buttonbar::switch1 && value) {
     #if CONFIG_HASWIFICOPRO
     popup_add_wifi_device();
+    #else
+    ble_start_scan();
     #endif
   }
   for (size_t i = 0; i < found_count; ++i) {

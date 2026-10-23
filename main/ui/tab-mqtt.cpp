@@ -4,6 +4,7 @@
 #include "comms-wifi.hpp"
 #include "config.h"
 #include "tab-mqtt.hpp"
+#include "comms-bt.hpp"
 
 #ifdef CONFIG_MQTT_SERVER
 #include "../../devices/mqtt-socket/tab-mqtt-socket.hpp"
@@ -187,6 +188,11 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
   t->popup_add_device_open = false;
 }
 
+void tab_mqtt::popup_add_device_scan_event_cb(lv_event_t * e) {
+  ble_start_scan();
+  popup_add_device_close_event_cb(e);
+}
+
 void tab_mqtt::popup_add_device() {
     if (popup_add_device_open) {
         lv_obj_del(popup_add_device_modal); // Close the message box
@@ -234,7 +240,7 @@ void tab_mqtt::popup_add_device() {
 
     // Create OK button
     lv_obj_t * ok_btn = lv_btn_create(btn_container);
-    lv_obj_set_size(ok_btn, LV_SCALE(100), LV_SCALE(40));
+    lv_obj_set_size(ok_btn, LV_SCALE(88), LV_SCALE(40));  // three buttons fit across
     lv_obj_align(ok_btn, LV_ALIGN_BOTTOM_LEFT, LV_SCALE(10), 0);
     lv_obj_add_event_cb(ok_btn, popup_add_device_ok_event_cb, LV_EVENT_CLICKED, this);
 
@@ -242,9 +248,18 @@ void tab_mqtt::popup_add_device() {
     lv_label_set_text(ok_label, "Ok");
     lv_obj_center(ok_label);
 
+    // Scan for Bluetooth devices
+    lv_obj_t * scan_btn = lv_btn_create(btn_container);
+    lv_obj_set_size(scan_btn, LV_SCALE(88), LV_SCALE(40));
+    lv_obj_add_event_cb(scan_btn, popup_add_device_scan_event_cb, LV_EVENT_CLICKED, this);
+
+    lv_obj_t * scan_label = lv_label_create(scan_btn);
+    lv_label_set_text(scan_label, "Scan");
+    lv_obj_center(scan_label);
+
     // Create Close (X) button
     lv_obj_t * close_btn = lv_btn_create(btn_container);
-    lv_obj_set_size(close_btn, LV_SCALE(100), LV_SCALE(40));
+    lv_obj_set_size(close_btn, LV_SCALE(88), LV_SCALE(40));
     lv_obj_align(close_btn, LV_ALIGN_BOTTOM_RIGHT, LV_SCALE(-10), 0);
     lv_obj_add_event_cb(close_btn, popup_add_device_close_event_cb, LV_EVENT_CLICKED, this);
 

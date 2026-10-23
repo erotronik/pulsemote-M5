@@ -21,6 +21,7 @@ class tab_mqtt : public Tab {
     static void popup_add_device_ok_event_cb(lv_event_t * e);
     static void popup_add_device_list_event_handler(lv_event_t * e);
     static void popup_add_device_close_event_cb(lv_event_t * e);
+    static void popup_add_device_scan_event_cb(lv_event_t * e);
 
     bool popup_add_device_open = false;
     lv_obj_t * selected_btn;

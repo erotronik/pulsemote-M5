@@ -166,6 +166,10 @@ void process_device_events() {
       }
     }
     
+    // a connected device went away: look for it again, in case it comes back. (A failed connection
+    // has no tab, and the scan it came from is still running)
+    if (found && t == D_DISCONNECTED) ble_start_scan();
+
     // A tab is only made once the device has connected: a failed connection never gets one, so the
     // scan task can delete that device straight away
     if (found || t != D_CONNECTED) continue;
@@ -294,7 +298,6 @@ extern "C" void app_main() {
   ESP_LOGD("setup","tab setup done");
 
   printf_log("Version %s\n\n",__DATE__);
-  printf_log("Scanning for devices...\n");
 
   xTaskCreatePinnedToCore(TaskMain, "Main", 1024 * 20, nullptr, 1, nullptr, 1);
   xTaskCreatePinnedToCore(TaskCommsBT, "comms-bt", 1024 * 20, nullptr, 2, nullptr, 0); // ble networking is on core0
