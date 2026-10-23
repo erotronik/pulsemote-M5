@@ -258,3 +258,21 @@ bool tab_ossm::hardware_changed(void) {
   }
   return true;
 }
+// All the knobs, not just Speed on the main page
+int tab_ossm::get_levels(level_t levels[levels_max]) {
+  const struct { const char *name; int value; } knobs[] = {
+    {"Speed", knob_speed}, {"Stroke", knob_stroke}, {"Depth", knob_depth}, {"Sensation", knob_sensation}};
+  int n = 0;
+  for (auto &k : knobs) {
+    snprintf(levels[n].name, sizeof(levels[n].name), "%s", k.name);
+    levels[n++].value = k.value;
+  }
+  return n;
+}
+
+// The whole pattern name, which the status box shortens
+std::string tab_ossm::get_status_text(void) {
+  device_ossm *md = static_cast<device_ossm *>(device);
+  const char *name = md ? md->pattern_name_for_idx(main_pattern) : nullptr;
+  return name ? name : "";
+}

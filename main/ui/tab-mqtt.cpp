@@ -5,6 +5,7 @@
 #include "config.h"
 #include "tab-mqtt.hpp"
 #include "comms-bt.hpp"
+#include "mqtt-ha.hpp"
 
 #ifdef CONFIG_MQTT_SERVER
 #include "../../devices/mqtt-socket/tab-mqtt-socket.hpp"
@@ -68,6 +69,7 @@ void tab_mqtt::loop(bool activetab) {
   }
 
   wifi_loop();
+  ha_loop();
 }
 
 const char *tab_mqtt::geticons(void) {

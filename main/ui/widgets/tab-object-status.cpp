@@ -44,6 +44,10 @@ tab_object_status::tab_object_status(lv_obj_t *parent, int w, int h) {
 
 tab_object_status::~tab_object_status() {}
 
+const char *tab_object_status::get_text(void) {
+    return lv_label_get_text(label);
+}
+
 void tab_object_status::set_active(bool active) {
     is_on = active;
     lv_obj_set_style_bg_color(container, lv_color_hex(is_on ? COLOUR_GREEN : COLOUR_RED), LV_PART_MAIN);

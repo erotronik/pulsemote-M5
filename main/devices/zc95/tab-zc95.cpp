@@ -275,6 +275,15 @@ void zc95_pattern_change_cb(lv_event_t *event) {
   zc95_tab->patternselect->hide();
 }
 
+// All four channels: only the first two knobs are main ones
+int tab_zc95::get_levels(level_t levels[levels_max]) {
+  for (int i = 0; i < channels; i++) {
+    snprintf(levels[i].name, sizeof(levels[i].name), "%d", i + 1);
+    levels[i].value = level[i];
+  }
+  return channels;
+}
+
 void tab_zc95::focus_change(bool focus) {
   need_refresh = true;
   buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));

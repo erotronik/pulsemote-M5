@@ -1,4 +1,5 @@
 #include <esp_log.h>
+#include <cstring>
 #include "tab.hpp"
 #include "lvgl-utils.h"
 
@@ -28,6 +29,32 @@ void Tab::create_standard_widgets() {
     
     lv_tabview_set_act(tv, lv_get_tabview_idx_from_page(tv, page), LV_ANIM_OFF);
     buttonbar->set_click_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+}
+
+std::string Tab::get_status_text(void) {
+    if (!status) return "";
+    const char *text = status->get_text();
+    return std::string(text, strcspn(text, "\n"));
+}
+
+int Tab::get_levels(level_t levels[levels_max]) {
+    if (!buttonbar) return 0;
+    int n = 0;
+    for (int i = 0; i < tab_object_buttonbar::maxbuttons && n < levels_max; i++) {
+        int b = buttonbar->rotary_order[i];
+        if (b == -1) continue;
+        // The label is like "1\n45%": the name is the first line. Skip LVGL symbols, which are in the
+        // private use area so start with 0xEF in UTF-8
+        const char *label = buttonbar->get_text(b);
+        if (!label || !*label || (unsigned char)label[0] == 0xEF) continue;
+        size_t len = strcspn(label, "\n");
+        if (len >= sizeof(levels[n].name)) len = sizeof(levels[n].name) - 1;
+        memcpy(levels[n].name, label, len);
+        levels[n].name[len] = '\0';
+        levels[n].value = buttonbar->get_value(b);
+        n++;
+    }
+    return n;
 }
 
 void Tab::create_battery_label(lv_obj_t *parent) {

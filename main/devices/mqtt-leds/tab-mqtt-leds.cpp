@@ -15,7 +15,7 @@ void send_led_mqtt_data(const char *topic, const char *topic2, const char *messa
 
 void send_led_onoff(const char *mqtt_topic, bool on) {
   // A boolean: WLED takes a string starting with 't' as toggle
-  send_led_mqtt_data(mqtt_topic, "/api", on?"{\\\"on\\\":true}":"{\\\"on\\\":false}");
+  send_led_mqtt_data(mqtt_topic, "/api", on?"{\"on\":true}":"{\"on\":false}");
 }
 
 tab_mqtt_leds::tab_mqtt_leds(char *n, char *t) {
@@ -58,7 +58,7 @@ void tab_mqtt_leds::encoder_change(int sw, int change) {
     if (preset > 5) preset = 0;
     if (preset < 0) preset = 5;
     char msg[16];
-    sprintf(msg,"{\\\"ps\\\":%d}",preset); 
+    sprintf(msg,"{\"ps\":%d}",preset); 
     send_led_mqtt_data(mqtt_topic, "/api",msg);
   }
 
@@ -76,7 +76,7 @@ void tab_mqtt_leds::switch_change(int sw, bool value) {
     preset++;
     if (preset > 5) preset = 0;
     char msg[16];
-    sprintf(msg,"{\\\"ps\\\":%d}",preset); 
+    sprintf(msg,"{\"ps\":%d}",preset); 
     send_led_mqtt_data(mqtt_topic, "/api",msg);
   }
 

@@ -12,6 +12,7 @@ class tab_coyote: public Tab {
         virtual bool hardware_changed(void) override;
         void switch_change(int sw, bool state) override;
         void loop(bool activetab) override;
+        std::string get_status_text(void) override;
         void focus_change(bool focus) override;
         void gotsyncdata(Tab *t, sync_data status) override;
         const char *coyote_main_modes_c =  "Manual\nTimer\nRandom\nSync";  

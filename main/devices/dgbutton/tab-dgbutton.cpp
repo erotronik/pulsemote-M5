@@ -4,6 +4,7 @@
 #include "tab-dgbutton.hpp"
 #include "tab-splashscreen.hpp"
 #include "board.hpp" // for hardware_beep()
+#include "mqtt-ha.hpp"
 
 tab_dgbutton::tab_dgbutton() {
   page = nullptr;
@@ -23,10 +24,12 @@ void tab_dgbutton::loop(bool activetab) {
     if (state == device_dgbutton::dgbutton_event::PUSH) {
       held = false;
       send_sync_data(SYNC_BUTTONPRESS);
+      ha_event(this, "press");
     }
     if (state == device_dgbutton::dgbutton_event::RELEASE) {
       held = false;
       send_sync_data(SYNC_BUTTONRELEASE);
+      ha_event(this, "release");
     }
     // The button repeats HELD every second: only act on the first
     if (state == device_dgbutton::dgbutton_event::HELD && !held) {
@@ -34,6 +37,7 @@ void tab_dgbutton::loop(bool activetab) {
       printf_log("DG Button Pushed\n");
       send_sync_data(SYNC_ALLOFF);
       hardware_beep();
+      ha_event(this, "hold");
     }
   }
 }
@@ -89,6 +93,12 @@ void tab_dgbutton::update_battery_icon(void) {
   if (battery_icon) lv_obj_invalidate(battery_icon);
 }
   
+// The button reports its battery level once connected: 0 until then
+int tab_dgbutton::get_battery(void) {
+  device_dgbutton *md = static_cast<device_dgbutton *>(device);
+  return (md && md->get_battery() > 0) ? md->get_battery() : -1;
+}
+
 // return false if we removed ourselves from the connected devices list
 bool tab_dgbutton::hardware_changed(void) {
   if (last_change == D_CONNECTING) {

@@ -7,6 +7,7 @@ idf_component_register(
          "core/lvgl-utils.cpp"
          "comms/comms-bt.cpp"
          "comms/comms-wifi.cpp"
+         "comms/mqtt-ha.cpp"
          "boards/board-m5cores3.cpp"
          "boards/board-m5tab5.cpp"
          "boards/board-waveshare7.cpp"

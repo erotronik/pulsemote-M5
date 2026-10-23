@@ -4,6 +4,8 @@
 #include "config.h"
 #include "comms-wifi.hpp"
 #include "tab-mqtt.hpp"
+#include "mqtt-ha.hpp"
+#include <freertos/idf_additions.h>
 
 #include <freertos/queue.h>
 #include <freertos/task.h>
@@ -34,6 +36,9 @@ SemaphoreHandle_t atBusy;
 EventGroupHandle_t responseFlags;
 static const int RESPONSE_OK    = (1 << 0);
 static const int RESPONSE_ERROR = (1 << 1);
+static const int RESPONSE_PROMPT    = (1 << 2);  // ">": send the data now
+static const int RESPONSE_PUBLISHED = (1 << 3);
+static const int RESPONSE_PUBFAIL   = (1 << 4);
 
 int cstate = 0;
 unsigned long cstate_timeout;
@@ -99,13 +104,18 @@ static inline int to_int_arduinoish(const char* s) {
   return (int)v;
 }
 
-void mqttsend(const char *topic, const char *message) {
+void mqttsend(const char *topic, const char *message, bool retain) {
   mqttsenditem item;
   std::memset(&item, 0, sizeof(item));
   std::strncpy(item.topic, topic, max_topic_size - 1);
   std::strncpy(item.message, message, max_message_size - 1);
   item.command = 0;
+  item.retain = retain;
   xQueueSend(mqttsenthandle, &item, 0);
+}
+
+int mqttsend_space(void) {
+  return mqttsenthandle ? uxQueueSpacesAvailable(mqttsenthandle) : 0;
 }
 
 void mqttsubscribe(const char *topic) {
@@ -229,6 +239,15 @@ static void espat_handleLine(const char* line) {
     return;
   }
 
+  if (streq(line, "+MQTTPUB:OK")) {
+    xEventGroupSetBits(responseFlags, RESPONSE_PUBLISHED);
+    return;
+  }
+  if (streq(line, "+MQTTPUB:FAIL")) {
+    xEventGroupSetBits(responseFlags, RESPONSE_PUBFAIL);
+    return;
+  }
+
   if (starts_with(line, "+MQTTSUBRECV")) {
     handle_mqttsubrecv(line);
   } else {
@@ -254,6 +273,10 @@ static void espat_processSerialInput(void) {
         for (int i = 0; i < n; i++) {
             char c = (char)tmp[i];
             if (c == '\r') continue;
+            if (c == '>' && espat_len == 0) {  // a prompt, which has no newline after it
+                xEventGroupSetBits(responseFlags, RESPONSE_PROMPT);
+                continue;
+            }
 
             if (c == '\n') {
                 if (espat_len > 0) {
@@ -307,6 +330,40 @@ static bool espat_sendATCommand(const char* cmd, uint32_t timeout = 6000) {
   xSemaphoreGive(atBusy);
   ESP_LOGD("espat", "timeout");
   return false;
+}
+
+// Wait for any of the response bits, returning which arrived (0 on a timeout)
+static EventBits_t espat_wait(EventBits_t wanted, uint32_t timeout) {
+  const unsigned long start = millis();
+  while (millis() - start < timeout) {
+    espat_processSerialInput();
+    const EventBits_t bits = xEventGroupGetBits(responseFlags) & wanted;
+    if (bits) {
+      xEventGroupClearBits(responseFlags, bits);
+      return bits;
+    }
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+  return 0;
+}
+
+// Publish with AT+MQTTPUBRAW, which takes the message as it is after a ">" prompt. AT+MQTTPUB needs
+// quotes and commas escaped, and the whole command has to fit in 256 bytes
+static bool espat_publish(const mqttsenditem& item) {
+  const size_t len = strlen(item.message);
+  char cmd[160];
+  std::snprintf(cmd, sizeof(cmd), "AT+MQTTPUBRAW=0,\"%s\",%u,1,%d", item.topic, (unsigned)len, item.retain ? 1 : 0);
+  xEventGroupClearBits(responseFlags, RESPONSE_PROMPT | RESPONSE_PUBLISHED | RESPONSE_PUBFAIL);
+  if (!espat_sendATCommand(cmd) || !espat_wait(RESPONSE_PROMPT, 2000)) {
+    ESP_LOGW("mqtt", "no prompt to publish %s", item.topic);
+    return false;
+  }
+  uart_write_bytes(ESPAT_UART, item.message, (int)len);
+  if (espat_wait(RESPONSE_PUBLISHED | RESPONSE_PUBFAIL, 5000) != RESPONSE_PUBLISHED) {
+    ESP_LOGW("mqtt", "publishing %s failed", item.topic);
+    return false;
+  }
+  return true;
 }
 
 static void espat_sendAT(const char* cmd) {
@@ -364,6 +421,8 @@ void wifi_task(void* pvParameters) {
       cstate++;
     }
     if (cstate == 8) {
+      // If the M5 goes away, the broker tells Home Assistant (see mqtt-ha.cpp)
+      espat_sendATCommand("AT+MQTTCONNCFG=0,60,0,\"" HA_AVAILABILITY_TOPIC "\",\"offline\",1,1");
       char cmd[256];
       std::snprintf(cmd, sizeof(cmd),
                     "AT+MQTTCONN=0,\"" CONFIG_MQTT_SERVER "\",1883,0");
@@ -392,12 +451,7 @@ void wifi_task(void* pvParameters) {
         ESP_LOGD("mqtt", "handling item with topic %s", mqtttosend.topic);
 
         if (mqtttosend.command == 0) {
-          // Publish: AT+MQTTPUB=0,"<topic>","<message>",1,0
-          char cmd[512];
-          std::snprintf(cmd, sizeof(cmd),
-                        "AT+MQTTPUB=0,\"%s\",\"%s\",1,0",
-                        mqtttosend.topic, mqtttosend.message);
-          espat_sendATCommand(cmd);
+          espat_publish(mqtttosend);
         } else if (mqtttosend.command == 1) {
           // Subscribe: AT+MQTTSUB=0,"<topic>",0
           bool known = false;
@@ -414,8 +468,9 @@ void wifi_task(void* pvParameters) {
 }
 
 void wifi_setup() {
-  mqttsenthandle = xQueueCreate(10, sizeof(mqttsenditem));
-  mqttsubhandle  = xQueueCreate(10, sizeof(mqttsenditem));
+  // In PSRAM: with Home Assistant discovery messages these are large
+  mqttsenthandle = xQueueCreateWithCaps(16, sizeof(mqttsenditem), MALLOC_CAP_SPIRAM);
+  mqttsubhandle  = xQueueCreateWithCaps(10, sizeof(mqttsenditem), MALLOC_CAP_SPIRAM);
   wifi_connected = false;
   xTaskCreatePinnedToCore(wifi_task, "wifi", 1024 * 12, NULL, 1, nullptr, 0); // run wifi also on core0
 }
@@ -510,14 +565,16 @@ void wifi_setup() {
 bool wifi_loop() { return false; }
 bool is_wifi_connected() { return wifi_connected; }
 
-void mqttsend(const char *topic, const char *message) {}
+void mqttsend(const char *topic, const char *message, bool retain) {}
+int mqttsend_space(void) { return 0; }
 void mqttsubscribe(const char *topic) {}
 
 #else
 void wifi_setup() { mqttsubhandle  = xQueueCreate(10, sizeof(mqttsenditem));}
 bool wifi_loop() { return false; }
 bool is_wifi_connected() { return false; }
-void mqttsend(const char *topic, const char *message) {}
+void mqttsend(const char *topic, const char *message, bool retain) {}
+int mqttsend_space(void) { return 0; }
 void mqttsubscribe(const char *topic) {}
 #endif
 #endif

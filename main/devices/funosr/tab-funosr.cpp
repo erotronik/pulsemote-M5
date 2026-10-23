@@ -265,3 +265,14 @@ bool tab_funosr::hardware_changed(void) {
   }
   return true;
 }
+// All the knobs, not just Speed on the main page
+int tab_funosr::get_levels(level_t levels[levels_max]) {
+  const struct { const char *name; int value; } knobs[] = {
+    {"Speed", knob_speed}, {"Stroke", knob_stroke}, {"Depth", knob_depth}};
+  int n = 0;
+  for (auto &k : knobs) {
+    snprintf(levels[n].name, sizeof(levels[n].name), "%s", k.name);
+    levels[n++].value = k.value;
+  }
+  return n;
+}

@@ -14,6 +14,8 @@ public:
     void set_extra_text(const char *text);
     void align(lv_align_t align, lv_coord_t x_ofs, lv_coord_t y_ofs);
     void show(bool visible);
+    bool get_active(void) { return is_on; }
+    const char *get_text(void);
 
 private:
     lv_obj_t *container;

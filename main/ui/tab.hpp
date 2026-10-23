@@ -2,6 +2,7 @@
 
 #include <lvgl.h>
 #include <list>
+#include <string>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include "device.hpp"
@@ -103,6 +104,26 @@ class Tab {
       }
     }
   };
+
+  // The device's output levels, 0-100, for Home Assistant (mqtt-ha.cpp). Returns how many. By default
+  // it's the main knobs; a tab with levels that aren't all on them overrides it
+  struct level_t {
+    char name[16];  // like "1", "A" or "Speed", from the knob's label
+    int value;
+  };
+  static const int levels_max = 8;
+  virtual int get_levels(level_t levels[levels_max]);
+
+  // The device's battery level 0-100, or -1 if unknown, for Home Assistant. By default what
+  // set_battery_label() was given
+  virtual int get_battery(void) { return shown_battery; }
+
+  // What the device is doing, for Home Assistant: by default the first line of the status box (not
+  // the timer countdown under it), empty if there's no status box
+  virtual std::string get_status_text(void);
+
+  // True for a button device, which sends button events to Home Assistant (mqtt-ha.cpp)
+  virtual bool has_button_events(void) { return false; }
 
   lv_obj_t* create_standard_page(const char* modes_str);
   void create_standard_widgets();

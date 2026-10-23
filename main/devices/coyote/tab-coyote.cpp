@@ -243,6 +243,13 @@ void tab_coyote::loop(bool active) {
 
 
 
+// Both channels' modes, like "Waves/Waves", as the status box shows them
+std::string tab_coyote::get_status_text(void) {
+  device_coyote *md = static_cast<device_coyote *>(device);
+  if (!md) return "";
+  return std::string(md->getModeName(ison ? mode_a : M_NONE)) + "/" + md->getModeName(ison ? mode_b : M_NONE);
+}
+
 void tab_coyote::coyote_tab_create() {
   create_standard_page(coyote_main_modes_c);
   create_standard_widgets();
