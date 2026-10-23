@@ -23,13 +23,22 @@ void hardware_beep(int duration_ms) {
   M5.Speaker.tone(2000, duration_ms);
 }
 
+// The backlight runs from the AXP2101's DLDO1, which M5GFX sets from 2.5V (brightness 1) to 3.3V
+// (255) in steps of 32. Full brightness runs the battery down quickly
+constexpr uint8_t brightness_normal = 160;  // 3.0V
+constexpr uint8_t brightness_dimmed = 64;   // 2.7V: 2.5V is too dark to read
+
+void hardware_set_dimmed(bool dimmed) {
+  M5.Display.setBrightness(dimmed ? brightness_dimmed : brightness_normal);
+}
+
 void hardware_tft_loop() {
     M5.update();
 }
 
 void hardware_tft_init() {
   M5.begin();
-  M5.Display.setBrightness(255); // needed since M5 update after Apr 2026
+  M5.Display.setBrightness(brightness_normal); // needed since M5 update after Apr 2026
   M5.Speaker.begin();
   lv_init();
   // LVGL's own 64k pool only holds a few device tabs: give it more from PSRAM. Each pool has to be

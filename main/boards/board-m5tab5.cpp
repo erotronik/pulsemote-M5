@@ -22,6 +22,10 @@ void hardware_beep(int duration_ms) {
   M5.Speaker.tone(2000, duration_ms);
 }
 
+void hardware_set_dimmed(bool dimmed) {
+  M5.Display.setBrightness(dimmed ? 32 : 255);
+}
+
 void hardware_tft_loop() {
     M5.update();
 }

@@ -5,6 +5,7 @@
 #include <freertos/queue.h>
 
 void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb);
+void pulsemote_pcb_dimleds(bool dimmed);
 void pulsemote_pcb_init(void);
 const uint8_t numencoders = 4;
 

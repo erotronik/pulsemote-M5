@@ -52,6 +52,8 @@ void lvgl_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data)
     }
 }
 
+void hardware_set_dimmed(bool dimmed) {}
+
 void hardware_tft_loop() {
   lv_timer_handler(); 
 }

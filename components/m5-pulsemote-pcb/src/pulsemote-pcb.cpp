@@ -17,6 +17,7 @@ PCA9685 pca;
 static constexpr int LED_COUNT = 6; // 4 switches + cherry
 static lv_color_t g_led[LED_COUNT];
 static uint32_t g_dirty = 0;
+static bool g_leds_dimmed = false;
 static portMUX_TYPE g_led_mux = portMUX_INITIALIZER_UNLOCKED;
 static TaskHandle_t rotaryTask = nullptr;
 static constexpr uint32_t NOTIF_LED = 1u << 0;
@@ -75,6 +76,18 @@ void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb) {
   taskENTER_CRITICAL(&g_led_mux);
   g_led[sw - 1] = rgb;
   g_dirty |= (1u << (sw - 1));
+  taskEXIT_CRITICAL(&g_led_mux);
+
+  if (rotaryTask) {
+    xTaskNotify(rotaryTask, NOTIF_LED, eSetBits);
+  }
+}
+
+// Turn all the LEDs down (or back up) without changing the colours they've been set to
+void pulsemote_pcb_dimleds(bool dimmed) {
+  taskENTER_CRITICAL(&g_led_mux);
+  g_leds_dimmed = dimmed;
+  g_dirty = (1u << LED_COUNT) - 1;
   taskEXIT_CRITICAL(&g_led_mux);
 
   if (rotaryTask) {
@@ -163,11 +176,14 @@ void rotaryReaderTask(void* pArgs) {
     }
     if (bits & NOTIF_LED) {
       uint32_t mask;
+      bool dimmed;
 
       taskENTER_CRITICAL(&g_led_mux);
       mask = g_dirty;
       g_dirty = 0;
+      dimmed = g_leds_dimmed;
       taskEXIT_CRITICAL(&g_led_mux);
+      const uint16_t scale = dimmed ? 2 : 16;  // the PWM is 12 bit, the colours 8
 
       for (int idx = 0; idx < LED_COUNT; idx++) {
         if (!(mask & (1u << idx))) continue;
@@ -180,10 +196,10 @@ void rotaryReaderTask(void* pArgs) {
         uint8_t sw = idx + 1;
         uint8_t base = pinstarts[idx];
 
-        pca.setPWM(base + 0, (uint16_t)rgb.red * 16);
+        pca.setPWM(base + 0, (uint16_t)rgb.red * scale);
         if (sw != 5) {
-          pca.setPWM(base + 1, (uint16_t)rgb.green * 16);
-          pca.setPWM(base + 2, (uint16_t)rgb.blue * 16);
+          pca.setPWM(base + 1, (uint16_t)rgb.green * scale);
+          pca.setPWM(base + 2, (uint16_t)rgb.blue * scale);
         }
       }
     }
@@ -252,6 +268,7 @@ void pulsemote_pcb_init(void) {
 
 #else
 void pulsemote_pcb_setleds(uint8_t sw, lv_color_t rgb) {};
+void pulsemote_pcb_dimleds(bool dimmed) {};
 void pulsemote_pcb_init(void) {};
 QueueHandle_t event_queue = nullptr;
 #endif

@@ -53,6 +53,7 @@ void handlebuttonpushes() {
       if (activepage == t->page) 
         t->switch_change(received_event.target, received_event.value);
     }
+    lv_display_trigger_activity(nullptr);  // for handlescreendimming()
     count--;
   }
 }
@@ -76,6 +77,7 @@ void handlerotaryencoders() {
         if (activepage == t->page)
           t->encoder_change(i, change);
       }
+      lv_display_trigger_activity(nullptr);  // for handlescreendimming()
     }
   }
 }
@@ -144,6 +146,12 @@ void process_device_events() {
     Device *d = event.d;
     
     ESP_LOGD("main", "processing device event %d from task %s", (int)t, pcTaskGetName(xTaskGetCurrentTaskHandle()));
+
+    // a device connecting or going away is worth seeing
+    if (t == D_CONNECTED || t == D_DISCONNECTED) {
+      TabLock l_lock(lvgl_mutex);
+      lv_display_trigger_activity(nullptr);
+    }
 
     bool found = false;
     {
@@ -228,6 +236,26 @@ void handletabloops(void) {
   }
 }
 
+// Dim the screen and knob LEDs once nothing has happened for a while: no touches (which LVGL notes itself), knobs,
+// buttons or devices coming and going. The next one brightens it again
+
+constexpr uint32_t dim_after_ms = 5 * 60 * 1000;
+
+void handlescreendimming() {
+  static bool dimmed = false;
+  bool idle;
+  {
+    TabLock l_lock(lvgl_mutex);
+    idle = lv_display_get_inactive_time(nullptr) > dim_after_ms;
+  }
+  if (idle != dimmed) {
+    ESP_LOGI("main", "screen %s", idle ? "dimmed" : "brightened");
+    hardware_set_dimmed(idle);
+    pulsemote_pcb_dimleds(idle);
+    dimmed = idle;
+  }
+}
+
 // Main UI loop
 
 void main_loop() {
@@ -241,6 +269,7 @@ void main_loop() {
   handlebuttonpushes();
   handlerotaryencoders();
   handletabloops();
+  handlescreendimming();
   vTaskDelay(1);
 }
 
