@@ -274,6 +274,7 @@ void main_loop() {
   handlerotaryencoders();
   handletabloops();
   handlescreendimming();
+  printf_log_flush();
   vTaskDelay(1);
 }
 

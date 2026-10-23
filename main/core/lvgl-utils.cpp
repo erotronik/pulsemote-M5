@@ -1,6 +1,16 @@
 #include "lvgl-utils.h"
 #include "tab-splashscreen.hpp"
 #include <tab.hpp>
+#include <freertos/queue.h>
+
+// Messages for the splashscreen log. Any task can log, but only the main loop adds them to the screen
+// (in printf_log_flush()), since other tasks can't wait for the locks: most of the time the main
+// loop holds them, and messages used to get lost
+struct log_line_t {
+  char text[128];
+};
+static QueueHandle_t log_queue = nullptr;
+static const int log_queue_length = 16;
 
 lv_style_t lvpulsemote_style_status;
 lv_style_t lvpulsemote_style_tab;
@@ -24,6 +34,8 @@ const lv_font_t* lv_font_get_scaled(uint32_t size) {
 }
 
 void lv_init_pulsemote(void) {
+  log_queue = xQueueCreate(log_queue_length, sizeof(log_line_t));
+
   // Determine scale based on screen width
   // We डिजाइन for 320px on small screens, but on high-res screens (like Tab5 1280px)
   // we scale by 2x instead of 4x to give more real estate and avoid "huge" UI.
@@ -59,24 +71,25 @@ void lv_init_pulsemote(void) {
 // Log to serial, and if the splashscreen is there, also to the debug window of the splashscreen
 
 void printf_log(const char *format, ...) {
-  char buf[256];
+  log_line_t line;
   va_list args;
   va_start(args, format);
-  vsnprintf(buf, sizeof(buf), format, args);
+  vsnprintf(line.text, sizeof(line.text), format, args);
   va_end(args);
-  ESP_LOGD("log","%s",buf);
-  
-  // Try to update the splashscreen log, but skip if we can't get the lock immediately.
-  // This prevents crashes if called from timer callbacks or during contention.
-  TabLock lock(tabs_mutex, 0); 
-  if (lock && !tabs.empty()) {
-    Tab *t = tabs.front();
-    tab_splashscreen *ts = static_cast<tab_splashscreen *>(t);
+  ESP_LOGD("log","%s",line.text);
+
+  if (log_queue) xQueueSend(log_queue, &line, 0);  // if it's full, the line only goes to the serial log
+}
+
+void printf_log_flush(void) {
+  log_line_t line;
+  while (log_queue && xQueueReceive(log_queue, &line, 0)) {
+    TabLock lock(tabs_mutex);
+    if (tabs.empty()) continue;
+    tab_splashscreen *ts = static_cast<tab_splashscreen *>(tabs.front());
     if (ts && ts->lv_debug_window) {
-      TabLock l_lock(lvgl_mutex, 0);
-      if (l_lock) {
-        lv_textarea_add_text(ts->lv_debug_window, buf);
-      }
+      TabLock l_lock(lvgl_mutex);
+      lv_textarea_add_text(ts->lv_debug_window, line.text);
     }
   }
 }

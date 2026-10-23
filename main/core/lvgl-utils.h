@@ -20,6 +20,7 @@ uint32_t lvgl_tick_function(void);
 void lvgl_touchpad_read(lv_indev_t *drv, lv_indev_data_t *data);
 void lv_hide_tab(lv_obj_t *page);
 void printf_log(const char *format, ...);
+void printf_log_flush(void);  // called by the main loop: puts logged messages on the screen
 void lv_init_pulsemote(void);
 
 // ESP-IDF compatibility: provide millis() wrapper
