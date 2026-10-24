@@ -15,6 +15,46 @@
 #include <freertos/queue.h>
 #include <freertos/task.h>
 
+#ifdef CONFIG_MQTT_SERVER
+// A tab for a Zigbee2MQTT socket, unless it has one already
+static void add_socket(const char *name) {
+  for (const auto& allt : tabs)
+    if (!strcasecmp(allt->gettabname(), name)) return;
+  char topic[100];
+  snprintf(topic, sizeof(topic), "zigbee2mqtt/%s/set", name);
+  ESP_LOGD("mqtt", "creating %s", topic);
+  tab_mqtt_socket *mv = new tab_mqtt_socket((char *)name, topic);
+  mv->setup();
+  mv->focus_change(true);
+  tabs.emplace_back(mv);
+}
+#endif
+
+#if defined(CONFIG_WIFI_SSID) && defined(CONFIG_MQTT_SERVER)
+// The sockets in mqtt_device_list come and go with what Zigbee2MQTT says about them on
+// zigbee2mqtt/<name>/availability: {"state":"online"} or "online" (and offline), retained, so we
+// hear it when we subscribe too
+static void socket_availability(const char *topic, const char *message) {
+  static const char prefix[] = "zigbee2mqtt/", suffix[] = "/availability";
+  size_t len = strlen(topic);
+  if (strncmp(topic, prefix, sizeof(prefix) - 1) || len <= sizeof(prefix) - 1 + sizeof(suffix) - 1 ||
+      strcmp(topic + len - (sizeof(suffix) - 1), suffix))
+    return;
+  std::string name(topic + sizeof(prefix) - 1, len - (sizeof(prefix) - 1) - (sizeof(suffix) - 1));
+  bool listed = false;
+  for (const std::string &n : mqtt_device_list)
+    if (n == name && !strncmp(n.c_str(), "socket", 6)) listed = true;
+  if (!listed) return;
+
+  if (strstr(message, "offline")) {
+    for (const auto& allt : tabs)
+      if (!strcasecmp(allt->gettabname(), name.c_str())) allt->last_change = D_DISCONNECTED;
+  } else if (strstr(message, "online")) {
+    add_socket(name.c_str());
+  }
+}
+#endif
+
 tab_mqtt::tab_mqtt() {
   //events = xQueueCreate(10,sizeof(sync_data));
 }
@@ -66,6 +106,9 @@ void tab_mqtt::loop(bool activetab) {
         }
       }
     }
+#if defined(CONFIG_WIFI_SSID) && defined(CONFIG_MQTT_SERVER)
+    socket_availability(item.topic, item.message);
+#endif
     for (Tab *t : tabs) t->mqtt_received(item.topic, item.message);
   }
 
@@ -88,6 +131,14 @@ void tab_mqtt::setup(void) {
   mt->last_change = mt->old_last_change = D_NONE;
   wifi_setup();  
   mqttsubscribe("wled/+/status");
+#if defined(CONFIG_WIFI_SSID) && defined(CONFIG_MQTT_SERVER)
+  for (const std::string &name : mqtt_device_list) {
+    if (strncmp(name.c_str(), "socket", 6)) continue;
+    char topic[max_topic_size];
+    snprintf(topic, sizeof(topic), "zigbee2mqtt/%s/availability", name.c_str());
+    mqttsubscribe(topic);
+  }
+#endif
 }
 
 #if 0
@@ -169,22 +220,7 @@ void tab_mqtt::popup_add_device_ok_event_cb(lv_event_t * e) {
     ESP_LOGD("popup","selected %s",txt);
 
 #ifdef CONFIG_MQTT_SERVER
-    if (!strncmp(txt,"socket",6)) {
-      char topic[100];
-      snprintf(topic,sizeof(topic)-1, "zigbee2mqtt/%s/set", txt);
-      ESP_LOGD("popup","creating %s",topic);
-      bool exists = false;
-      for (const auto& allt : tabs) {
-        if (!strcasecmp(allt->gettabname(),txt))
-          exists = true;
-      }
-      if (!exists) {
-        tab_mqtt_socket *mv = new tab_mqtt_socket(txt, topic);
-        mv->setup();
-        mv->focus_change(true);
-        tabs.emplace_back(mv);
-      }
-    }
+    if (!strncmp(txt,"socket",6)) add_socket(txt);
 #endif
   }
   lv_obj_del(t->popup_add_device_modal); // Close the message box

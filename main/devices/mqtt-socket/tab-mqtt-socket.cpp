@@ -1,4 +1,5 @@
 #include <memory>
+#include <ArduinoJson.h>
 
 #include "tab.hpp"
 #include "lvgl-utils.h"
@@ -6,13 +7,12 @@
 #include "tab-mqtt.hpp"
 #include "comms-wifi.hpp"
 
-void send_mqtt_data(const char *topic, const char *message) {
-  mqttsend(topic,message);
-}
-
 tab_mqtt_socket::tab_mqtt_socket(char *n, char *t) {
   strncpy(mqtt_topic, t, sizeof(mqtt_topic)-1);
   strncpy(mqtt_topic_name, n, sizeof(mqtt_topic_name)-1);
+  strncpy(mqtt_state_topic, t, sizeof(mqtt_state_topic)-1);
+  char *set = strrchr(mqtt_state_topic, '/');
+  if (set && !strcmp(set, "/set")) *set = '\0';
   ison = false;
   timer = new tab_object_timer(false);
   rand_timer = new tab_object_timer(true);
@@ -21,10 +21,10 @@ tab_mqtt_socket::tab_mqtt_socket(char *n, char *t) {
   modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
       ison = active_on;
       if (active_on) {
-          send_mqtt_data(mqtt_topic, "ON");
+          send_state(true);
           send_sync_data(SYNC_ON);
       } else {
-          send_mqtt_data(mqtt_topic, "OFF");
+          send_state(false);
           send_sync_data(SYNC_OFF);
       }
   });
@@ -33,6 +33,14 @@ tab_mqtt_socket::tab_mqtt_socket(char *n, char *t) {
   device = nullptr;
 }
 tab_mqtt_socket::~tab_mqtt_socket() {}
+
+void tab_mqtt_socket::send_state(bool on) {
+  mqttsend(mqtt_topic, on ? "ON" : "OFF");
+  wanted = on;
+  waiting_since = millis();
+  no_reply = false;
+  need_refresh = true;
+}
 
 
 void tab_mqtt_socket::encoder_change(int sw, int change) {
@@ -66,11 +74,11 @@ void tab_mqtt_socket::switch_change(int sw, bool value) {
   if (main_mode == MODE_MANUAL) {
     if (sw == tab_object_buttonbar::switch1 && value && ison == 0) {
       ison = 1;
-      send_mqtt_data(mqtt_topic, "ON");
+      send_state(true);
       send_sync_data(SYNC_ON);
     } else if (sw == tab_object_buttonbar::switch1 && value && ison == 1) {
       ison = 0;
-      send_mqtt_data(mqtt_topic, "OFF");
+      send_state(false);
       send_sync_data(SYNC_OFF);
     }
   }
@@ -79,7 +87,7 @@ void tab_mqtt_socket::switch_change(int sw, bool value) {
     main_mode = MODE_MANUAL;
     modetimer->set_is_on(false);
     modeselect->reset();
-    send_mqtt_data(mqtt_topic, "OFF");
+    send_state(false);
     ison = false;
   }
 }
@@ -92,7 +100,7 @@ void tab_mqtt_socket::gotsyncdata(Tab *t, sync_data syncstatus) {
     main_mode = MODE_MANUAL;
     modeselect->reset();
     ison = false;
-    send_mqtt_data(mqtt_topic, "OFF");
+    send_state(false);
     need_refresh = true;
   }
   // if we sync on wifi then we'll get in a loop
@@ -100,17 +108,25 @@ void tab_mqtt_socket::gotsyncdata(Tab *t, sync_data syncstatus) {
     bool isinverted = sync->isinverted();
     if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
       ison = true;
-      send_mqtt_data(mqtt_topic, "ON");
+      send_state(true);
     } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted) ||
                syncstatus == SYNC_BYE) {  // the source has gone away
       ison = false;
-      send_mqtt_data(mqtt_topic, "OFF");
+      send_state(false);
     }
     need_refresh = true;
   }
 }
 
 void tab_mqtt_socket::loop(bool activetab) {
+  // Zigbee2MQTT gives up on a socket that's lost its power after about 10s
+  if (waiting_since && millis() - waiting_since > 12000) {
+    waiting_since = 0;
+    no_reply = true;
+    if (main_mode == MODE_MANUAL) ison = reported == 1;
+    need_refresh = true;
+  }
+
   if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
   }
@@ -121,11 +137,12 @@ void tab_mqtt_socket::loop(bool activetab) {
 
     status->set_active(ison);
 
+    const char *state = waiting_since ? (wanted ? "On..." : "Off...") : no_reply ? "No reply" : ison ? "On" : "Off";
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = modetimer->get_remaining_seconds();
-      status->set_text_fmt("%s\n%d", ison?"On":"Off", seconds);
+      status->set_text_fmt("%s\n%d", state, seconds);
     } else {
-      status->set_text(ison?"On":"Off");
+      status->set_text(state);
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -139,13 +156,6 @@ void tab_mqtt_socket::loop(bool activetab) {
     } else {
       buttonbar->set_text(tab_object_buttonbar::switch1,"Stop");
       buttonbar->set_value(tab_object_buttonbar::switch1,0);
-    }
-
-    if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      if (rand_timer->has_focus() || timer->has_focus())
-        buttonbar->set_value(tab_object_buttonbar::rotary4,100);
-      else
-        buttonbar->set_value(tab_object_buttonbar::rotary4,0);
     }
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
@@ -171,21 +181,39 @@ void tab_mqtt_socket::tab_create() {
   create_standard_page(mqtt_socket_main_modes_c);
   create_standard_widgets();
 
-  mqttsubscribe(mqtt_topic);
+  mqttsubscribe(mqtt_state_topic);
+}
+
+// Zigbee2MQTT's state for the socket, like {"state":"ON","linkquality":42}, whenever it changes,
+// whoever changed it (us, Home Assistant, the socket's own button)
+void tab_mqtt_socket::mqtt_received(const char *topic, const char *message) {
+  if (strcmp(topic, mqtt_state_topic)) return;
+  JsonDocument doc;
+  if (deserializeJson(doc, message)) return;
+  const char *state = doc["state"] | "";
+  if (!*state) return;
+  reported = !strcmp(state, "ON");
+  if (waiting_since && reported == wanted) waiting_since = 0;
+  no_reply = false;
+  // In Manual it's whatever the socket is, unless we're still waiting to hear it's changed (other
+  // updates, like the signal strength, still have the old state); the other modes decide for
+  // themselves
+  if (main_mode == MODE_MANUAL && !waiting_since) ison = reported;
+  need_refresh = true;
 }
 
 // return false if we removed ourselves from the connected devices list
 bool tab_mqtt_socket::hardware_changed(void) {
   need_refresh = true;
   if (last_change == D_CONNECTING) {
-    printf_log("Connecting %s\n", device->getShortName());
+    printf_log("Connecting %s\n", gettabname());
   } else if (last_change == D_CONNECTED) {
     tab_create();
     send_sync_data(SYNC_START);
     send_sync_data(SYNC_ON);
-    printf_log("Connected %s\n", device->getShortName());
+    printf_log("Connected %s\n", gettabname());
   } else if (last_change == D_DISCONNECTED) {
-    printf_log("Disconnected %s\n", device->getShortName());
+    printf_log("Disconnected %s\n", gettabname());
     send_sync_data(SYNC_BYE);
     return false;
   }
