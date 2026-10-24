@@ -66,6 +66,7 @@ void tab_mqtt::loop(bool activetab) {
         }
       }
     }
+    for (Tab *t : tabs) t->mqtt_received(item.topic, item.message);
   }
 
   wifi_loop();

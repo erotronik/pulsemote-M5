@@ -125,6 +125,10 @@ class Tab {
   // True for a button device, which sends button events to Home Assistant (mqtt-ha.cpp)
   virtual bool has_button_events(void) { return false; }
 
+  // A message from the broker, which every tab sees (from the main loop). For a tab that subscribed
+  // to something with mqttsubscribe()
+  virtual void mqtt_received(const char *topic, const char *message) {}
+
   // A device with an on/off reading of its own, like the bubble bottle's breathing, which shows in
   // Home Assistant as a binary sensor with this name. nullptr for none
   virtual const char *activity_name(void) { return nullptr; }

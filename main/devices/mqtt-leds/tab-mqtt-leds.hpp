@@ -13,6 +13,7 @@ class tab_mqtt_leds : public Tab {
   void focus_change(bool focus) override;
   bool hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
+  void mqtt_received(const char *topic, const char *message) override;
 
   void setup() override {
     tab_create();
@@ -29,7 +30,12 @@ class tab_mqtt_leds : public Tab {
   bool need_knob_refresh = false;
   int hue = 0;  // 0-359
   time_t huesend;
-  int preset = 0;
+  int brightness = 128;  // 1-255, WLED's last brightness while on
+  unsigned long brightnesssend = 0;
+  unsigned long last_turned = 0;  // when a knob was last turned, so WLED's replies don't fight it
+  int preset = 1;  // 1-presets_max, or 0 for none
+  static const int presets_max = 10;
+  void send_preset(void);
   bool ison;
   bool lockpanel = false;
 };

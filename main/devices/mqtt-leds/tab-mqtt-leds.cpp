@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 
 #include "tab.hpp"
@@ -44,22 +45,29 @@ tab_mqtt_leds::tab_mqtt_leds(char *n, char *t) {
 tab_mqtt_leds::~tab_mqtt_leds() {}
 
 
+void tab_mqtt_leds::send_preset(void) {
+  char msg[16];
+  snprintf(msg, sizeof(msg), "{\"ps\":%d}", preset);
+  send_led_mqtt_data(mqtt_topic, "/api", msg);
+}
+
 void tab_mqtt_leds::encoder_change(int sw, int change) {
   if (sw == tab_object_buttonbar::rotary1 && ison) {
     hue = (hue + change*4 + 360) % 360;
-    lv_color_t rgb = lv_color_hsv_to_rgb(hue, 100, 50);
-    buttonbar->set_rgb(tab_object_buttonbar::rotary1, rgb); 
-    if (huesend == 0) { 
-      huesend = millis()+500;
-    }
+    if (huesend == 0) huesend = millis() + 250;
+    last_turned = millis();
+    need_knob_refresh = true;
   }
   if (sw == tab_object_buttonbar::rotary2 && ison) {
-    preset+=change;
-    if (preset > 5) preset = 0;
-    if (preset < 0) preset = 5;
-    char msg[16];
-    sprintf(msg,"{\"ps\":%d}",preset); 
-    send_led_mqtt_data(mqtt_topic, "/api",msg);
+    preset = (preset - 1 + change % presets_max + presets_max) % presets_max + 1;
+    send_preset();
+    need_refresh = true;
+  }
+  if (sw == tab_object_buttonbar::rotary3 && ison) {
+    brightness = std::min(255, std::max(1, brightness + change * 8));
+    if (brightnesssend == 0) brightnesssend = millis() + 250;
+    last_turned = millis();
+    need_knob_refresh = true;
   }
 
   if (sw == tab_object_buttonbar::rotary4) {
@@ -73,11 +81,8 @@ void tab_mqtt_leds::switch_change(int sw, bool value) {
   need_refresh = true;
 
   if (sw == tab_object_buttonbar::rotary2 && value && ison) {
-    preset++;
-    if (preset > 5) preset = 0;
-    char msg[16];
-    sprintf(msg,"{\"ps\":%d}",preset); 
-    send_led_mqtt_data(mqtt_topic, "/api",msg);
+    preset = preset % presets_max + 1;
+    send_preset();
   }
 
   if (sw == tab_object_buttonbar::rotary4 && value) {
@@ -157,6 +162,12 @@ void tab_mqtt_leds::loop(bool activetab) {
     sprintf(msg,"#%02x%02x%02x",rgb.red,rgb.green,rgb.blue);
     send_led_mqtt_data(mqtt_topic,"/col",msg);
   }
+  if (brightnesssend != 0 && millis() > brightnesssend) {
+    brightnesssend = 0;
+    char msg[16];
+    snprintf(msg, sizeof(msg), "{\"bri\":%d}", brightness);
+    send_led_mqtt_data(mqtt_topic, "/api", msg);
+  }
 
   if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
@@ -170,9 +181,11 @@ void tab_mqtt_leds::loop(bool activetab) {
 
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = modetimer->get_remaining_seconds();
-      status->set_text_fmt("%s %d\n%d", ison?"On":"Off", preset, seconds);
+      status->set_text_fmt("%s %d%%\n%d", ison?"On":"Off", brightness * 100 / 255, seconds);
+    } else if (preset) {
+      status->set_text_fmt("%s %d%%\nPreset %d", ison?"On":"Off", brightness * 100 / 255, preset);
     } else {
-      status->set_text_fmt("%s %d", ison?"On":"Off", preset);
+      status->set_text_fmt("%s %d%%", ison?"On":"Off", brightness * 100 / 255);
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -180,9 +193,19 @@ void tab_mqtt_leds::loop(bool activetab) {
   if (activetab && need_knob_refresh) {
     need_knob_refresh = false;
 
-    buttonbar->set_text(tab_object_buttonbar::rotary1,ison?"col":"");
-    buttonbar->set_click_text(tab_object_buttonbar::rotary2,ison?"mode":"");
+    buttonbar->set_text(tab_object_buttonbar::rotary1, ison ? "Colour" : "");
+    buttonbar->set_value(tab_object_buttonbar::rotary1, ison ? hue * 100 / 359 : 0);
+    if (preset)
+      buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, ison ? "Preset\n%d" : "", preset);
+    else
+      buttonbar->set_text(tab_object_buttonbar::rotary2, ison ? "Preset" : "");
+    buttonbar->set_value(tab_object_buttonbar::rotary2, ison ? preset * 100 / presets_max : 0);
+    buttonbar->set_click_text(tab_object_buttonbar::rotary2, ison ? "next" : "");
+    buttonbar->set_text_fmt(tab_object_buttonbar::rotary3, ison ? "Bright\n%d%%" : "", brightness * 100 / 255);
+    buttonbar->set_value(tab_object_buttonbar::rotary3, ison ? brightness * 100 / 255 : 0);
     buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(hue, 100, 50):lv_color_hex(0));
+    buttonbar->set_rgb(tab_object_buttonbar::rotary2, ison?lv_color_hsv_to_rgb(0, 0, 20):lv_color_hex(0));
+    buttonbar->set_rgb(tab_object_buttonbar::rotary3, ison?lv_color_hsv_to_rgb(0, 0, brightness * 50 / 255):lv_color_hex(0));
 
     if (main_mode == MODE_MANUAL) {
       buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
@@ -192,12 +215,6 @@ void tab_mqtt_leds::loop(bool activetab) {
       buttonbar->set_value(tab_object_buttonbar::switch1,0);
     }
 
-    if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
-      if (rand_timer->has_focus() || timer->has_focus())
-        buttonbar->set_value(tab_object_buttonbar::rotary4,100);
-      else
-        buttonbar->set_value(tab_object_buttonbar::rotary4,0);
-    }
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       if (rand_timer->has_focus() || timer->has_focus())
         buttonbar->set_value(tab_object_buttonbar::rotary4,100);
@@ -221,7 +238,42 @@ void tab_mqtt_leds::tab_create() {
   create_standard_page(mqtt_leds_main_modes_c);
   create_standard_widgets();
 
-  mqttsubscribe(mqtt_topic);
+  // What WLED says about itself when anything changes it: brightness (0 when off), colour, and
+  // its state as XML, which has the preset
+  for (const char *sub : {"/g", "/c", "/v"}) {
+    char topic[max_topic_size];
+    snprintf(topic, sizeof(topic), "%s%s", mqtt_topic, sub);
+    mqttsubscribe(topic);
+  }
+}
+
+void tab_mqtt_leds::mqtt_received(const char *topic, const char *message) {
+  size_t len = strlen(mqtt_topic);
+  if (strncmp(topic, mqtt_topic, len) || topic[len] != '/') return;
+  const char *sub = topic + len + 1;
+  // Not while a knob is being turned, when these are still catching up
+  bool turning = millis() - last_turned < 1500;
+
+  if (!strcmp(sub, "g")) {
+    int g = atoi(message);
+    if (!turning && g > 0) brightness = g;
+    // In Manual it's whatever WLED says, like when it's turned on from its own app; the other modes
+    // decide for themselves
+    if (main_mode == MODE_MANUAL) ison = g > 0;
+  } else if (!strcmp(sub, "c") && !turning && message[0] == '#') {
+    unsigned long rgb = strtoul(message + 1, nullptr, 16);
+    lv_color_hsv_t hsv = lv_color_to_hsv(lv_color_make(rgb >> 16, (rgb >> 8) & 0xff, rgb & 0xff));
+    if (hsv.s > 10) hue = hsv.h;  // white has no hue: keep the last one
+  } else if (!strcmp(sub, "v")) {
+    const char *ps = strstr(message, "<ps>");
+    if (ps) {
+      int p = atoi(ps + 4);
+      preset = p >= 1 && p <= presets_max ? p : 0;
+    }
+  } else {
+    return;
+  }
+  need_refresh = true;
 }
 
 // return false if we removed ourselves from the connected devices list
