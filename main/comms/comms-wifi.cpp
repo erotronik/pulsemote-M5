@@ -49,12 +49,13 @@ QueueHandle_t mqttsenthandle;
 // used by wifi_task
 static std::vector<std::string> mqtt_subscriptions;
 
-static void espat_sendAT(const char* cmd);
+static bool espat_sendATCommand(const char* cmd, uint32_t timeout = 6000);
 
+// Waiting for the reply, as the co-processor answers "busy p..." to anything sent before then
 static void espat_subscribe(const char *topic) {
   char cmd[256];
   std::snprintf(cmd, sizeof(cmd), "AT+MQTTSUB=0,\"%s\",0", topic);
-  espat_sendAT(cmd);
+  espat_sendATCommand(cmd, 2000);
 }
 
 static esp_err_t espat_uart_init(void) {
@@ -299,7 +300,7 @@ static void espat_processSerialInput(void) {
     }
 }
 
-static bool espat_sendATCommand(const char* cmd, uint32_t timeout = 6000) {
+static bool espat_sendATCommand(const char* cmd, uint32_t timeout) {
   if (xSemaphoreTake(atBusy, portMAX_DELAY) != pdTRUE) return false;
 
   xEventGroupClearBits(responseFlags, RESPONSE_OK | RESPONSE_ERROR);
