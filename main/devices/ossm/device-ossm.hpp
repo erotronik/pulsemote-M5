@@ -28,6 +28,10 @@ class device_ossm : public Device {
   void set_pattern(int s);
 
   bool got_data_yet();
+  // The OSSM's state machine state, like "homing.forward", "menu.idle" or "strokeEngine.idle"; ""
+  // until it's said
+  std::string get_state(void);
+  void go_stroke_engine(void);
 
   int get_speed(void);
   int get_stroke(void);
@@ -48,6 +52,8 @@ class device_ossm : public Device {
   void ble_ossm_send(const char*newValue);
   char send_buf[32];
   JsonDocument rxstatus;
+  char state[32] = "";  // from rxstatus, which the notify callback sets on NimBLE's task
+  portMUX_TYPE state_lock = portMUX_INITIALIZER_UNLOCKED;
   JsonDocument patternlist;
   void ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
   NimBLEClient* bleClient = nullptr;

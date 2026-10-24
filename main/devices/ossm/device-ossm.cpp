@@ -109,7 +109,26 @@ void device_ossm::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteris
     ESP_LOGW("ossm", "JSON parse error: %s", err.c_str());
     return;
   }
+  const char *s = rxstatus["state"] | "";
+  taskENTER_CRITICAL(&state_lock);
+  bool changed = strcmp(state, s) != 0;
+  snprintf(state, sizeof(state), "%s", s);
+  taskEXIT_CRITICAL(&state_lock);
+  if (changed) ESP_LOGI("ossm", "state %s", s);  // not in the critical section, as logging takes a lock
   //ESP_LOGI("ossm","speed=%d",rxstatus["speed"]|0);
+}
+
+std::string device_ossm::get_state(void) {
+  taskENTER_CRITICAL(&state_lock);
+  std::string s = state;
+  taskEXIT_CRITICAL(&state_lock);
+  return s;
+}
+
+// The same as choosing Stroke Engine on the OSSM's menu, so only does anything while its menu is
+// showing
+void device_ossm::go_stroke_engine(void) {
+  ble_ossm_send("go:strokeEngine");
 }
 
 bool device_ossm::got_data_yet() {
@@ -212,8 +231,6 @@ bool device_ossm::connect_to_device(NimBLEAdvertisedDevice* device) {
 
   const char* newValue = "false";
   ossm_speedknob_Characteristic->writeValue(newValue, strlen(newValue));
-  ble_ossm_send("go:strokeEngine");
-
   is_connected = true;
 
   notify(D_CONNECTED);

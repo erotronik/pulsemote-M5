@@ -3,6 +3,7 @@
 #include "lvgl-utils.h"
 #include "tab.hpp"
 #include "tab-object-segbar.hpp"
+#include "device-ossm.hpp"
 
 class tab_ossm : public Tab {
  public:
@@ -30,4 +31,12 @@ class tab_ossm : public Tab {
   bool ison;
   bool lockpanel = false;
   int knob_speed, knob_stroke, knob_depth, knob_sensation;
+
+  // Getting the OSSM into Stroke Engine, and keeping it in step with us once it's there
+  std::string ossm_state;
+  bool reached_engine = false;  // it's been in Stroke Engine since we connected
+  unsigned long last_go = 0;
+  void follow_state(device_ossm *md);
+  void send_settings(device_ossm *md);
+  const char *state_notice(void);
 };

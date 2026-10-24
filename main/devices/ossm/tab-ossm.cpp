@@ -95,6 +95,11 @@ void tab_ossm::switch_change(int sw, bool value) {
     }
   }
 
+  if (sw == tab_object_buttonbar::switch1 && value && ossm_state.rfind("menu", 0) == 0) {
+    md->go_stroke_engine();
+    return;
+  }
+
   if (main_mode == MODE_MANUAL) {
     if (sw == tab_object_buttonbar::switch1 && value && ison == 0) {
       ison = true;
@@ -146,6 +151,48 @@ void tab_ossm::gotsyncdata(Tab *t, sync_data syncstatus) {
   }
 }
 
+// Everything we've set, as Stroke Engine starts with its own (speed 0, stroke 50, depth 10,
+// sensation 50)
+void tab_ossm::send_settings(device_ossm *md) {
+  md->set_pattern(main_pattern);
+  md->set_stroke(knob_stroke);
+  md->set_depth(knob_depth);
+  md->set_sensation(knob_sensation);
+  md->set_speed(ison ? knob_speed : 0);
+}
+
+void tab_ossm::follow_state(device_ossm *md) {
+  std::string state = md->get_state();
+  bool in_engine = state.rfind("strokeEngine.idle", 0) == 0 || state.rfind("strokeEngine.pattern", 0) == 0;
+  if (state != ossm_state) {
+    bool was_in_engine = ossm_state.rfind("strokeEngine.idle", 0) == 0 || ossm_state.rfind("strokeEngine.pattern", 0) == 0;
+    if (in_engine && !was_in_engine) {
+      reached_engine = true;
+      send_settings(md);
+    }
+    ossm_state = state;
+    need_refresh = true;
+  }
+  // Choosing Stroke Engine only works from the OSSM's menu, which it gets to after homing when it's
+  // turned on. Once it's been there, leave it at its menu if someone takes it back there: On does it
+  // again
+  if (!reached_engine && state.rfind("menu", 0) == 0 && millis() - last_go > 2000) {
+    md->go_stroke_engine();
+    last_go = millis();
+  }
+}
+
+// What to show instead of the pattern while the OSSM isn't ready
+const char *tab_ossm::state_notice(void) {
+  if (ossm_state.empty() || ossm_state.rfind("strokeEngine.idle", 0) == 0 || ossm_state.rfind("strokeEngine.pattern", 0) == 0)
+    return nullptr;
+  if (ossm_state.find("preflight") != std::string::npos) return "Speed knob\nto 0";
+  if (ossm_state.rfind("homing", 0) == 0) return "Homing";
+  if (ossm_state.rfind("menu", 0) == 0) return reached_engine ? "At menu\nOn: start" : "Starting";
+  if (ossm_state.rfind("error", 0) == 0) return "OSSM error";
+  return "Waiting";
+}
+
 void tab_ossm::loop(bool activetab) {
   device_ossm *md = static_cast<device_ossm *>(device);
 
@@ -160,6 +207,7 @@ void tab_ossm::loop(bool activetab) {
       need_refresh = true;
     }
   }
+  if (firstdata) follow_state(md);
 
   if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
       need_refresh = true;
@@ -171,7 +219,9 @@ void tab_ossm::loop(bool activetab) {
     device_ossm *md = static_cast<device_ossm *>(device);
     status->set_active(ison);
 
-    if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
+    if (state_notice()) {
+      status->set_text(state_notice());
+    } else if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = modetimer->get_remaining_seconds();
       status->set_text_fmt("%.10s\n%s: %d", md->pattern_name_for_idx(main_pattern), ison?"On":"Off", seconds);
     } else {
@@ -250,6 +300,8 @@ bool tab_ossm::hardware_changed(void) {
     send_sync_data(SYNC_START);
     send_sync_data(SYNC_OFF);
     ison = false;
+    ossm_state.clear();
+    reached_engine = false;
     printf_log("Connected %s\n", device->getShortName());
   } else if (last_change == D_DISCONNECTED) {
     printf_log("Disconnected %s\n", device->getShortName());
