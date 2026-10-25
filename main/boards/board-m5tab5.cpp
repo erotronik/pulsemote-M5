@@ -18,7 +18,10 @@ bool hardware_is_charging() {
     return M5.Power.isCharging();
 }
 
+// The speaker is only on while beeping: left on, its amplifier crackles and whines with whatever
+// else the board is doing. hardware_tft_loop() turns it off again
 void hardware_beep(int duration_ms) {
+  if (!M5.Speaker.isRunning()) M5.Speaker.begin();
   M5.Speaker.tone(2000, duration_ms);
 }
 
@@ -28,13 +31,15 @@ void hardware_set_dimmed(bool dimmed) {
 
 void hardware_tft_loop() {
     M5.update();
+    if (M5.Speaker.isRunning() && !M5.Speaker.isPlaying()) M5.Speaker.end();
 }
 
 void hardware_tft_init() {
   ESP_LOGD("main", "M5.begin()");
   M5.begin();
   M5.Display.setBrightness(255); // needed since M5 update after Apr 2026
-  M5.Speaker.begin();
+  M5.Speaker.begin();  // and straight off again, so the amplifier is off until the first beep
+  M5.Speaker.end();
 
   M5.Display.setRotation(3);
   M5.Display.setSwapBytes(true);
