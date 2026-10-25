@@ -297,6 +297,8 @@ void tab_zc95::tab_create() {
 
   buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
   buttonbar->set_onmain(tab_object_buttonbar::rotary2, true);
+  buttonbar->set_onmain(tab_object_buttonbar::rotary3, true);
+  buttonbar->set_onmain(tab_object_buttonbar::rotary4, true);
   buttonbar->set_click_text(tab_object_buttonbar::rotary1, "");
   buttonbar->set_click_text(tab_object_buttonbar::rotary2, "");
   buttonbar->set_click_text(tab_object_buttonbar::rotary3, "mode");
