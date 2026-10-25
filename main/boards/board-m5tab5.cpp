@@ -10,8 +10,10 @@ constexpr int32_t SCREENH = 720;
 lv_display_t *display;
 lv_indev_t *indev;
 
+// Without a battery fitted say full, not empty. Tell that from a flat battery (which reads 0% too, and
+// charges) by its voltage: a flat 2S battery still has several volts
 int hardware_get_battery_level() {
-  if (M5.Power.getBatteryLevel() == 0 && M5.Power.isCharging()) return 100; // no batter
+  if (M5.Power.getBatteryVoltage() < 1000) return 100;
   return M5.Power.getBatteryLevel();
 }
 
