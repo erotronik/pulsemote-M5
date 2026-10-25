@@ -26,8 +26,12 @@ void hardware_beep(int duration_ms) {
   M5.Speaker.tone(2000, duration_ms);
 }
 
+// Full brightness is more than it needs, and the most power it draws: on a PC's USB port it browned out
+constexpr uint8_t brightness_normal = 128;
+constexpr uint8_t brightness_dimmed = 32;
+
 void hardware_set_dimmed(bool dimmed) {
-  M5.Display.setBrightness(dimmed ? 32 : 255);
+  M5.Display.setBrightness(dimmed ? brightness_dimmed : brightness_normal);
 }
 
 void hardware_tft_loop() {
@@ -38,7 +42,7 @@ void hardware_tft_loop() {
 void hardware_tft_init() {
   ESP_LOGD("main", "M5.begin()");
   M5.begin();
-  M5.Display.setBrightness(255); // needed since M5 update after Apr 2026
+  M5.Display.setBrightness(brightness_normal); // needed since M5 update after Apr 2026
   M5.Speaker.begin();  // and straight off again, so the amplifier is off until the first beep
   M5.Speaker.end();
 
