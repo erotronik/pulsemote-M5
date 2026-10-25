@@ -8,7 +8,6 @@
 #include "tab-mqtt.hpp"
 #include <pulsemote-pcb.hpp>
 #include "board.hpp"
-#include <m5encoder8.hpp>
 #include "comms-bt.hpp"
 
 tab_splashscreen::tab_splashscreen() {
@@ -33,12 +32,17 @@ void tab_splashscreen::updateicons() {
 
 void tab_splashscreen::loop(bool activetab) {
   if (activetab) {
-    const uint8_t map[]={3,2,0,1};
-    for (int i = 0; i < 4; i++) {
-      buttonhue[map[i]]= ((millis()%20000*360)/20000+20*i)%360;  // cycle colours every 20s
-      pulsemote_pcb_setleds(map[i], lv_color_hsv_to_rgb(buttonhue[map[i]], 100, 50));  // rotary LED
+    // While there's nothing connected, cycle the knobs' colours every 20s, each a little on from the
+    // one to its right. Otherwise they're off
+    bool connected = false;
+    for (const auto& t : tabs)
+      if (t != this && strncmp(t->gettabname(), "wifi", 4)) connected = true;
+    for (int i = 0; i < buttonbar->nrotaries; i++) {
+      int hue = ((millis() % 20000 * 360) / 20000 + 20 * i) % 360;
+      buttonbar->set_rgb(buttonbar->rotary_order[buttonbar->nrotaries - 1 - i],
+                         connected ? lv_color_black() : lv_color_hsv_to_rgb(hue, 100, 50));
     }
-    pulsemote_pcb_setleds(4, lv_color_hsv_to_rgb(0, 0, 5));  // cherry LED (very bright)
+    buttonbar->set_rgb(tab_object_buttonbar::switch1, lv_color_hsv_to_rgb(0, 0, 5));  // cherry LED (very bright)
   }
   if (activetab && (batterycheckmillis == 0 || (millis() - batterycheckmillis) > 2000)) { // every 2 sec
     updateicons();
@@ -195,14 +199,7 @@ void tab_splashscreen::setup(void) {
   lv_obj_center(labelicons);
   lv_obj_move_foreground(icons_bg);
 
-  buttonbar = new tab_object_buttonbar(page, tab_object_buttonbar::splash_rotaries);
+  buttonbar = new tab_object_buttonbar(page, tab_object_buttonbar::splash_rotaries, tab_object_buttonbar::splash_switch_last);
 
   needs_refresh = true;
-
-#if CONFIG_HASM5ENCODER
-  auto x = new M5Encoder8(); if (x->begin()) { ESP_LOGI("splashscreen", "M5Encoder8 found"); } else { ESP_LOGI("splashscreen", "M5Encoder8 not found"); delete x; }
-      x->setLEDColor(0, 0xFF0000);  x->setLEDColor(1, 0x00FF00);x->setLEDColor(2, 0x0000FF); 
-
-#endif
-
 }

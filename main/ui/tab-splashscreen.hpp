@@ -29,7 +29,6 @@ class tab_splashscreen: public Tab {
      bool needs_refresh = false;
 
      void updateicons(void);
-     int buttonhue[tab_object_buttonbar::maxbuttons] = {};
      static void popup_add_wifi_device(void);
 
      struct FoundControl {

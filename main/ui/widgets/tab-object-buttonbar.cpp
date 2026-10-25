@@ -2,6 +2,9 @@
 #include "tab-object-buttonbar.hpp"
 #include "tab.hpp"
 #include <pulsemote-pcb.hpp>
+#if CONFIG_HASM5ENCODER
+#include <m5encoder8.hpp>
+#endif
 #include <cmath>
 
 // We don't want the default handler for the arcs as you can jump to
@@ -69,7 +72,7 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
     }
 }
 
-tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent, int rotaries) {
+tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent, int rotaries, bool switch_last) {
   nrotaries = rotaries;
   nbuttons = rotaries + 1;
   const int device_rotaries[maxrotaries] = { rotary1, rotary2, rotary3, rotary4 };
@@ -77,9 +80,11 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent, int rotaries) {
     rotary_order[i] = i < maxrotaries ? device_rotaries[i] : maxbuttons + i - maxrotaries;
   int pos = 0;
   for (int i = 0; i < nrotaries; i++) {
-    if (i == nrotaries / 2) all_order[pos++] = switch1;
+    if (i == nrotaries / 2 && !switch_last) all_order[pos++] = switch1;
     all_order[pos++] = rotary_order[i];
   }
+  if (switch_last) all_order[pos++] = switch1;
+  for (auto &p : buttonmaptoposition) p = splash_buttons;  // not on this bar
   for (pos = 0; pos < nbuttons; pos++) buttonmaptoposition[all_order[pos]] = pos;
 
   container = lv_obj_create(parent);
@@ -106,6 +111,15 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent, int rotaries) {
 
   lv_obj_set_style_pad_all(container, 0, 0);
   lv_obj_set_style_margin_all(container, 0, 0);
+#if CONFIG_HASM5ENCODER
+  // With an 8Encoder below the screen, a bar of eight lines its circles up with its knobs, which
+  // span a little less than the screen's width
+  if (encoder8_events && nbuttons == encoder8_knobs) {
+    constexpr int margin = 44;  // pixels at each end, lined up by eye on the Tab5
+    lv_obj_set_style_pad_left(container, margin, 0);
+    lv_obj_set_style_pad_right(container, margin, 0);
+  }
+#endif
 
   for (int i = 0; i < nbuttons; i++) {
     // Wrapper provides a hit-testable area for both badge and arc in a stable layout
@@ -238,6 +252,11 @@ void tab_object_buttonbar::set_onmain(int button, bool flag) {
 // leds and buttons are numbered differently
 void tab_object_buttonbar::set_rgb(int button, lv_color_t rgb) {
   pulsemote_pcb_setleds(button, rgb);
+#if CONFIG_HASM5ENCODER
+  // The 8Encoder's knobs are the controls on screen in order, so its LEDs are too
+  if (button >= 0 && button < splash_buttons && buttonmaptoposition[button] < nbuttons)
+    encoder8_set_led(buttonmaptoposition[button], rgb.red, rgb.green, rgb.blue);
+#endif
 }
 
 void tab_object_buttonbar::set_rgb_all(lv_color_t rgb) {

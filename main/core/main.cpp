@@ -16,6 +16,9 @@
 #include "tab.hpp"
 #include "lvgl-utils.h"
 #include <pulsemote-pcb.hpp>
+#if CONFIG_HASM5ENCODER
+#include <m5encoder8.hpp>
+#endif
 #include "board.hpp"
 
 lv_obj_t *tv;
@@ -81,6 +84,42 @@ void handlerotaryencoders() {
     }
   }
 }
+
+#if CONFIG_HASM5ENCODER
+// An 8Encoder's knobs are the controls on screen, in order from the left. Where that's the switch,
+// turning does nothing and pressing presses it. On a device's tab that's its five, the third the
+// switch; on the splashscreen all eight, the last Scan
+
+void handleencoder8() {
+  // On another tab, its knobs are that tab's, which sets the LEDs of those it uses. Watched for here,
+  // as lv_tabview_set_act() (the splashscreen going to a device's tab) doesn't send an event
+  static lv_obj_t *lastpage = nullptr;
+  {
+    TabLock l_lock(lvgl_mutex);
+    lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
+    if (activepage != lastpage)
+      for (int i = 0; i <= encoder8_knobs; i++) encoder8_set_led(i, 0, 0, 0);
+    lastpage = activepage;
+  }
+
+  encoder8_event_t e;
+  while (encoder8_events && xQueueReceive(encoder8_events, &e, 0)) {
+    TabLock lock(tabs_mutex);
+    TabLock l_lock(lvgl_mutex);
+    lv_obj_t *activepage = lv_obj_get_child(lv_tabview_get_content(tv),lv_tabview_get_tab_act(tv));
+    for (const auto& t : tabs) {
+      if (activepage != t->page || !t->buttonbar || e.input >= t->buttonbar->nbuttons) continue;
+      int id = t->buttonbar->all_order[e.input];
+      if (e.turn) {
+        if (id != tab_object_buttonbar::switch1) t->encoder_change(id, e.turn);
+      } else {
+        t->switch_change(id, e.pressed);
+      }
+    }
+    lv_display_trigger_activity(nullptr);  // for handlescreendimming()
+  }
+}
+#endif
 
 // this is called when the tab changes, by click or swipe.  trigger the
 // focus callback of the newly active tab (don't bother to tell the
@@ -256,6 +295,9 @@ void handlescreendimming() {
     ESP_LOGI("main", "screen %s", idle ? "dimmed" : "brightened");
     hardware_set_dimmed(idle);
     pulsemote_pcb_dimleds(idle);
+#if CONFIG_HASM5ENCODER
+    encoder8_dim_leds(idle);
+#endif
     dimmed = idle;
   }
 }
@@ -272,6 +314,9 @@ void main_loop() {
   handlehardwarecallbacks();
   handlebuttonpushes();
   handlerotaryencoders();
+#if CONFIG_HASM5ENCODER
+  handleencoder8();
+#endif
   handletabloops();
   handlescreendimming();
   printf_log_flush();

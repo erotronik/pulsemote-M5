@@ -37,12 +37,15 @@ class tab_object_buttonbar {
     static const int maxrotaries = 4;
     static const int maxbuttons = 5;
 #if CONFIG_BOARD_M5TAB5 && !CONFIG_PULSEMOTE_PCB
-    // The splashscreen shows knobs from several devices, and the Tab5's screen has room for more. It
-    // also has room for taller badges above the knobs, which are easier to touch
-    static const int splash_rotaries = 8;
+    // The splashscreen shows knobs from several devices, and the Tab5's screen has room for more: as
+    // many as an 8Encoder has knobs, the last one the switch. It also has room for taller badges above
+    // the knobs, which are easier to touch
+    static const int splash_rotaries = 7;
+    static const bool splash_switch_last = true;
     static const int badge_pad = 8;
 #else
     static const int splash_rotaries = maxrotaries;
+    static const bool splash_switch_last = false;
     static const int badge_pad = 2;  // above and below a badge's text
 #endif
 #else
@@ -51,11 +54,12 @@ class tab_object_buttonbar {
     static const int splash_buttons = splash_rotaries + 1;
 
     // rotaries is how many knobs: maxrotaries, or splash_rotaries for the splashscreen. Those past
-    // maxrotaries have the ids from maxbuttons up, and are on screen only
-    tab_object_buttonbar(lv_obj_t *parent, int rotaries = maxrotaries);
+    // maxrotaries have the ids from maxbuttons up. switch_last puts the switch after them, rather than
+    // in the middle
+    tab_object_buttonbar(lv_obj_t *parent, int rotaries = maxrotaries, bool switch_last = false);
 
     int nrotaries, nbuttons;
-    int all_order[splash_buttons];      // the ids in their order on screen, the switch in the middle
+    int all_order[splash_buttons];      // the ids in their order on screen
     int rotary_order[splash_rotaries];  // the knobs' ids, in order
 
     lv_obj_t *container;

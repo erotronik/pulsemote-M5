@@ -4,6 +4,9 @@
 
 #include <M5Unified.h>
 #include <esp_heap_caps.h>
+#if CONFIG_HASM5ENCODER
+#include <m5encoder8.hpp>
+#endif
 constexpr int32_t SCREENW = 1280;
 constexpr int32_t SCREENH = 720;
 
@@ -47,6 +50,20 @@ void hardware_tft_init() {
   M5.Display.setBrightness(brightness_normal); // needed since M5 update after Apr 2026
   M5.Speaker.begin();  // and straight off again, so the amplifier is off until the first beep
   M5.Speaker.end();
+
+#if CONFIG_HASM5ENCODER
+  // An 8Encoder on Port A (G53 SDA, G54 SCL). M5Unified only pulls the port's 5V enable up, and the
+  // port then has 3.3V: drive it. Not off and on again first, to restart a hung encoder: that
+  // blanked the screen, leaving only the backlight. M5.Ex_I2C has those pins, and the encoder needs
+  // them to itself
+  auto &ioexp = M5.getIOExpander(0);
+  ioexp.digitalWrite(2, true);  // EXT5V_EN
+  ioexp.setHighImpedance(2, false);
+  ioexp.setDirection(2, true);
+  M5.Ex_I2C.release();
+  vTaskDelay(pdMS_TO_TICKS(300));  // for the encoder to start up
+  encoder8_begin(GPIO_NUM_53, GPIO_NUM_54);
+#endif
 
   M5.Display.setRotation(3);
   M5.Display.setSwapBytes(true);

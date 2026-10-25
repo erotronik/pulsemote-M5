@@ -21,9 +21,11 @@ config PULSEMOTE_PCB
         If you have the Pulsemote-M5 PCB attached
 
 config HASM5ENCODER
-    bool "Has a M5Encoder8 board"
+    bool "Has an M5Stack Unit 8Encoder on Port A"
+    depends on BOARD_M5TAB5
+    default y
     help
-        If you have a M5Encoder8 board
+        Use an M5Stack Unit 8Encoder plugged into the Tab5's Port A, if there is one
 
 config HASWIFICOPRO
     bool "Has a espat coprocessor for wifi"
