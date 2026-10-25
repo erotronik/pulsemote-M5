@@ -20,7 +20,7 @@ idf.py menuconfig (check out the pulsemote board section)
 idf.py -p /dev/ttyACM0 build flash monitor
 ```
 
-### If you want more than 3 Bluetooth devices at the same time
+Note: If you want more than 3 Bluetooth devices at the same time
 
 Unfortunately the C6 coprocessor is compiled to only support 3. You need to reflash it. Perhaps
 you can do this via the 'OTA' method, but untested, I did it flashing via hardware.
