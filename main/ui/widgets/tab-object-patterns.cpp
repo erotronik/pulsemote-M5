@@ -9,6 +9,8 @@ void tab_object_patterns::selectpattern(lv_obj_t *parent, const char *patterns[]
   hide();
   lv_obj_set_style_text_font(dd, LV_FONT_GET(16), LV_PART_MAIN);
   lv_obj_set_style_text_font(lv_dropdown_get_list(dd), LV_FONT_GET(16), LV_PART_MAIN);
+  // The theme caps the list at 2 inches, a third of the Tab5's screen: let it go down to the bottom
+  lv_obj_set_style_max_height(lv_dropdown_get_list(dd), LV_VER_RES, LV_PART_MAIN);
   lv_obj_set_align(dd, LV_ALIGN_TOP_LEFT);
   lv_obj_set_size(dd, LV_PCT(100), LV_SCALE(dropdown_height));  // match the timer box width
 
