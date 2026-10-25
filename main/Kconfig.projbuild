@@ -1,0 +1,35 @@
+menu "Pulsemote Board selection"
+
+choice BOARD
+    prompt "Target board"
+    default BOARD_M5TAB5
+help
+    Select the board this firmware is built for.
+
+config BOARD_M5TAB5
+    bool "M5TAB5"
+
+config BOARD_M5CORES3
+    bool "M5CoreS3"
+
+endchoice
+
+config PULSEMOTE_PCB
+    bool "PulseMote PCB variant"
+    default y if BOARD_M5CORES3
+    help
+        If you have the Pulsemote-M5 PCB attached
+
+config HASM5ENCODER
+    bool "Has a M5Encoder8 board"
+    help
+        If you have a M5Encoder8 board
+
+config HASWIFICOPRO
+    bool "Has a espat coprocessor for wifi"
+    default y if BOARD_M5CORESS3
+    help
+        If you have a esp32c6 connected for wifi via esp-at
+
+endmenu
+

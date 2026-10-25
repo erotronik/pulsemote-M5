@@ -1,0 +1,264 @@
+#include <memory>
+#include "device-funosr.hpp"
+#include "tab-funosr.hpp"
+#include "../../ui/tab.hpp"
+#include "../../core/lvgl-utils.h"
+#include <cmath>
+
+tab_funosr::tab_funosr() {
+  ison = false;
+  timer = new tab_object_timer(false);
+  rand_timer = new tab_object_timer(true);
+  sync = new tab_object_sync();
+  modeselect = new tab_object_modes();
+  modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
+      ison = active_on;
+      if (active_on) {
+          send_funosr();
+          send_sync_data(SYNC_ON);
+      } else {
+          send_stop();
+          send_sync_data(SYNC_OFF);
+      }
+  });
+  page = nullptr;
+  old_last_change = last_change = D_NONE;
+  segbar = nullptr;
+  device = nullptr;
+  knob_speed = 2;
+  knob_stroke = 20;
+  knob_depth = 100;
+}
+tab_funosr::~tab_funosr() {}
+
+void tab_funosr::send_funosr() {
+  device_funosr *md = static_cast<device_funosr *>(device);
+  if (!md) return;
+  int smax = std::min(99,100- knob_depth);
+  int smin = std::min(99,std::max(0,100 - (knob_depth - knob_stroke)));
+  int duration = (int)(100 * std::pow((5000.0 / 100.0), (100.0 - knob_speed) / 100.0));
+  // — smaller denominators (like 70.0) make it fall faster; larger flatten it out.
+  sprintf(msg,"minmax %d %d %d", smin, smax, duration);
+  ESP_LOGD("stroke","sending %s",msg);
+  md->funosr_stroke(smin, smax, duration);
+}
+
+void tab_funosr::send_stop() {
+  goto_max();
+}
+
+void tab_funosr::goto_min() {
+  device_funosr *md = static_cast<device_funosr *>(device);
+  if (!md) return;
+  md->funosr_goto(std::min(99,std::max(0,100- (knob_depth - knob_stroke))));
+}
+
+void tab_funosr::goto_max() {
+  device_funosr *md = static_cast<device_funosr *>(device);
+  if (!md) return;
+  md->funosr_goto(std::min(99,100 - knob_depth));
+}
+
+void tab_funosr::encoder_change(int sw, int change) {
+  if (sw == tab_object_buttonbar::rotary4) {
+    if (modeselect->has_focus() || rand_timer->has_focus() || timer->has_focus()) {
+      modeselect->rotary_change(change);
+      rand_timer->rotary_change(change);
+      timer->rotary_change(change);
+    }
+  }
+  if (sw == tab_object_buttonbar::rotary1) {
+    knob_speed = std::min(100,std::max(0,knob_speed+change*2));
+    if (knob_speed <2) knob_speed = 2;
+    if (ison) send_funosr();
+  }
+  if (sw == tab_object_buttonbar::rotary2) {
+    knob_stroke = std::min(100,std::max(0,knob_stroke+change*4));
+    if (knob_depth < knob_stroke)
+      knob_depth = knob_stroke;
+    if (ison) send_funosr();
+  }
+  if (sw == tab_object_buttonbar::rotary3 ) {
+    knob_depth = std::min(100,std::max(0,knob_depth+change*4));
+    if (knob_depth < knob_stroke)
+      knob_stroke = knob_depth;
+    if (ison) send_funosr();
+  }
+  need_knob_refresh = true;
+}
+
+void tab_funosr::switch_change(int sw, bool value) {
+  need_refresh = true;
+
+  if (sw == tab_object_buttonbar::rotary2 && value) {
+    goto_min();
+    ison = false;
+    main_mode = MODE_MANUAL;
+    modeselect->reset();
+    send_sync_data(SYNC_OFF);
+  }
+  if (sw == tab_object_buttonbar::rotary3 && value) {
+    goto_max();
+    ison = false;
+    main_mode = MODE_MANUAL;
+    modeselect->reset();
+    send_sync_data(SYNC_OFF);
+  }
+
+  if (sw == tab_object_buttonbar::rotary4 && value) {
+    if (modeselect->has_focus()) {
+      if (!modeselect->highlight_next_field()) {  // false then we left focus                          
+       if (main_mode == MODE_RANDOM)
+          rand_timer->highlight_next_field();
+        else if (main_mode == MODE_TIMER)
+          timer->highlight_next_field();
+      }
+    } else if (rand_timer->has_focus()) {
+      rand_timer->highlight_next_field();
+    } else if (timer->has_focus()) {
+      timer->highlight_next_field();
+    } else {
+      modeselect->highlight_next_field();
+    }
+  }
+
+  if (main_mode == MODE_MANUAL) {
+    if (sw == tab_object_buttonbar::switch1 && value && ison == 0) {
+      ison = true;
+      send_funosr();
+      send_sync_data(SYNC_ON);
+    } else if (sw == tab_object_buttonbar::switch1 && value && ison == 1) {
+      ison = false;
+      send_stop();
+      send_sync_data(SYNC_OFF);
+    }
+  }
+  if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && value) {
+    if (ison) {
+      ison = false;
+      send_stop();
+      send_sync_data(SYNC_OFF);
+    }
+    main_mode = MODE_MANUAL;
+    modetimer->set_is_on(false);
+    modeselect->reset();
+  }
+}
+
+// another device can push data to us when they connect, disconnect, turn on, turn off
+
+void tab_funosr::gotsyncdata(Tab *t, sync_data syncstatus) {
+  ESP_LOGD("funosr", "got sync data %d from %s", syncstatus, t->gettabname());
+  if (syncstatus == SYNC_ALLOFF) {
+    main_mode = MODE_MANUAL;
+    modeselect->reset();
+    ison = false;
+    send_stop();
+    need_refresh = true;
+  }
+  if (main_mode == MODE_SYNC) {
+    bool isinverted = sync->isinverted();
+
+  if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
+      ison = true;
+      send_funosr();
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted) ||
+               syncstatus == SYNC_BYE) {  // the source has gone away
+      ison = false;
+      send_stop();
+    }
+    need_refresh = true;
+  }
+}
+
+void tab_funosr::loop(bool activetab) {
+
+  if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
+      need_refresh = true;
+  }
+
+  if (activetab && need_refresh) {
+    ESP_LOGD("funosr", "refresh active tab from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
+
+    status->set_active(ison);
+
+    if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
+      int seconds = modetimer->get_remaining_seconds();
+      status->set_text_fmt("%.10s\n%s: %d", "Stroke", ison?"On":"Off", seconds);
+    } else {
+      status->set_text_fmt("%.10s\n%s", "Stroke", ison?"On":"Off");
+    }
+    need_refresh = false;
+    need_knob_refresh = true;
+  }
+  if (need_knob_refresh) {
+
+    need_knob_refresh = false;
+ 
+    buttonbar->set_level(tab_object_buttonbar::rotary1, "Speed", knob_speed);
+    buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
+    if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(0, 100, knob_speed): lv_color_hsv_to_rgb(0, 0, 0));
+
+    buttonbar->set_level(tab_object_buttonbar::rotary2, "Stroke", knob_stroke);
+    if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(60, 100, knob_stroke));
+
+    buttonbar->set_level(tab_object_buttonbar::rotary3, "Depth", knob_depth);
+    if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary3, lv_color_hsv_to_rgb(120, 100, knob_depth));
+
+    if (activetab) segbar->set_range(knob_depth - knob_stroke, knob_depth);
+    buttonbar->set_click_text(tab_object_buttonbar::rotary3,"Go In");
+    buttonbar->set_click_text(tab_object_buttonbar::rotary2,"Go Out");
+
+    if (main_mode == MODE_MANUAL) {
+      buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
+      buttonbar->set_value(tab_object_buttonbar::switch1,ison? 100:0);
+    } else {
+      buttonbar->set_text(tab_object_buttonbar::switch1,"Stop");
+      buttonbar->set_value(tab_object_buttonbar::switch1,0);
+    }
+
+    if (main_pattern == 0 || ((main_mode == MODE_RANDOM || main_mode == MODE_TIMER) && (rand_timer->has_focus() || timer->has_focus()))) {
+      buttonbar->set_value(tab_object_buttonbar::rotary4, 0);
+      buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(0, 0, 0));
+    }
+  }
+}
+
+
+void tab_funosr::focus_change(bool focus) {
+  ESP_LOGD("funosr", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
+  need_refresh = true;
+  if (buttonbar) buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
+}
+
+
+void tab_funosr::tab_create() {
+  create_standard_page(funosr_main_modes_c);
+  create_standard_widgets();
+
+  buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
+
+  segbar = new tab_object_segbar(page, LV_SCALE(150), LV_SCALE(12));
+  segbar->align(LV_ALIGN_TOP_LEFT, LV_SCALE(4), LV_SCALE(72));
+}
+
+
+// return false if we removed ourselves from the connected devices list
+bool tab_funosr::hardware_changed(void) {
+  need_refresh = true;
+  if (last_change == D_CONNECTING) {
+    printf_log("Connecting %s\n", device->getShortName());
+  } else if (last_change == D_CONNECTED) {
+    tab_create();
+    send_sync_data(SYNC_START);
+    send_sync_data(SYNC_OFF);
+    ison = false;
+    printf_log("Connected %s\n", device->getShortName());
+  } else if (last_change == D_DISCONNECTED) {
+    printf_log("Disconnected %s\n", device->getShortName());
+    send_sync_data(SYNC_BYE);
+    return false;
+  }
+  return true;
+}

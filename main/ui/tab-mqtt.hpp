@@ -1,0 +1,34 @@
+#pragma once
+
+#include "tab.hpp"
+#include "device.hpp"
+#include "lvgl-utils.h"
+#include "config.h"
+
+class tab_mqtt;
+
+class tab_mqtt : public Tab {
+  public:
+    tab_mqtt();
+    void loop(bool activetab) override;
+    const char *geticons(void) override;
+    const char* gettabname(void) override;
+    void setup(void) override;
+    void gotsyncdata(Tab *t, sync_data status) override;
+    void popup_add_device();
+
+  private:
+    static void popup_add_device_ok_event_cb(lv_event_t * e);
+    static void popup_add_device_list_event_handler(lv_event_t * e);
+    static void popup_add_device_close_event_cb(lv_event_t * e);
+    static void popup_add_device_scan_event_cb(lv_event_t * e);
+
+    bool popup_add_device_open = false;
+    lv_obj_t * selected_btn;
+    lv_style_t style_selected;
+    lv_obj_t * popup_add_device_modal;
+
+    //void callback(char* topic, uint8_t* payload, unsigned int length);
+    //QueueHandle_t events;
+};
+

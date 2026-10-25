@@ -1,0 +1,18 @@
+## Dependencies from ESP Component Registry  
+dependencies:
+  m5stack/M5Unified:
+    git: https://github.com/m5stack/M5Unified.git
+    version: 80922a5e3e81b216bbe93f2eb3bfbc9add0f2af4
+  m5stack/M5GFX:
+    git: https://github.com/m5stack/M5GFX
+    version: 0.2.18
+  h2zero/esp-nimble-cpp: ^2.3.4
+  lvgl/lvgl: 
+    git: https://github.com/lvgl/lvgl.git
+    version: v9.2.0
+  bblanchon/ArduinoJson: ^7.0.0
+  espressif/mqtt: "*"
+  erotronik/CoyoStim:
+    git: https://github.com/erotronik/CoyoStim.git
+    version: espidf
+    

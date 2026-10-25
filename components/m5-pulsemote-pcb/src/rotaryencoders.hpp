@@ -1,0 +1,57 @@
+/*
+ * RotaryEncOverMCP.h
+ *
+ *  Created on: 21.05.2018
+ *      Author: Maxi
+ */
+#pragma once
+
+/* Describes new objects based on the Rotary and Adafruit MCP23017 library */
+#include "mcp23017.hpp"
+#include <Rotary.h>
+
+/* function pointer definition */
+typedef void (*rotaryActionFunc)(bool clockwise, int id);
+
+/* We describe an object in which we instantiate a rotary encoder
+ * over an I2C expander.
+ * It holds the information:
+ *  * to which MCP object it's connected
+ *  * which pin it is connected to
+ *  * what function to call when there is a change
+ * */
+class RotaryEncOverMCP {
+public:
+    RotaryEncOverMCP(MCP23017* mcp, uint8_t pinA, uint8_t pinB, rotaryActionFunc actionFunc = nullptr, int id = 0)
+    : rot(pinA, pinB), mcp(mcp),
+      pinA(pinA), pinB(pinB),
+      actionFunc(actionFunc), id(id) {
+    }
+
+    /* Initialize object in the MCP */
+    void init() {
+    }
+
+    /* On an interrupt, can be called with the value of the GPIOAB register (or INTCAP) */
+    void feedInput(uint16_t gpioAB) {
+        uint8_t pinValA = (gpioAB >> pinA) &1;
+        uint8_t pinValB = (gpioAB >> pinB) &1;
+        uint8_t event = rot.process(pinValA, pinValB);
+        if(event == DIR_CW || event == DIR_CCW) {
+            //clock wise or counter-clock wise
+            bool clockwise = event == DIR_CW;
+            //Call into action function if registered
+            if(actionFunc) {
+                actionFunc(clockwise, id);
+            }
+        }
+    }
+
+private:
+    Rotary rot;                         /* the rotary object which will be created*/
+    MCP23017* mcp = nullptr;   /* pointer the I2C GPIO expander it's connected to */
+    uint8_t pinA = 0;
+    uint8_t pinB = 0;           /* the pin numbers for output A and output B */
+    rotaryActionFunc actionFunc = nullptr;  /* function pointer, will be called when there is an action happening */
+    int id = 0;                             /* optional ID for identification */
+};

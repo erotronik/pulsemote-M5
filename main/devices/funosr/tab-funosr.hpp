@@ -1,0 +1,32 @@
+#pragma once
+
+#include "lvgl-utils.h"
+#include "tab.hpp"
+#include "tab-object-segbar.hpp"
+
+class tab_funosr : public Tab {
+ public:
+  tab_funosr();
+  ~tab_funosr();
+  void encoder_change(int sw, int change) override;
+  void switch_change(int sw, bool state) override;
+  void loop(bool activetab) override;
+  void focus_change(bool focus) override;
+  bool hardware_changed(void) override;
+  void gotsyncdata(Tab *t, sync_data status) override;
+
+  const char *funosr_main_modes_c = "Manual\nTimer\nRandom\nSync";
+  tab_object_segbar *segbar;
+
+ private:
+  int main_pattern = 0;
+  void tab_create(void);
+  bool need_knob_refresh = false;
+  bool ison;
+  int knob_speed, knob_stroke, knob_depth;
+  void send_funosr();
+  void send_stop();
+  void goto_min();
+  void goto_max();
+  char msg[200];
+};

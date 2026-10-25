@@ -1,0 +1,151 @@
+#include <NimBLEDevice.h>
+#include <esp_log.h>
+
+#include "comms-bt.hpp"
+#include "device-bubblebottle.hpp"
+#include "device.hpp"
+#include <functional>
+
+NimBLEUUID BUBBLEBOTTLE_SERVICE_BLEUUID("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+NimBLEUUID BUBBLEBOTTLE_UUID_RX("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+NimBLEUUID BUBBLEBOTTLE_UUID_TX("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
+
+bool device_bubblebottle::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
+   if (advertisedDevice->isAdvertisingService(BUBBLEBOTTLE_SERVICE_BLEUUID)) {
+    std::string md = advertisedDevice->getManufacturerData();
+    if (md.size() >= 2 && (uint8_t)md[0] == 0xf1 && (uint8_t)md[1] == 0xf1)
+      return true;
+   }
+   return false;
+}
+
+void device_bubblebottle::set_callback(device_callback c) { 
+  update_callback = c; 
+}
+
+void device_bubblebottle::notify(type_of_change change) {
+  if (update_callback) update_callback(change, this);
+}
+
+void device_bubblebottle::connected_callback() {
+  ESP_LOGI(getShortName(), "Client onConnect");
+}
+
+void device_bubblebottle::disconnected_callback(int reason) {
+  is_connected = false;
+  ESP_LOGI(getShortName(), "Client onDisconnect reason: %d", reason);
+  notify(D_DISCONNECTED);
+}
+
+class DeviceBubblebottleNimBLEClientCallback : public NimBLEClientCallbacks {
+ public:
+  DeviceBubblebottleNimBLEClientCallback(device_bubblebottle* instance) {
+    device_bubblebottle_instance = instance;
+  }
+
+  void onConnect(NimBLEClient* pclient){
+    device_bubblebottle_instance->connected_callback();
+  }
+
+  // arduino
+  void onDisconnect(NimBLEClient* pclient) {
+    device_bubblebottle_instance->disconnected_callback(0);
+  }
+
+  // esp-idf
+  void onDisconnect(NimBLEClient* pclient, int reason) {
+    device_bubblebottle_instance->disconnected_callback(reason);
+  }
+
+ private:
+  device_bubblebottle* device_bubblebottle_instance;
+};
+
+device_bubblebottle::device_bubblebottle() {
+  events = xQueueCreate(10,sizeof(int));
+}
+
+device_bubblebottle::~device_bubblebottle() {
+  if (bleClient) {
+    ble_delete_client(bleClient);
+  }
+  vQueueDelete(events);
+}
+
+void device_bubblebottle::ble_bubblebottle_send(const char* newValue) {
+  if (is_connected) {
+    ESP_LOGI("bubblebottle","Sending %s" ,newValue);
+    device_bubblebottle::uuid_tx_Characteristic->writeValue(newValue, strlen(newValue));
+  } else 
+    ESP_LOGE("bubblebottle","cant send not connected");
+}
+
+// Messages are lines, "*B" for breath in and "*R" for release. A packet can hold more than one, and
+// the end of a packet also ends a line
+void device_bubblebottle::ble_mk_callback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+  size_t start = 0;
+  for (size_t i = 0; i <= length; i++) {
+    if (i < length && pData[i] != '\n') continue;
+    if (i - start >= 2 && pData[start] == '*') {
+      ESP_LOGD("bottlecb","%c", pData[start + 1]);
+      int state = 0;
+      if (pData[start + 1] == 'B')
+        state = 1;
+      else if (pData[start + 1] == 'R')
+        state = 2;
+      if (state) xQueueSend(events, &state, 0);
+    }
+    start = i + 1;
+  }
+}
+
+bool device_bubblebottle::connect_to_device(NimBLEAdvertisedDevice* device) {
+  ESP_LOGI(getShortName(), "Connecting");
+
+  if (!bleClient) {
+    bleClient = NimBLEDevice::createClient();
+    bleClient->setClientCallbacks(new DeviceBubblebottleNimBLEClientCallback(this));
+  }
+  notify(D_CONNECTING);
+  bool res = true;
+
+  ESP_LOGI(getShortName(), "Will try to connect to %s",device->getAddress().toString().c_str());
+
+  if (!bleClient->connect(device)) {
+    ESP_LOGE(getShortName(), "Connection failed");
+    return false;
+  }
+  ESP_LOGI(getShortName(), "Connection established");
+  res = ble_get_service(bubblebottleService, bleClient, BUBBLEBOTTLE_SERVICE_BLEUUID);
+  if (res == false) {
+    ESP_LOGE(getShortName(), "Missing service");
+    bleClient->disconnect();
+    return false;
+  }
+
+  res = ble_get_characteristic(bubblebottleService, uuid_rx_Characteristic, BUBBLEBOTTLE_UUID_RX,
+      std::bind(&device_bubblebottle::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+
+  if (res == false) {
+    ESP_LOGE(getShortName(), "Missing rx characteristic");
+    bleClient->disconnect();
+    return false;
+  }
+  // don't really need to transmit to it, so don't bother with the tx characteristic
+  #if 0
+  res = getCharacteristic(
+      bubblebottleService, uuid_tx_Characteristic, BUBBLEBOTTLE_UUID_TX, nullptr);
+
+  if (res == false) {
+    ESP_LOGE(getShortName(), "Missing tx characteristic");
+    bleClient->disconnect();
+    return false;
+  }
+  #endif
+
+  ESP_LOGI(getShortName(), "Found services and characteristics");
+  is_connected = true;
+
+  notify(D_CONNECTED);
+  return true;
+}

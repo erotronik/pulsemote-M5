@@ -1,0 +1,356 @@
+#include <NimBLEDevice.h>
+#include <esp_log.h>
+
+#include "comms-bt.hpp"
+#include <device-mk312.hpp>
+#include <device.hpp>
+#include <functional>
+#include <algorithm>
+
+// This code works with a MK-312BT box that has a bluetooth serial BLE board installed
+// or with an original ET-312B that has a bluetooth serial dongle attached. In both
+// cases the name of the device must be "MK" or have a "312" inside it.
+//
+// I connected a cheap BT578v3 to an ET-312B. To start you need to connect it to a PC
+// and issue a command like AT+NAMBET312\r\n to set the name and AT+BAUD5 to set it to
+// 19200 (it defaults to 9600) see http://www.irxon.com/pdf/docs/BT578_V3_EN.pdf
+
+NimBLEUUID MK312_SERVICE_BLEUUID("0000ffe0-0000-1000-8000-00805f9b34fb");
+NimBLEUUID MK312_UUID_RXTX("0000ffe1-0000-1000-8000-00805f9b34fb");
+
+bool device_mk312::is_device(const NimBLEAdvertisedDevice* advertisedDevice) {
+  if (advertisedDevice->isAdvertisingService(MK312_SERVICE_BLEUUID)) {
+    // any BLE UART will match this so only try to connect to something with name MK or 312 in the name
+    if (strstr(advertisedDevice->getName().c_str(),"312")) return true;
+    if (!strcmp(advertisedDevice->getName().c_str(),"MK")) return true;
+  }
+  return false;
+}
+
+void device_mk312::set_callback(device_callback c) { 
+  update_callback = c; 
+}
+
+void device_mk312::notify(type_of_change change) {
+  if (update_callback) update_callback(change, this);
+}
+
+void device_mk312::connected_callback() {
+  ESP_LOGI(getShortName(), "Client onConnect");
+}
+
+void device_mk312::disconnected_callback(int reason) {
+  is_connected = false;
+  ESP_LOGI(getShortName(), "Client onDisconnect reason: %d", reason);
+  // notifyStream is kept until we're deleted: the tab's task may be reading it right now
+  notify(D_DISCONNECTED);
+}
+
+class DeviceMK312NimBLEClientCallback : public NimBLEClientCallbacks {
+ public:
+  DeviceMK312NimBLEClientCallback(device_mk312* instance) {
+    device_mk312_instance = instance;
+  }
+
+  void onConnect(NimBLEClient* pclient) {
+    device_mk312_instance->connected_callback();
+  }
+
+  // arduino
+  void onDisconnect(NimBLEClient* pclient) {
+    device_mk312_instance->disconnected_callback(0);
+  }
+
+  // esp-idf
+  void onDisconnect(NimBLEClient* pclient, int reason) {
+    device_mk312_instance->disconnected_callback(reason);
+  }
+
+ private:
+  device_mk312* device_mk312_instance;
+};
+
+device_mk312::device_mk312() {}
+
+device_mk312::~device_mk312() {
+  if (bleClient) {
+    ble_delete_client(bleClient);
+  }
+  // After the client, so no notification can arrive for it
+  if (notifyStream) {
+    vStreamBufferDelete(notifyStream);
+    notifyStream = nullptr;
+  }
+}
+
+static void venerate_logger(void* ctx, const char* msg) {
+  ESP_LOGD("Venerate", "%s", msg);
+}
+
+void device_mk312::etbox_flushcb(void) {
+  ESP_LOGD("mk312","bt write %d bytes core%d",mktx_n, xPortGetCoreID());
+
+  // response=false is needed for Nimble 2
+  //
+  // Note that Many BLE UART firmwares (especially the cheap serial bridges) are much happier when you use 
+  // write-without-response for the TX path, and they can behave oddly if you do write-with-response on the 
+  // same RX/TX characteristic. We need this otherwise it fails with the MK312.
+
+  device_mk312::uuid_rxtx_Characteristic->writeValue(mktx, mktx_n,false);
+  mktx_n = 0;
+}
+
+void device_mk312::etbox_txcb(uint8_t c) {
+  mktx[mktx_n++] = c;
+  if (mktx_n == mktx_maxlen) etbox_flushcb();
+}
+
+// Throw away anything received but not read, so it isn't taken as the reply to the next message
+void device_mk312::etbox_discardcb(void) {
+  if (notifyStream) xStreamBufferReset(notifyStream);
+}
+
+int device_mk312::etbox_rxcb(char* p, int x) {
+  if (!notifyStream || !p || x <= 0) return 0;
+  size_t n = xStreamBufferReceive(notifyStream, p, (size_t)x, pdMS_TO_TICKS(200));
+  return (int)n;
+}
+
+bool device_mk312::connected() {
+  if (!is_connected) return false;
+  return BOX.isconnected();
+}
+
+void device_mk312::etbox_setbyte(uint16_t address, uint8_t data) {
+  if (BOX.isconnected()) BOX.setbyte(address, data);
+}
+
+uint8_t device_mk312::etbox_getbyte(uint16_t address) {
+  if (BOX.isconnected()) return BOX.getbyte(address);
+  return 0;
+}
+
+void device_mk312::set_mode(int p) {
+  int q = p + ETMODE_waves;
+  if (p == etmodes_potluck) 
+    q = potluck[rand()%potluck_n];
+  ESP_LOGD("set_mode","set mode %d",q);
+  etbox_setbyte(ETMEM_modesplit, q );
+  etbox_setbyte(ETMEM_runcommand, ETCOMMAND_SELECTNEWMODE);
+  etbox_setbyte(ETMEM_runcommand2, ETCOMMAND_EXITMENU); // redraw
+
+  vTaskDelay(pdMS_TO_TICKS(180));
+  lastvalidmode = p + ETMODE_waves;
+
+  // The new mode has its own MA range, and the box won't work out MA itself while the panel is locked
+  if (ma_control) etbox_refresh_ma();
+}
+
+void device_mk312::next_mode() {
+  etbox_setbyte(ETMEM_runcommand, ETCOMMAND_SWITCHTONEXTMODE);
+  get_mode();
+}
+
+// The last mode known, as an index into etmodes. The box has modes the table doesn't (User5-7):
+// they show as Waves rather than reading past the end of it
+int device_mk312::get_last_mode() {
+  int index = lastvalidmode - ETMODE_waves;
+  if (index < 0 || index >= etmodes_n) return 0;
+  return index;
+}
+
+int device_mk312::get_mode() {
+  // BOX.getbyte(), not etbox_getbyte(): that returns uint8_t, so a failed read (-1) looks like 255
+  int mode = BOX.isconnected() ? BOX.getbyte(ETMEM_mode) : -1;
+  ESP_LOGD("get_mode","get mode %d",mode);
+  if (mode != -1) lastvalidmode = mode;
+  return get_last_mode();
+}
+
+// The mode the box is set to, as an index into etmodes, or -1 if it can't be read or isn't one of
+// them (User5-7 have no entry)
+int device_mk312::etbox_read_mode(void) {
+  if (!BOX.isconnected()) return -1;
+  int mode = BOX.getbyte(ETMEM_mode);
+  if (mode < ETMODE_waves || mode - ETMODE_waves >= etmodes_potluck) return -1;
+  return mode - ETMODE_waves;
+}
+
+void device_mk312::etbox_on(int mode) {
+  if (mode == -1) mode = get_mode();
+  set_mode(mode);
+  lastvalidmode = mode+ETMODE_waves;
+}
+
+void device_mk312::etbox_off(void) {
+  etbox_setbyte(ETMEM_runcommand, ETCOMMAND_INITMODULE);
+  etbox_setbyte(ETMEM_runcommanddata, 0x64);  // 8 spaces over the mode
+  etbox_setbyte(ETMEM_runcommand2, ETCOMMAND_LCDWRITESTRING);
+}
+
+void device_mk312::etbox_setlevela(uint8_t data) {
+  etbox_setbyte(ETMEM_knoba, (data * 256+99) / 100); // Round up to match the display
+}
+
+void device_mk312::etbox_setlevelb(uint8_t data) {
+  etbox_setbyte(ETMEM_knobb, (data * 256+99) / 100); // Round up to match the display
+}
+
+// $400f is the box's register r15: bit 0 turns off the front panel pots (A, B and MA), the other
+// bits are used by mode programs and linked boxes, so only change bit 0
+void device_mk312::etbox_setpanellock(bool x) {
+  if (!BOX.isconnected()) return;
+  int flags = BOX.getbyte(ETMEM_panellock);
+  if (flags < 0) return;
+  etbox_setbyte(ETMEM_panellock, x ? (flags | 0x01) : (flags & ~0x01));
+
+  // Locking the panel also stops the box reading its MA knob, so take over MA from where it is now
+  ma_control = x;
+  ma_position = -1;
+  if (ma_control) etbox_refresh_ma();
+}
+
+// The box works out MA from its knob as min + (255 - knob) * (max - min) / 255, where min and max
+// ($4086, $4087) are set by each mode, and the same min and max mean the mode doesn't use MA.
+
+bool device_mk312::read_ma_range(void) {
+  int min = BOX.getbyte(ETMEM_knobmamin);
+  int max = BOX.getbyte(ETMEM_knobmamax);
+  if (min < 0 || max < 0) return false;
+  ma_min = min;
+  ma_max = max;
+  return true;
+}
+
+void device_mk312::send_ma(void) {
+  if (ma_position < 0 || ma_min == ma_max) return;
+  int knob = 255 - (ma_position * 255 + 49) / 99;
+  etbox_setbyte(ETMEM_knobmaset, ma_min + knob * (ma_max - ma_min) / 255);
+}
+
+// Read the mode's MA range again, and set MA for it. The first time, start from the box's value.
+// Unless always_send, MA is only sent if the range has changed (e.g. the mode was changed on the box).
+void device_mk312::etbox_refresh_ma(bool always_send) {
+  int old_min = ma_min, old_max = ma_max;
+  if (!ma_control || !BOX.isconnected() || !read_ma_range() || ma_min == ma_max) return;
+
+  if (ma_position < 0) {
+    int value = BOX.getbyte(ETMEM_knobmaset);
+    if (value < 0) return;
+    int knob = std::min(255, std::max(0, (value - ma_min) * 255 / (ma_max - ma_min)));
+    ma_position = ((255 - knob) * 99 + 127) / 255;
+  } else if (!always_send && ma_min == old_min && ma_max == old_max) {
+    return;
+  }
+  send_ma();
+}
+
+// The box's Bluetooth module can stay connected when the box is off. Then nothing answers the next
+// command, Venerate marks the session as not connected, and only a disconnect would remove the
+// tab: so disconnect.
+void device_mk312::check_box_answering(void) {
+  if (!box_answered || !is_connected || dropping || !bleClient || BOX.isconnected()) return;
+
+  ESP_LOGW(getShortName(), "box stopped answering, disconnecting");
+  dropping = true;
+  bleClient->disconnect();
+}
+
+int device_mk312::etbox_get_ma(void) {
+  if (ma_min == ma_max) return -1;
+  return ma_position;
+}
+
+void device_mk312::etbox_set_ma(int position) {
+  if (!ma_control || ma_position < 0) return;
+  ma_position = std::min(99, std::max(0, position));
+  send_ma();
+}
+
+void device_mk312::ble_mk_callback(
+    BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData,
+    size_t length, bool isNotify) {
+  ESP_LOGD(getShortName(), "ble callback %d bytes from core%d",length, xPortGetCoreID());
+  if (!isNotify || !notifyStream || !pData || length == 0) return;
+
+  size_t pushed = xStreamBufferSend(notifyStream, pData, length, 0);
+  if (pushed != length) {
+    ESP_LOGW(getShortName(), "notifyStream full: dropped %u bytes", (unsigned)(length - pushed));
+  }
+}
+
+bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
+  ESP_LOGI(getShortName(), "Connecting core%d", xPortGetCoreID());
+
+  if (notifyStream) {
+    xStreamBufferReset(notifyStream);
+  } else {
+    notifyStream = xStreamBufferCreate(NOTIFY_STREAM_SIZE, 1 /* trigger level */);
+  }
+  if (!notifyStream) {
+    ESP_LOGE(getShortName(), "Failed to create notifyStream");
+    return false;
+  }
+
+  if (!bleClient) {
+    bleClient = NimBLEDevice::createClient();
+    bleClient->setClientCallbacks(new DeviceMK312NimBLEClientCallback(this));
+  }
+  notify(D_CONNECTING);
+  bool res = true;
+
+  ESP_LOGI(getShortName(), "Will try to connect to %s", device->getAddress().toString().c_str());
+
+  if (!bleClient->connect(device)) {
+    ESP_LOGE(getShortName(), "Connection failed");
+    return false;
+  }
+  ESP_LOGI(getShortName(), "Connection established");
+  
+  res = ble_get_service(mk312Service, bleClient, MK312_SERVICE_BLEUUID);
+  if (!res) {
+    ESP_LOGE(getShortName(), "Missing service");
+    bleClient->disconnect();
+    return false;
+  }
+
+  res = ble_get_characteristic(mk312Service, uuid_rxtx_Characteristic, MK312_UUID_RXTX,
+      std::bind(&device_mk312::ble_mk_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+  if (!res) {
+    ESP_LOGE(getShortName(), "Missing characteristic");
+    bleClient->disconnect();
+    return false;
+  }
+  ESP_LOGI(getShortName(), "Found services and characteristics");
+  is_connected = true;
+
+  BOX.begin(std::bind(&device_mk312::etbox_txcb, this, std::placeholders::_1),
+            std::bind(&device_mk312::etbox_rxcb, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&device_mk312::etbox_flushcb, this),
+            std::bind(&device_mk312::etbox_discardcb, this));
+  BOX.setdebug(0, venerate_logger, nullptr); // logging every byte is useful for debugging, set to 2
+  vTaskDelay(pdMS_TO_TICKS(100));
+  BOX.newhello();
+  if (!BOX.isconnected()) {
+    ESP_LOGE(getShortName(), "couldnt do hello handshake to box");
+
+    bleClient->disconnect();
+    vTaskDelay(pdMS_TO_TICKS(100));
+    ble_delete_client(bleClient);
+    notify(D_DISCONNECTED);
+    return false;
+  }
+  int y = BOX.getbyte(ETMEM_knoba); // any location really just to ensure the handshake worked
+  if (y == -1) {
+    ESP_LOGE(getShortName(), "couldnt get data from box");
+    bleClient->disconnect();
+    vTaskDelay(pdMS_TO_TICKS(100));
+    ble_delete_client(bleClient);
+    notify(D_DISCONNECTED);
+    return false;
+  }
+  ESP_LOGI(getShortName(), "test read, KNOBA=%d", y);
+  box_answered = true;
+  notify(D_CONNECTED);
+  return true;
+}

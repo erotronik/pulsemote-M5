@@ -1,0 +1,332 @@
+#include "device-mk312.hpp"
+#include "tab-mk312.hpp"
+#include "../../ui/tab.hpp"
+#include "../../core/lvgl-utils.h"
+
+tab_mk312::tab_mk312() {
+  ison = true; // default power on mode is on
+  lockpanel = false; // lockpanel means we lock out the front A/B level knobs and control the levels from software
+  timer = new tab_object_timer(false);
+  rand_timer = new tab_object_timer(true);
+  sync = new tab_object_sync();
+  modeselect = new tab_object_modes();
+  patternselect = new tab_object_patterns();
+  modetimer = new tab_object_modetimer(timer, rand_timer, [this](bool active_on) {
+      device_mk312 *md = static_cast<device_mk312 *>(device);
+      ison = active_on;
+      if (active_on) {
+          md->etbox_on(wanted_mode);
+          send_sync_data(SYNC_ON);
+      } else {
+          md->etbox_off();
+          send_sync_data(SYNC_OFF);
+      }
+  });
+  page = nullptr;
+  old_last_change = last_change = D_NONE;
+  device = nullptr;
+}
+
+tab_mk312::~tab_mk312() {}
+
+void tab_mk312::encoder_change(int sw, int change) {
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+  if (sw == tab_object_buttonbar::rotary2 && lockpanel) {
+    level_b = std::min(99, std::max(0, level_b + change));
+    md->etbox_setlevelb(level_b);
+    need_knob_refresh = true;
+  }
+  if (sw == tab_object_buttonbar::rotary1 && lockpanel) {
+    level_a = std::min(99, std::max(0, level_a + change));
+    md->etbox_setlevela(level_a);
+    need_knob_refresh = true;
+  }
+  if (sw == tab_object_buttonbar::rotary4) {
+    // With the panel locked, rotary4 is the MA knob unless it's been clicked into the settings
+    if (lockpanel && !settings_have_focus() && md->etbox_get_ma() >= 0) {
+      md->etbox_set_ma(md->etbox_get_ma() + change);
+      need_knob_refresh = true;
+    } else {
+      rand_timer->rotary_change(change);
+      timer->rotary_change(change);
+      modeselect->rotary_change(change);
+    }
+  }
+  // The first turn only opens the mode list, at the current mode: a tap on the knob on a touchscreen
+  // is a turn, and would move it one up or down
+  if (sw == tab_object_buttonbar::rotary3) {
+    if (!patternselect->visible())
+      patternselect->show(shown_mode());
+    else
+      patternselect->rotary_change(change);
+    need_refresh = true;
+  }
+}
+
+void tab_mk312::switch_change(int sw, bool value) {
+  need_refresh = true;
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+
+  if (sw == tab_object_buttonbar::rotary4 && value) {
+    if (modeselect->has_focus()) {
+      if (!modeselect->highlight_next_field()) {  // false then we left focus                          
+	      if (main_mode == MODE_RANDOM)
+          rand_timer->highlight_next_field();
+        else if (main_mode == MODE_TIMER)
+          timer->highlight_next_field();
+      }
+    } else if (rand_timer->has_focus()) {
+      rand_timer->highlight_next_field();
+    } else if (timer->has_focus()) {
+      timer->highlight_next_field();
+    } else {
+      modeselect->highlight_next_field();
+    }
+  }
+
+  if (main_mode == MODE_MANUAL && sw == tab_object_buttonbar::switch1 && value) {
+    if (ison == 0) {
+      ison = 1;
+      md->etbox_on(wanted_mode);
+      send_sync_data(SYNC_ON);
+    } else {
+      ison = 0;
+      md->etbox_off();
+      send_sync_data(SYNC_OFF);
+    }
+  }
+
+  if (main_mode != MODE_MANUAL && sw == tab_object_buttonbar::switch1 && value) {  // Stop
+    device_mk312 *md = static_cast<device_mk312*>(device);   
+    main_mode = MODE_MANUAL;
+    modetimer->set_is_on(false);
+    modeselect->reset();
+    ison = false;
+    md->etbox_off();
+  }
+  if ((sw == tab_object_buttonbar::rotary1 || sw == tab_object_buttonbar::rotary2) && value) {
+    lockpanel = !lockpanel;
+    md->etbox_setpanellock(lockpanel);
+    buttonbar->set_onmain(tab_object_buttonbar::rotary1, lockpanel);
+    buttonbar->set_onmain(tab_object_buttonbar::rotary2, lockpanel);
+    if (lockpanel) {
+      level_a = 0;
+      level_b = 0;
+      md->etbox_setlevelb(level_b);
+      md->etbox_setlevela(level_a);
+    }
+  }
+  if (sw == tab_object_buttonbar::rotary3 && value) {
+    if (!patternselect->visible()) {
+      patternselect->show(shown_mode());
+    } else {
+      wanted_mode = patternselect->hide();
+    }
+    need_refresh = true;
+  }
+}
+
+// another device can push data to us when they connect, disconnect, turn on, turn off
+
+void tab_mk312::gotsyncdata(Tab *t, sync_data syncstatus) {
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+  if (!md) return;
+  ESP_LOGD("mk312", "got sync data %d from %s", syncstatus, t->gettabname());
+  if (syncstatus == SYNC_BUTTONPRESS && lockpanel) {
+    last_level_button_press_a = level_a;
+    last_level_button_press_b = level_b;
+    level_a = std::min(99, std::max(0, level_a + 5+rand()%(11-5)));
+    md->etbox_setlevela(level_a);
+    level_b = std::min(99, std::max(0, level_b + 5+rand()%(11-5)));
+    md->etbox_setlevelb(level_b);
+    need_knob_refresh = true;
+  }
+  if (syncstatus == SYNC_BUTTONRELEASE && lockpanel) {
+    level_a = last_level_button_press_a;
+    md->etbox_setlevela(level_a);
+    level_b = last_level_button_press_b;
+    md->etbox_setlevelb(level_b);
+    need_knob_refresh = true;
+  }
+  if (syncstatus == SYNC_ALLOFF) {
+    main_mode = MODE_MANUAL;
+    modeselect->reset();
+    ison = false;
+    md->etbox_off();
+    need_refresh = true;
+  }
+  if (main_mode == MODE_SYNC) {
+    bool isinverted = sync->isinverted();
+    if ((syncstatus == SYNC_ON && !isinverted) || (syncstatus == SYNC_OFF && isinverted)) {
+      ison = true;
+      md->etbox_on(wanted_mode);
+    } else if ((syncstatus == SYNC_OFF && !isinverted) || (syncstatus == SYNC_ON && isinverted) ||
+               syncstatus == SYNC_BYE) {  // the source has gone away
+      ison = false;
+      md->etbox_off();
+    }
+    need_refresh = true;
+  }
+}
+
+void tab_mk312::loop(bool activetab) {
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+  if (!md) return;
+  md->check_box_answering();
+
+  if (modetimer->update(main_mode == MODE_RANDOM || main_mode == MODE_TIMER, main_mode == MODE_RANDOM)) {
+      need_refresh = true;
+  }
+
+  if (ison && md->connected() && wanted_mode != -1 && wanted_mode != md->get_last_mode()) {
+    ESP_LOGD("et312","need to set mode to %d currently %d", wanted_mode, md->get_last_mode());
+    md->set_mode(wanted_mode);
+    need_knob_refresh = true;
+  }
+
+  // The mode can also be changed on the box, which changes the MA range, so check it now and then
+  if (lockpanel && md->connected() && xTaskGetTickCount() - last_ma_check > pdMS_TO_TICKS(60000)) {
+    last_ma_check = xTaskGetTickCount();
+    md->etbox_refresh_ma(false);
+    need_knob_refresh = true;
+  }
+
+  if (activetab && need_refresh) {
+    ESP_LOGD("mk312", "refresh active tab from %s on %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID());
+
+    status->set_active(ison);
+    if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
+      int seconds = modetimer->get_remaining_seconds();
+      status->set_text_fmt("%s\n%d", md->etmodes[shown_mode()], seconds);
+    } else {
+      status->set_text(md->etmodes[shown_mode()]);
+    }
+    need_refresh = false;
+    need_knob_refresh = true;
+  }
+  if (need_knob_refresh) {
+
+    need_knob_refresh = false;
+    if (main_mode == MODE_MANUAL) {
+      buttonbar->set_text(tab_object_buttonbar::switch1,"On\nOff");
+      buttonbar->set_value(tab_object_buttonbar::switch1,ison? 100:0);
+    } else {
+      buttonbar->set_text(tab_object_buttonbar::switch1,"Stop");
+      buttonbar->set_value(tab_object_buttonbar::switch1,0);
+    }
+
+    if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
+      if (rand_timer->has_focus() || timer->has_focus())
+        buttonbar->set_value(tab_object_buttonbar::rotary4,100);
+      else
+        buttonbar->set_value(tab_object_buttonbar::rotary4,0);
+    }
+
+    if (lockpanel && !settings_have_focus()) {
+      int ma = md->etbox_get_ma();
+      if (ma >= 0) {
+        buttonbar->set_text_fmt(tab_object_buttonbar::rotary4, "MA\n%" LV_PRId32 "%%", ma);
+        buttonbar->set_value(tab_object_buttonbar::rotary4, ma);
+      } else {
+        buttonbar->set_text(tab_object_buttonbar::rotary4, "MA\n-");  // this mode doesn't use MA
+        buttonbar->set_value(tab_object_buttonbar::rotary4, 0);
+      }
+    } else {
+      buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+    }
+
+    buttonbar->set_text(tab_object_buttonbar::rotary3, "mode");
+    if (lockpanel) {
+      buttonbar->set_click_text(tab_object_buttonbar::rotary1,"");
+      buttonbar->set_level(tab_object_buttonbar::rotary1, "A", level_a);
+      buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, level_a));
+      buttonbar->set_level(tab_object_buttonbar::rotary2, "B", level_b);
+      buttonbar->set_ison(tab_object_buttonbar::rotary2, ison);
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b));
+    } else {
+      buttonbar->set_click_text(tab_object_buttonbar::rotary1,"unlock");
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 0, 0));
+      if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 0, 0));
+      buttonbar->clear_level(tab_object_buttonbar::rotary1);
+      buttonbar->clear_level(tab_object_buttonbar::rotary2);
+      buttonbar->set_value(tab_object_buttonbar::rotary1,0);
+      buttonbar->set_value(tab_object_buttonbar::rotary2,0);
+      buttonbar->set_text(tab_object_buttonbar::rotary1, LV_SYMBOL_CHARGE);
+      buttonbar->set_text(tab_object_buttonbar::rotary2, LV_SYMBOL_CHARGE);
+    }
+  }
+}
+
+
+// rotary4 has been clicked into the mode/timer settings
+bool tab_mk312::settings_have_focus(void) {
+  return modeselect->has_focus() || timer->has_focus() || rand_timer->has_focus();
+}
+
+// While it's on, the box's own mode, which can also be changed on the box
+int tab_mk312::shown_mode(void) {
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+  return (ison || wanted_mode == -1) ? md->get_last_mode() : wanted_mode;
+}
+
+void mk312_pattern_change_cb(lv_event_t *event) {
+  tab_mk312 *mk312_tab = static_cast<tab_mk312 *>(lv_event_get_user_data(event));
+  lv_obj_t *dropdown = (lv_obj_t *)lv_event_get_target(event);
+
+  // Turning rotary3 changes the selection while the list is open: that's just scrolling. The mode is
+  // picked when the list closes, by clicking rotary3 (see switch_change()) or touching an option.
+  if (lv_dropdown_is_open(dropdown)) return;
+
+  int i = static_cast<tab_mk312::main_modes>(lv_dropdown_get_selected(dropdown));
+  ESP_LOGI("mk312", "cb %s on %d: new pattern %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), i);
+  mk312_tab->wanted_mode = i;
+  mk312_tab->need_refresh = true;
+  mk312_tab->patternselect->hide();
+}
+
+void tab_mk312::focus_change(bool focus) {
+  ESP_LOGD("mk312", "focus cb %s on %d: %d", pcTaskGetName(xTaskGetCurrentTaskHandle()), xPortGetCoreID(), focus);
+  need_refresh = true;
+  buttonbar->set_rgb_all(lv_color_hsv_to_rgb(0, 0, 0));
+  buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
+}
+
+
+void tab_mk312::tab_create() {
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+
+  create_standard_page(mk312_main_modes_c);
+  create_standard_widgets();
+
+  buttonbar->set_onmain(tab_object_buttonbar::rotary1, true);
+  buttonbar->set_onmain(tab_object_buttonbar::rotary2, true);
+
+  // MK312 specific pattern UI
+  patternselect->selectpattern(page, md->etmodes , md->etmodes_n);
+  lv_obj_add_event_cb(patternselect->getdropdownobject(), mk312_pattern_change_cb, LV_EVENT_VALUE_CHANGED, this);
+}
+
+// return false if we removed ourselves from the connected devices list
+bool tab_mk312::hardware_changed(void) {
+  ESP_LOGD("mk312","hardware changed %d", last_change);
+  need_refresh = true;
+  if (last_change == D_CONNECTING) {
+    printf_log("Connecting %s\n", device->getShortName());
+  } else if (last_change == D_CONNECTED) {
+    device_mk312 *md = static_cast<device_mk312 *>(device);
+    // Carry on with whatever mode the box is set to, rather than always switching to Waves
+    int box_mode = md->etbox_read_mode();
+    if (box_mode >= 0) wanted_mode = box_mode;
+    tab_create();
+    send_sync_data(SYNC_START);
+    send_sync_data(SYNC_ON);
+    md->etbox_on(wanted_mode);
+    printf_log("Connected %s\n", device->getShortName());
+  } else if (last_change == D_DISCONNECTED) {
+    printf_log("Disconnected %s\n", device->getShortName());
+    send_sync_data(SYNC_BYE);
+    return false;
+  }
+  return true;
+}
