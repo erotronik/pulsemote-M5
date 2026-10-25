@@ -52,12 +52,13 @@ void tab_mk312::encoder_change(int sw, int change) {
       modeselect->rotary_change(change);
     }
   }
+  // The first turn only opens the mode list, at the current mode: a tap on the knob on a touchscreen
+  // is a turn, and would move it one up or down
   if (sw == tab_object_buttonbar::rotary3) {
-    if (!patternselect->visible()) {
-      ESP_LOGE("mk312","rotary3 show patternselect %d", wanted_mode);
-      patternselect->show(wanted_mode);
-    }
-    patternselect->rotary_change(change);
+    if (!patternselect->visible())
+      patternselect->show(shown_mode());
+    else
+      patternselect->rotary_change(change);
     need_refresh = true;
   }
 }
@@ -117,8 +118,7 @@ void tab_mk312::switch_change(int sw, bool value) {
   }
   if (sw == tab_object_buttonbar::rotary3 && value) {
     if (!patternselect->visible()) {
-      ESP_LOGE("mk312","switch show patternselect %d", wanted_mode);
-      patternselect->show(wanted_mode);
+      patternselect->show(shown_mode());
     } else {
       wanted_mode = patternselect->hide();
     }
@@ -197,9 +197,9 @@ void tab_mk312::loop(bool activetab) {
     status->set_active(ison);
     if (main_mode == MODE_RANDOM || main_mode == MODE_TIMER) {
       int seconds = modetimer->get_remaining_seconds();
-      status->set_text_fmt("%s\n%d", md->etmodes[(ison||wanted_mode==-1)?md->get_last_mode():wanted_mode], seconds);
+      status->set_text_fmt("%s\n%d", md->etmodes[shown_mode()], seconds);
     } else {
-      status->set_text(md->etmodes[(ison||wanted_mode==-1)?md->get_last_mode():wanted_mode]);
+      status->set_text(md->etmodes[shown_mode()]);
     }
     need_refresh = false;
     need_knob_refresh = true;
@@ -262,6 +262,12 @@ void tab_mk312::loop(bool activetab) {
 // rotary4 has been clicked into the mode/timer settings
 bool tab_mk312::settings_have_focus(void) {
   return modeselect->has_focus() || timer->has_focus() || rand_timer->has_focus();
+}
+
+// While it's on, the box's own mode, which can also be changed on the box
+int tab_mk312::shown_mode(void) {
+  device_mk312 *md = static_cast<device_mk312 *>(device);
+  return (ison || wanted_mode == -1) ? md->get_last_mode() : wanted_mode;
 }
 
 void mk312_pattern_change_cb(lv_event_t *event) {

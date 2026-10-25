@@ -14,6 +14,7 @@ class tab_mk312 : public Tab {
   bool hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
   int wanted_mode = 0;
+  int shown_mode(void);  // the mode the status shows, and the mode list opens at
 
   const char *mk312_main_modes_c = "Manual\nTimer\nRandom\nSync";
 

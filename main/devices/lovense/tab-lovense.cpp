@@ -45,10 +45,13 @@ void tab_lovense::encoder_change(int sw, int change) {
     knob_speed = std::min(20,std::max(1,knob_speed+change));
     if (ison) md->setmodespeed(main_pattern,knob_speed);
   }
+  // The first turn only opens the pattern list: a tap on the knob on a touchscreen is a turn, and
+  // would move it one up or down
   if (sw == tab_object_buttonbar::rotary3) {
     if (!patternselect->visible())
       patternselect->show(main_pattern);
-    patternselect->rotary_change(change);
+    else
+      patternselect->rotary_change(change);
     need_refresh = true;
   }
 
