@@ -39,7 +39,7 @@ class tab_splashscreen: public Tab {
       bool ison;
       int value;
      };
-     static const size_t kMaxFound = tab_object_buttonbar::maxrotaries;
+     static const size_t kMaxFound = tab_object_buttonbar::splash_rotaries;
      FoundControl found[kMaxFound];
      size_t found_count = 0;
 };

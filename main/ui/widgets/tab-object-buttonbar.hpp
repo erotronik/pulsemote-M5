@@ -6,7 +6,6 @@
 
 class tab_object_buttonbar {
   public:
-    tab_object_buttonbar(lv_obj_t *parent);
 
     void set_text(int button, const char *text);
     void set_text_fmt(int button, const char *format, ...);
@@ -27,8 +26,7 @@ class tab_object_buttonbar {
     const char *get_level_name(int button);  // nullptr if the knob isn't a level
     int get_level(int button);
 
-    // The board's knobs and switch. The ids are the hardware's numbering; all_order is their order on
-    // screen, and buttonmaptoposition each id's place in it
+    // The board's knobs and switch, as a device's tab has them. The ids are the hardware's numbering
 #if CONFIG_PULSEMOTE_PCB || CONFIG_BOARD_M5TAB5
     // The PulseMote PCB: four knobs and a switch. The Tab5 without it has the same, on screen only
     static const int rotary2 = 0;
@@ -38,22 +36,34 @@ class tab_object_buttonbar {
     static const int switch1 = 4;
     static const int maxrotaries = 4;
     static const int maxbuttons = 5;
-
-    const int all_order[maxbuttons] = { rotary1, rotary2, switch1, rotary3, rotary4 };
-    const int rotary_order[maxrotaries] = { rotary1, rotary2, rotary3, rotary4 };
-    const int buttonmaptoposition[maxbuttons] = { 1, 0, 3, 4, 2 };
+#if CONFIG_BOARD_M5TAB5 && !CONFIG_PULSEMOTE_PCB
+    // The splashscreen shows knobs from several devices, and the Tab5's screen has room for more
+    static const int splash_rotaries = 8;
+#else
+    static const int splash_rotaries = maxrotaries;
+#endif
 #else
 #error "No knob layout for this board"
 #endif
+    static const int splash_buttons = splash_rotaries + 1;
+
+    // rotaries is how many knobs: maxrotaries, or splash_rotaries for the splashscreen. Those past
+    // maxrotaries have the ids from maxbuttons up, and are on screen only
+    tab_object_buttonbar(lv_obj_t *parent, int rotaries = maxrotaries);
+
+    int nrotaries, nbuttons;
+    int all_order[splash_buttons];      // the ids in their order on screen, the switch in the middle
+    int rotary_order[splash_rotaries];  // the knobs' ids, in order
 
     lv_obj_t *container;
     static void arc_event_cb(lv_event_t * e);
 
   private:
-    lv_obj_t *arc[maxbuttons];
-    lv_obj_t *press[maxbuttons];
-    bool onmain[maxbuttons] = {};
-    bool ison[maxbuttons] = {};
-    char level_name[maxbuttons][16] = {};
-    int level_value[maxbuttons] = {};
+    int buttonmaptoposition[splash_buttons];  // each id's place in all_order
+    lv_obj_t *arc[splash_buttons];
+    lv_obj_t *press[splash_buttons];
+    bool onmain[splash_buttons] = {};
+    bool ison[splash_buttons] = {};
+    char level_name[splash_buttons][16] = {};
+    int level_value[splash_buttons] = {};
 };

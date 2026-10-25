@@ -57,7 +57,8 @@ void tab_splashscreen::loop(bool activetab) {
     for (auto * st: tabs) {
       auto * bbar = st->buttonbar;
       if (bbar) {
-        for (int j : buttonbar->rotary_order) {
+        for (int i = 0; i < bbar->nrotaries; i++) {
+          int j = bbar->rotary_order[i];
           char *tx = bbar->get_text(j);
           if (tx && found_count < kMaxFound) {
             found[found_count++] = { st, j, tx, bbar->get_ison(j), bbar->get_value(j) };
@@ -194,7 +195,7 @@ void tab_splashscreen::setup(void) {
   lv_obj_center(labelicons);
   lv_obj_move_foreground(icons_bg);
 
-  buttonbar = new tab_object_buttonbar(page);
+  buttonbar = new tab_object_buttonbar(page, tab_object_buttonbar::splash_rotaries);
 
   needs_refresh = true;
 

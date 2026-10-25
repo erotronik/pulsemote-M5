@@ -20,11 +20,11 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
 
     // pushed the arc or the button above it?
     int arc_index = -1;
-    for (int i = 0; i < maxbuttons; ++i) {
+    for (int i = 0; i < self->nbuttons; ++i) {
         if (self->arc[i] == obj) { arc_index = i; break; }
     }
     if (arc_index < 0) {
-      for (int i = 0; i < maxbuttons; ++i) {
+      for (int i = 0; i < self->nbuttons; ++i) {
         if (self->press[i] == hit) { 
           for (const auto& t : tabs) {
             if (self == t->buttonbar) t->switch_change(t->buttonbar->all_order[i], true);
@@ -69,7 +69,19 @@ void tab_object_buttonbar::arc_event_cb(lv_event_t * e) {
     }
 }
 
-tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
+tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent, int rotaries) {
+  nrotaries = rotaries;
+  nbuttons = rotaries + 1;
+  const int device_rotaries[maxrotaries] = { rotary1, rotary2, rotary3, rotary4 };
+  for (int i = 0; i < nrotaries; i++)
+    rotary_order[i] = i < maxrotaries ? device_rotaries[i] : maxbuttons + i - maxrotaries;
+  int pos = 0;
+  for (int i = 0; i < nrotaries; i++) {
+    if (i == nrotaries / 2) all_order[pos++] = switch1;
+    all_order[pos++] = rotary_order[i];
+  }
+  for (pos = 0; pos < nbuttons; pos++) buttonmaptoposition[all_order[pos]] = pos;
+
   container = lv_obj_create(parent);
   // Set the container to be transparent and have no effect
   lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
@@ -95,7 +107,7 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent) {
   lv_obj_set_style_pad_all(container, 0, 0);
   lv_obj_set_style_margin_all(container, 0, 0);
 
-  for (int i = 0; i < maxbuttons; i++) {
+  for (int i = 0; i < nbuttons; i++) {
     // Wrapper provides a hit-testable area for both badge and arc in a stable layout
     lv_obj_t *wrapper = lv_obj_create(container);
     lv_obj_remove_style_all(wrapper);
@@ -229,7 +241,8 @@ void tab_object_buttonbar::set_rgb(int button, lv_color_t rgb) {
 }
 
 void tab_object_buttonbar::set_rgb_all(lv_color_t rgb) {
-  for (int button : all_order) {
+  for (int i = 0; i < nbuttons; i++) {
+    int button = all_order[i];
     pulsemote_pcb_setleds(button, rgb);
   }
 }
