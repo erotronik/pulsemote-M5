@@ -197,15 +197,13 @@ void tab_coyote::loop(bool active) {
     need_refresh = false;
 
     //int power = md->get().chan_a().get_power_pc();
-    buttonbar->set_value(tab_object_buttonbar::rotary1, level_a_req); 
+    buttonbar->set_level(tab_object_buttonbar::rotary1, "A", level_a_req);
     buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1, "A\n%d%%", level_a_req);
     if (active) buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, level_a_req));
 
     //power = md->get().chan_b().get_power_pc();
-    buttonbar->set_value(tab_object_buttonbar::rotary2, level_b_req); 
+    buttonbar->set_level(tab_object_buttonbar::rotary2, "B", level_b_req);
     buttonbar->set_ison(tab_object_buttonbar::rotary2, ison);
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary2, "B\n%d%%", level_b_req);
     if (active) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(0, 100, level_b_req));
 
     buttonbar->set_click_text(tab_object_buttonbar::rotary1,ison?"Mode A":"");

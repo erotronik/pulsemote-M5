@@ -239,7 +239,10 @@ void tab_zc95::loop(bool activetab) {
     const int rotary[channels] = { tab_object_buttonbar::rotary1, tab_object_buttonbar::rotary2,
                                    tab_object_buttonbar::rotary3, tab_object_buttonbar::rotary4 };
     for (int i = 0; i < channels; i++) {
-      // rotary3/4 show what they're doing instead of a level when clicked into the pattern list or settings
+      char name[2] = { (char)('1' + i), '\0' };
+      buttonbar->set_level(rotary[i], name, level[i]);
+      // rotary3/4 show what they're doing instead of their level when clicked into the pattern list or
+      // settings, though it's still their level
       if (i == 2 && patternselect->visible()) {
         buttonbar->set_text(rotary[i], "mode");
         buttonbar->set_value(rotary[i], 100);
@@ -252,9 +255,7 @@ void tab_zc95::loop(bool activetab) {
         if (activetab) buttonbar->set_rgb(rotary[i], lv_color_hsv_to_rgb(0, 0, 0));
         continue;
       }
-      buttonbar->set_value(rotary[i], level[i]);
       buttonbar->set_ison(rotary[i], ison);
-      buttonbar->set_text_fmt(rotary[i], "%d\n%" LV_PRId32 "%%", i + 1, level[i]);
       if (activetab) buttonbar->set_rgb(rotary[i], lv_color_hsv_to_rgb(0, 100, level[i]));
     }
   }
@@ -273,15 +274,6 @@ void zc95_pattern_change_cb(lv_event_t *event) {
   zc95_tab->wanted_pattern = i;
   zc95_tab->need_refresh = true;
   zc95_tab->patternselect->hide();
-}
-
-// All four channels: only the first two knobs are main ones
-int tab_zc95::get_levels(level_t levels[levels_max]) {
-  for (int i = 0; i < channels; i++) {
-    snprintf(levels[i].name, sizeof(levels[i].name), "%d", i + 1);
-    levels[i].value = level[i];
-  }
-  return channels;
 }
 
 void tab_zc95::focus_change(bool focus) {

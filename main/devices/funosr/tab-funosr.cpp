@@ -195,17 +195,14 @@ void tab_funosr::loop(bool activetab) {
 
     need_knob_refresh = false;
  
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed);
-    buttonbar->set_value(tab_object_buttonbar::rotary1,knob_speed);
+    buttonbar->set_level(tab_object_buttonbar::rotary1, "Speed", knob_speed);
     buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
     if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(0, 100, knob_speed): lv_color_hsv_to_rgb(0, 0, 0));
 
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary2,"Stroke\n%d%%",knob_stroke);
-    buttonbar->set_value(tab_object_buttonbar::rotary2,knob_stroke);
+    buttonbar->set_level(tab_object_buttonbar::rotary2, "Stroke", knob_stroke);
     if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(60, 100, knob_stroke));
 
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary3,"Depth\n%d%%",knob_depth);
-    buttonbar->set_value(tab_object_buttonbar::rotary3,knob_depth);
+    buttonbar->set_level(tab_object_buttonbar::rotary3, "Depth", knob_depth);
     if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary3, lv_color_hsv_to_rgb(120, 100, knob_depth));
 
     if (activetab) segbar->set_range(knob_depth - knob_stroke, knob_depth);
@@ -264,15 +261,4 @@ bool tab_funosr::hardware_changed(void) {
     return false;
   }
   return true;
-}
-// All the knobs, not just Speed on the main page
-int tab_funosr::get_levels(level_t levels[levels_max]) {
-  const struct { const char *name; int value; } knobs[] = {
-    {"Speed", knob_speed}, {"Stroke", knob_stroke}, {"Depth", knob_depth}};
-  int n = 0;
-  for (auto &k : knobs) {
-    snprintf(levels[n].name, sizeof(levels[n].name), "%s", k.name);
-    levels[n++].value = k.value;
-  }
-  return n;
 }

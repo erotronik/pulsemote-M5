@@ -209,11 +209,12 @@ void tab_lovense::loop(bool activetab) {
     need_knob_refresh = false;
  
     if (main_pattern == 0) {
-      buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed*5);
+      buttonbar->set_level(tab_object_buttonbar::rotary1, "Speed", knob_speed*5);
       buttonbar->set_value(tab_object_buttonbar::rotary1,knob_speed*5-3);
       buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(0, 100, knob_speed*5): lv_color_hsv_to_rgb(0, 0, 0));
     } else {
-      buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"");
+      buttonbar->clear_level(tab_object_buttonbar::rotary1);
+      buttonbar->set_text(tab_object_buttonbar::rotary1,"");
       buttonbar->set_value(tab_object_buttonbar::rotary1,0);
       buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison? lv_color_hsv_to_rgb(0, 100, 100): lv_color_hsv_to_rgb(0, 0, 0));
     }

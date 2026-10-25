@@ -43,15 +43,10 @@ int Tab::get_levels(level_t levels[levels_max]) {
     for (int i = 0; i < tab_object_buttonbar::maxbuttons && n < levels_max; i++) {
         int b = buttonbar->rotary_order[i];
         if (b == -1) continue;
-        // The label is like "1\n45%": the name is the first line. Skip LVGL symbols, which are in the
-        // private use area so start with 0xEF in UTF-8
-        const char *label = buttonbar->get_text(b);
-        if (!label || !*label || (unsigned char)label[0] == 0xEF) continue;
-        size_t len = strcspn(label, "\n");
-        if (len >= sizeof(levels[n].name)) len = sizeof(levels[n].name) - 1;
-        memcpy(levels[n].name, label, len);
-        levels[n].name[len] = '\0';
-        levels[n].value = buttonbar->get_value(b);
+        const char *name = buttonbar->get_level_name(b);
+        if (!name) continue;
+        snprintf(levels[n].name, sizeof(levels[n].name), "%s", name);
+        levels[n].value = buttonbar->get_level(b);
         n++;
     }
     return n;

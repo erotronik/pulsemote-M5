@@ -10,7 +10,6 @@ class tab_zc95 : public Tab {
   void encoder_change(int sw, int change) override;
   void switch_change(int sw, bool state) override;
   void loop(bool activetab) override;
-  int get_levels(level_t levels[levels_max]) override;
   void focus_change(bool focus) override;
   bool hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;

@@ -106,9 +106,9 @@ class Tab {
   };
 
   // The device's output levels, 0-100, for Home Assistant (mqtt-ha.cpp). Returns how many. By default
-  // it's the main knobs; a tab with levels that aren't all on them overrides it
+  // the knobs given a level with the buttonbar's set_level()
   struct level_t {
-    char name[16];  // like "1", "A" or "Speed", from the knob's label
+    char name[16];  // like "1", "A" or "Speed", as given to the buttonbar's set_level()
     int value;
   };
   static const int levels_max = 8;

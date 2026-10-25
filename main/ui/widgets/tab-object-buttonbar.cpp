@@ -198,6 +198,27 @@ int tab_object_buttonbar::get_value(int button) {
   return lv_arc_get_value(arc[buttonmaptoposition[button]]);
 }
    
+void tab_object_buttonbar::set_level(int button, const char *name, int value) {
+  int pos = buttonmaptoposition[button];
+  snprintf(level_name[pos], sizeof(level_name[pos]), "%s", name);
+  level_value[pos] = value;
+  set_value(button, value);
+  set_text_fmt(button, "%s\n%d%%", name, value);
+}
+
+void tab_object_buttonbar::clear_level(int button) {
+  level_name[buttonmaptoposition[button]][0] = '\0';
+}
+
+const char *tab_object_buttonbar::get_level_name(int button) {
+  const char *name = level_name[buttonmaptoposition[button]];
+  return *name ? name : nullptr;
+}
+
+int tab_object_buttonbar::get_level(int button) {
+  return level_value[buttonmaptoposition[button]];
+}
+
 void tab_object_buttonbar::set_onmain(int button, bool flag) {
   onmain[buttonmaptoposition[button]] = flag;
 }

@@ -14,7 +14,6 @@ class tab_funosr : public Tab {
   void focus_change(bool focus) override;
   bool hardware_changed(void) override;
   void gotsyncdata(Tab *t, sync_data status) override;
-  int get_levels(level_t levels[levels_max]) override;
 
   const char *funosr_main_modes_c = "Manual\nTimer\nRandom\nSync";
   tab_object_segbar *segbar;

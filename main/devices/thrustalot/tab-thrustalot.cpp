@@ -169,8 +169,7 @@ void tab_thrustalot::loop(bool activetab) {
   if (activetab && need_knob_refresh) {
     need_knob_refresh = false;
  
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed);
-    buttonbar->set_value(tab_object_buttonbar::rotary1,knob_speed);
+    buttonbar->set_level(tab_object_buttonbar::rotary1, "Speed", knob_speed);
     buttonbar->set_rgb(tab_object_buttonbar::rotary1, lv_color_hsv_to_rgb(0, 100, knob_speed));
     buttonbar->set_text_fmt(tab_object_buttonbar::rotary2,"Delay\n%.2f",(float)tempo_to_ms(knob_tempo)/1000.0);
     buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(180, 100, (99-knob_tempo)));

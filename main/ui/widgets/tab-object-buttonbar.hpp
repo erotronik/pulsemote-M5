@@ -15,10 +15,16 @@ class tab_object_buttonbar {
     void set_rgb_all(lv_color_t rgb);
     void set_onmain(int button, bool flag);
     void set_ison(int button, bool flag);
+    // A knob that's a level: sets the arc and a "name\nvalue%" label, and keeps the name and value for
+    // Tab::get_levels(). set_text()/set_value() afterwards only change what's shown
+    void set_level(int button, const char *name, int value);
+    void clear_level(int button);  // no longer a level
 
     char * get_text(int button);
     int get_value(int button);
     bool get_ison(int button);
+    const char *get_level_name(int button);  // nullptr if the knob isn't a level
+    int get_level(int button);
 
     static const int rotary2 = 0;
     static const int rotary1 = 1;
@@ -39,4 +45,6 @@ class tab_object_buttonbar {
     const int buttonmaptoposition[maxbuttons] = { 1, 0, 3, 4, 2 };
     bool onmain[maxbuttons] = { false, false, false, false, false };
     bool ison[maxbuttons] = { false, false, false, false, false };
+    char level_name[maxbuttons][16] = {};
+    int level_value[maxbuttons] = {};
 };

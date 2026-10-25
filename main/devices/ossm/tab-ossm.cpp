@@ -233,17 +233,14 @@ void tab_ossm::loop(bool activetab) {
   if (need_knob_refresh) {
     need_knob_refresh = false;
  
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary1,"Speed\n%d%%",knob_speed);
-    buttonbar->set_value(tab_object_buttonbar::rotary1,knob_speed);
+    buttonbar->set_level(tab_object_buttonbar::rotary1, "Speed", knob_speed);
     buttonbar->set_ison(tab_object_buttonbar::rotary1, ison);
     if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(0, 100, knob_speed): lv_color_hsv_to_rgb(0, 0, 0));
 
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary2,"Stroke\n%d%%",knob_stroke);
-    buttonbar->set_value(tab_object_buttonbar::rotary2,knob_stroke);
+    buttonbar->set_level(tab_object_buttonbar::rotary2, "Stroke", knob_stroke);
     if (activetab)  buttonbar->set_rgb(tab_object_buttonbar::rotary2, lv_color_hsv_to_rgb(60, 100, knob_stroke));
 
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary3,"Depth\n%d%%",knob_depth);
-    buttonbar->set_value(tab_object_buttonbar::rotary3,knob_depth);
+    buttonbar->set_level(tab_object_buttonbar::rotary3, "Depth", knob_depth);
     if (activetab)  buttonbar->set_rgb(tab_object_buttonbar::rotary3, lv_color_hsv_to_rgb(120, 100, knob_depth));
 
     buttonbar->set_click_text(tab_object_buttonbar::rotary1,"patn");
@@ -259,13 +256,14 @@ void tab_ossm::loop(bool activetab) {
       buttonbar->set_value(tab_object_buttonbar::switch1,0);
     }
 
+    // Sensation is still a level while the knob is on settings. "Sensation" doesn't fit on the knob
+    buttonbar->set_level(tab_object_buttonbar::rotary4, "Sensation", knob_sensation);
     if (main_pattern == 0 || ((main_mode == MODE_RANDOM || main_mode == MODE_TIMER) && (rand_timer->has_focus() || timer->has_focus()))) {
       buttonbar->set_value(tab_object_buttonbar::rotary4, 0);
       buttonbar->set_text(tab_object_buttonbar::rotary4, LV_SYMBOL_SETTINGS);
       if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(0, 0, 0));
     } else {
       buttonbar->set_text_fmt(tab_object_buttonbar::rotary4,"Sens\n%d%%",knob_sensation);
-      buttonbar->set_value(tab_object_buttonbar::rotary4,knob_sensation);
       if (activetab) buttonbar->set_rgb(tab_object_buttonbar::rotary4, lv_color_hsv_to_rgb(180, 100, knob_sensation));
     }
   }
@@ -309,17 +307,6 @@ bool tab_ossm::hardware_changed(void) {
     return false;
   }
   return true;
-}
-// All the knobs, not just Speed on the main page
-int tab_ossm::get_levels(level_t levels[levels_max]) {
-  const struct { const char *name; int value; } knobs[] = {
-    {"Speed", knob_speed}, {"Stroke", knob_stroke}, {"Depth", knob_depth}, {"Sensation", knob_sensation}};
-  int n = 0;
-  for (auto &k : knobs) {
-    snprintf(levels[n].name, sizeof(levels[n].name), "%s", k.name);
-    levels[n++].value = k.value;
-  }
-  return n;
 }
 
 // The whole pattern name, which the status box shortens

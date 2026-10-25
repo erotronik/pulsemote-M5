@@ -201,8 +201,13 @@ void tab_mqtt_leds::loop(bool activetab) {
       buttonbar->set_text(tab_object_buttonbar::rotary2, ison ? "Preset" : "");
     buttonbar->set_value(tab_object_buttonbar::rotary2, ison ? preset * 100 / presets_max : 0);
     buttonbar->set_click_text(tab_object_buttonbar::rotary2, ison ? "next" : "");
-    buttonbar->set_text_fmt(tab_object_buttonbar::rotary3, ison ? "Bright\n%d%%" : "", brightness * 100 / 255);
-    buttonbar->set_value(tab_object_buttonbar::rotary3, ison ? brightness * 100 / 255 : 0);
+    if (ison) {
+      buttonbar->set_level(tab_object_buttonbar::rotary3, "Bright", brightness * 100 / 255);
+    } else {
+      buttonbar->clear_level(tab_object_buttonbar::rotary3);
+      buttonbar->set_text(tab_object_buttonbar::rotary3, "");
+      buttonbar->set_value(tab_object_buttonbar::rotary3, 0);
+    }
     buttonbar->set_rgb(tab_object_buttonbar::rotary1, ison?lv_color_hsv_to_rgb(hue, 100, 50):lv_color_hex(0));
     buttonbar->set_rgb(tab_object_buttonbar::rotary2, ison?lv_color_hsv_to_rgb(0, 0, 20):lv_color_hex(0));
     buttonbar->set_rgb(tab_object_buttonbar::rotary3, ison?lv_color_hsv_to_rgb(0, 0, brightness * 50 / 255):lv_color_hex(0));
