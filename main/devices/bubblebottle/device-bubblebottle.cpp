@@ -67,8 +67,7 @@ device_bubblebottle::device_bubblebottle() {
 
 device_bubblebottle::~device_bubblebottle() {
   if (bleClient) {
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = nullptr;
+    ble_delete_client(bleClient);
   }
   vQueueDelete(events);
 }

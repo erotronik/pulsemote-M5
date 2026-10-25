@@ -73,6 +73,16 @@ class PulsemoteAdvertisedDeviceCallbacks : public NimBLEScanCallbacks {
   }
 };
 
+// A client that's still connected is only deleted once its disconnect completes, which can be seconds
+// later. By then the device that owns it may have gone too (a failed connection's is deleted straight
+// away), so stop its callbacks reaching the device. That leaves the device's callbacks object, a few bytes
+void ble_delete_client(NimBLEClient*& bleClient) {
+  if (!bleClient) return;
+  if (bleClient->isConnected()) bleClient->setClientCallbacks(nullptr);
+  NimBLEDevice::deleteClient(bleClient);
+  bleClient = nullptr;
+}
+
 bool ble_get_service(NimBLERemoteService*& service, NimBLEClient* bleClient, NimBLEUUID uuid) {
   ESP_LOGD("get_service", "Getting service %s", uuid.toString().c_str());
   service = bleClient->getService(uuid);

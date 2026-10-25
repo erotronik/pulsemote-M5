@@ -72,8 +72,7 @@ device_breath::device_breath() {
 
 device_breath::~device_breath() {
   if (bleClient) {
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = nullptr;
+    ble_delete_client(bleClient);
   }
 }
 

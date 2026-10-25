@@ -74,8 +74,7 @@ device_mk312::device_mk312() {}
 
 device_mk312::~device_mk312() {
   if (bleClient) {
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = nullptr;
+    ble_delete_client(bleClient);
   }
   // After the client, so no notification can arrive for it
   if (notifyStream) {
@@ -337,8 +336,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
 
     bleClient->disconnect();
     vTaskDelay(pdMS_TO_TICKS(100));
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = NULL;
+    ble_delete_client(bleClient);
     notify(D_DISCONNECTED);
     return false;
   }
@@ -347,8 +345,7 @@ bool device_mk312::connect_to_device(NimBLEAdvertisedDevice* device) {
     ESP_LOGE(getShortName(), "couldnt get data from box");
     bleClient->disconnect();
     vTaskDelay(pdMS_TO_TICKS(100));
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = NULL;
+    ble_delete_client(bleClient);
     notify(D_DISCONNECTED);
     return false;
   }

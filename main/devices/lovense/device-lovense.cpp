@@ -78,8 +78,7 @@ device_lovense::device_lovense() {}
 
 device_lovense::~device_lovense() {
   if (bleClient) {
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = nullptr;
+    ble_delete_client(bleClient);
   }
   if (notifyQueue) {
     vQueueDelete(notifyQueue);

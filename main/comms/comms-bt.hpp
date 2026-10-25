@@ -4,6 +4,8 @@
 
 void TaskCommsBT(void *pvParameters);
 bool ble_get_service( NimBLERemoteService*& service, NimBLEClient* bleClient, NimBLEUUID uuid);
+// Delete a device's client and set it to nullptr. Use this rather than NimBLEDevice::deleteClient()
+void ble_delete_client(NimBLEClient*& bleClient);
 bool ble_get_characteristic( NimBLERemoteService* service, NimBLERemoteCharacteristic*& c,  NimBLEUUID uuid, NimBLERemoteCharacteristic::notify_callback notifyCallback = nullptr, bool response = false);
 
 // Scanning for devices runs in sessions: at power-on, when a device goes away, and from a Scan button.

@@ -60,8 +60,7 @@ device_dgbutton::device_dgbutton() {
 
 device_dgbutton::~device_dgbutton() {
   if (bleClient) {
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = nullptr;
+    ble_delete_client(bleClient);
   }
   vQueueDelete(events);
 }

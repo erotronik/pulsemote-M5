@@ -69,8 +69,7 @@ device_funosr::device_funosr() {
 
 device_funosr::~device_funosr() {
   if (bleClient) {
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = nullptr;
+    ble_delete_client(bleClient);
   }
 }
 

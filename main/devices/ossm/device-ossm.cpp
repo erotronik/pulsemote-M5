@@ -95,8 +95,7 @@ device_ossm::device_ossm() {}
 
 device_ossm::~device_ossm() {
   if (bleClient) {
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = nullptr;
+    ble_delete_client(bleClient);
   }
 }
 

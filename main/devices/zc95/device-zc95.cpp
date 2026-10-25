@@ -76,8 +76,7 @@ device_zc95::~device_zc95() {
       std::string eot(1, EOT);
       send(eot);
     }
-    NimBLEDevice::deleteClient(bleClient);
-    bleClient = nullptr;
+    ble_delete_client(bleClient);
   }
   if (request_mutex) vSemaphoreDelete(request_mutex);
   if (message_queue) {
@@ -285,8 +284,7 @@ bool device_zc95::connected(void) {
 void device_zc95::disconnect_and_delete(void) {
   bleClient->disconnect();
   vTaskDelay(pdMS_TO_TICKS(100));
-  NimBLEDevice::deleteClient(bleClient);
-  bleClient = nullptr;
+  ble_delete_client(bleClient);
   rxCharacteristic = nullptr;
   notify(D_DISCONNECTED);
 }
