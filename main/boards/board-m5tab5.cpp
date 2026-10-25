@@ -3,6 +3,7 @@
 #if CONFIG_BOARD_M5TAB5
 
 #include <M5Unified.h>
+#include <esp_heap_caps.h>
 constexpr int32_t SCREENW = 1280;
 constexpr int32_t SCREENH = 720;
 
@@ -46,6 +47,15 @@ void hardware_tft_init() {
 
   ESP_LOGD("main", "lv_init()");
   lv_init();
+  // LVGL's own 64k pool runs out quickly at the Tab5's scale (opening the ZC95's pattern list hung it):
+  // give it more from PSRAM. Each pool has to be smaller than LV_MEM_SIZE, the largest LVGL's allocator
+  // can handle
+  constexpr size_t lv_extra_pool = 60 * 1024;
+  for (int i = 0; i < 8; i++) {
+    void *pool = heap_caps_malloc(lv_extra_pool, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!pool || !lv_mem_add_pool(pool, lv_extra_pool))
+      ESP_LOGE("board", "couldn't add LVGL memory pool %d", i);
+  }
   ESP_LOGD("main", "lv_tick_set_cb()");
   lv_tick_set_cb(lvgl_tick_function);
   ESP_LOGD("main", "lv_display_create()");
