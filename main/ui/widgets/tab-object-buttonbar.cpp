@@ -229,7 +229,7 @@ void tab_object_buttonbar::set_rgb(int button, lv_color_t rgb) {
 }
 
 void tab_object_buttonbar::set_rgb_all(lv_color_t rgb) {
-  for (int button : {tab_object_buttonbar::rotary1, tab_object_buttonbar::rotary2, tab_object_buttonbar::rotary3, tab_object_buttonbar::rotary4, tab_object_buttonbar::switch1}) {
+  for (int button : all_order) {
     pulsemote_pcb_setleds(button, rgb);
   }
 }

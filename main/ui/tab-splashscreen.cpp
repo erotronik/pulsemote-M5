@@ -57,14 +57,11 @@ void tab_splashscreen::loop(bool activetab) {
     for (auto * st: tabs) {
       auto * bbar = st->buttonbar;
       if (bbar) {
-        for (int i=0; i< buttonbar->maxbuttons; i++) {
-          int j = buttonbar->rotary_order[i];
-          if (j!=-1) {
-            char *tx = bbar->get_text(j);
-            if (tx && found_count < kMaxFound) {
-              found[found_count++] = { st, j, tx, bbar->get_ison(j), bbar->get_value(j) };
-              ESP_LOGD("","%s=%s=%d\n",st->gettabname(), tx, bbar->get_value(j));
-            }
+        for (int j : buttonbar->rotary_order) {
+          char *tx = bbar->get_text(j);
+          if (tx && found_count < kMaxFound) {
+            found[found_count++] = { st, j, tx, bbar->get_ison(j), bbar->get_value(j) };
+            ESP_LOGD("","%s=%s=%d\n",st->gettabname(), tx, bbar->get_value(j));
           }
         }
       }

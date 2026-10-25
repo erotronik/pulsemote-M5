@@ -40,9 +40,8 @@ std::string Tab::get_status_text(void) {
 int Tab::get_levels(level_t levels[levels_max]) {
     if (!buttonbar) return 0;
     int n = 0;
-    for (int i = 0; i < tab_object_buttonbar::maxbuttons && n < levels_max; i++) {
-        int b = buttonbar->rotary_order[i];
-        if (b == -1) continue;
+    for (int b : buttonbar->rotary_order) {
+        if (n == levels_max) break;
         const char *name = buttonbar->get_level_name(b);
         if (!name) continue;
         snprintf(levels[n].name, sizeof(levels[n].name), "%s", name);

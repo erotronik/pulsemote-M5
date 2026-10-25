@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sdkconfig.h"
 #include "lvgl-utils.h"
 #include <unordered_map>
 
@@ -26,15 +27,24 @@ class tab_object_buttonbar {
     const char *get_level_name(int button);  // nullptr if the knob isn't a level
     int get_level(int button);
 
+    // The board's knobs and switch. The ids are the hardware's numbering; all_order is their order on
+    // screen, and buttonmaptoposition each id's place in it
+#if CONFIG_PULSEMOTE_PCB || CONFIG_BOARD_M5TAB5
+    // The PulseMote PCB: four knobs and a switch. The Tab5 without it has the same, on screen only
     static const int rotary2 = 0;
     static const int rotary1 = 1;
     static const int rotary3 = 2;
     static const int rotary4 = 3;
     static const int switch1 = 4;
+    static const int maxrotaries = 4;
     static const int maxbuttons = 5;
 
     const int all_order[maxbuttons] = { rotary1, rotary2, switch1, rotary3, rotary4 };
-    const int rotary_order[maxbuttons] = { rotary1, rotary2, rotary3, rotary4, -1 };
+    const int rotary_order[maxrotaries] = { rotary1, rotary2, rotary3, rotary4 };
+    const int buttonmaptoposition[maxbuttons] = { 1, 0, 3, 4, 2 };
+#else
+#error "No knob layout for this board"
+#endif
 
     lv_obj_t *container;
     static void arc_event_cb(lv_event_t * e);
@@ -42,9 +52,8 @@ class tab_object_buttonbar {
   private:
     lv_obj_t *arc[maxbuttons];
     lv_obj_t *press[maxbuttons];
-    const int buttonmaptoposition[maxbuttons] = { 1, 0, 3, 4, 2 };
-    bool onmain[maxbuttons] = { false, false, false, false, false };
-    bool ison[maxbuttons] = { false, false, false, false, false };
+    bool onmain[maxbuttons] = {};
+    bool ison[maxbuttons] = {};
     char level_name[maxbuttons][16] = {};
     int level_value[maxbuttons] = {};
 };
