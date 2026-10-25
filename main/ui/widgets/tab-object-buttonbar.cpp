@@ -101,7 +101,7 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent, int rotaries) {
 
   const int arc_size = LV_SCALE(60);
   const int arc_label_gap = LV_SCALE(6);
-  const int wrapper_h = arc_size + LV_SCALE(20) + arc_label_gap;
+  const int wrapper_h = arc_size + LV_SCALE(16 + 2 * badge_pad) + arc_label_gap;  // 16 for the badge's text
   lv_obj_set_style_pad_top(container, arc_label_gap, 0); 
 
   lv_obj_set_style_pad_all(container, 0, 0);
@@ -128,7 +128,7 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent, int rotaries) {
     lv_obj_set_style_bg_opa(press[i], LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(press[i], lv_palette_darken(LV_PALETTE_BLUE, 3), 0);
     lv_obj_set_style_pad_hor(press[i], LV_SCALE(4), 0);
-    lv_obj_set_style_pad_ver(press[i], LV_SCALE(2), 0);
+    lv_obj_set_style_pad_ver(press[i], LV_SCALE(badge_pad), 0);
     lv_obj_set_style_border_width(press[i], 0, 0);
     lv_obj_add_event_cb(press[i], arc_event_cb, LV_EVENT_CLICKED, this);
     lv_obj_add_flag(press[i], LV_OBJ_FLAG_CLICKABLE);

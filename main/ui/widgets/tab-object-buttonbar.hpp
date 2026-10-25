@@ -37,10 +37,13 @@ class tab_object_buttonbar {
     static const int maxrotaries = 4;
     static const int maxbuttons = 5;
 #if CONFIG_BOARD_M5TAB5 && !CONFIG_PULSEMOTE_PCB
-    // The splashscreen shows knobs from several devices, and the Tab5's screen has room for more
+    // The splashscreen shows knobs from several devices, and the Tab5's screen has room for more. It
+    // also has room for taller badges above the knobs, which are easier to touch
     static const int splash_rotaries = 8;
+    static const int badge_pad = 8;
 #else
     static const int splash_rotaries = maxrotaries;
+    static const int badge_pad = 2;  // above and below a badge's text
 #endif
 #else
 #error "No knob layout for this board"
