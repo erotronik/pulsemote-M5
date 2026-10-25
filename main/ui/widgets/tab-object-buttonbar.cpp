@@ -112,12 +112,15 @@ tab_object_buttonbar::tab_object_buttonbar(lv_obj_t *parent, int rotaries, bool 
   lv_obj_set_style_pad_all(container, 0, 0);
   lv_obj_set_style_margin_all(container, 0, 0);
 #if CONFIG_HASM5ENCODER
-  // With an 8Encoder below the screen, a bar of eight lines its circles up with its knobs, which
-  // span a little less than the screen's width
-  if (encoder8_events && nbuttons == encoder8_knobs) {
+  // With an 8Encoder below the screen, the circles line up with its knobs, which span a little less
+  // than the screen's width: the splashscreen's eight with all of them, a device's five with the first
+  // five. The bar is the screen's width
+  if (encoder8_events) {
     constexpr int margin = 44;  // pixels at each end, lined up by eye on the Tab5
+    int knob_spacing = (LV_HOR_RES - 2 * margin - arc_size) / (encoder8_knobs - 1);
+    lv_obj_set_flex_align(container, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END);
     lv_obj_set_style_pad_left(container, margin, 0);
-    lv_obj_set_style_pad_right(container, margin, 0);
+    lv_obj_set_style_pad_column(container, knob_spacing - arc_size, 0);
   }
 #endif
 
